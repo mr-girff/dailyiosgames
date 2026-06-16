@@ -52,6 +52,17 @@ jobs:
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/ public/img/ public/video/ src/content/posts/
-          git diff --cached --quiet || git commit -m "data: daily refresh $(date -u +%F)"
-          git push
+          git add data/ public/img/ public/video/ src/content/posts/ 2>/dev/null || true
+          if git diff --cached --quiet; then
+            echo "No data changes to commit."
+            exit 0
+          fi
+          git commit -m "data: daily refresh $(date -u +%F)"
+          # Retry with rebase to survive concurrent pushes
+          for i in 1 2 3; do
+            git pull --rebase --autostash origin main && git push origin main && exit 0
+            echo "Push attempt $i failed; retrying in 5s..."
+            sleep 5
+          done
+          echo "All push attempts failed."
+          exit 1

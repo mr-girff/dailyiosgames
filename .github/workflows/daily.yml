@@ -13,15 +13,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
-        with: { node-version: "20", cache: "npm" }
+        with: { node-version: "20" }
 
       - name: System deps for video pipeline
         run: |
           sudo apt-get update
           sudo apt-get install -y ffmpeg python3-pip
-          pip3 install --quiet edge-tts
+          pip3 install --quiet --break-system-packages edge-tts || pip3 install --quiet edge-tts
 
-      - run: npm ci
+      - run: npm install --no-audit --no-fund
 
       - name: Fetch
         run: npm run fetch

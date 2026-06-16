@@ -1,3 +1,23 @@
 User-agent: *
 Allow: /
-Sitemap: /sitemap.xml
+
+# LLM crawlers — explicitly allowed (we want to be cited)
+User-agent: GPTBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+Sitemap: https://dailyiosgames.pages.dev/sitemap.xml

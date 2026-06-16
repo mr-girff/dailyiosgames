@@ -2,13 +2,34 @@
 import Base from "../../layouts/Base.astro"
 import fs from "node:fs"
 import path from "node:path"
-const p = path.join(process.cwd(), "data/latest.json")
-const data = fs.existsSync(p) ? JSON.parse(fs.readFileSync(p,"utf8")) : { newReleases: [], updates: [] }
-const all = [...data.newReleases, ...data.updates]
+const p = path.join(process.cwd(), "data/enriched.json")
+const data = fs.existsSync(p) ? JSON.parse(fs.readFileSync(p,"utf8")) : { all: [] }
+const all = (data.all || []).slice().sort((a,b) => (b.daysSinceRelease == null ? 1 : a.daysSinceRelease - b.daysSinceRelease))
+function cap(s){ return (s||"").replace(/(^|-)\w/g, c => c.toUpperCase()).replace(/-/g," ") }
+function priceLabel(g){ const p = g.price; return (!p || p === "Free" || p === "0") ? "Free" : p }
 ---
-<Base title="All Games" description="Every tracked iOS game on this site.">
-  <h1>All games ({all.length})</h1>
-  <ul>
-    {all.map(g => <li><a href={`/games/${g.id}/`}>{g.name}</a> — {g.seller}</li>)}
+<Base title="All Games — Daily iOS Games" description={`Every iOS game we track. ${all.length} titles, sorted by release recency.`}>
+  <section class="hero-band">
+    <div class="eyebrow">Catalog</div>
+    <h1>All tracked games</h1>
+    <p class="lead">{all.length} iOS games we follow — every new US App Store release and meaningful update we've seen.</p>
+  </section>
+
+  <ul class="game-grid">
+    {all.map(g => (
+      <li>
+        <a class="game-card" href={`/games/${g.id}/`}>
+          {g.icon && <img class="icon" src={g.icon} alt="" width="64" height="64" loading="lazy" />}
+          <div class="meta">
+            <div class="name">{g.name}</div>
+            <div class="dev">{g.seller}</div>
+            <div class="tags">
+              {g.archetype && <span class="tag">{cap(g.archetype)}</span>}
+              <span class={`tag ${priceLabel(g)==='Free' ? 'price-free' : ''}`}>{priceLabel(g)}</span>
+            </div>
+          </div>
+        </a>
+      </li>
+    ))}
   </ul>
 </Base>

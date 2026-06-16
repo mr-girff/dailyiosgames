@@ -1,109 +1,48 @@
 ---
-// Per-archetype hero. Switches layout AND visual treatment based on game understanding.
+// Unified hero: prominent app icon + name + dev + hook + key facts.
+// Falls back gracefully when screenshots are missing.
 const { game } = Astro.props
-const layout = game.heroLayout || "screenshot-carousel"
-const shots = game.images?.screenshots || []
-const icon  = game.images?.icon
+const icon = game.icon
+const shots = Array.isArray(game.screenshots) ? game.screenshots.filter(Boolean) : []
+const price = game.price === "Free" || game.price === "0" ? "Free" : (game.price || "Free")
+function cap(s){ return (s||"").replace(/(^|-)\w/g, c => c.toUpperCase()).replace(/-/g," ") }
 ---
-{layout === "grid-tiles" && (
-  <section class="hero hero-grid">
-    {icon && <img src={icon.src} srcset={icon.srcset} sizes="(max-width: 600px) 128px, 192px" alt={icon.alt} width="192" height="192" fetchpriority="high" />}
-    <div class="grid-bg" aria-hidden="true">
-      {Array.from({ length: 16 }).map((_, i) => <div class={`tile t-${i % 4}`}></div>)}
-    </div>
+<section class="detail-hero">
+  {icon && (
+    <img class="icon-xl" src={icon} alt={`${game.name} app icon`} width="168" height="168" fetchpriority="high" loading="eager" />
+  )}
+  <div>
     <h1>{game.name}</h1>
-    <p class="hook">{game.uniqueHook || game.coreLoop}</p>
-  </section>
-)}
+    <p class="seller">by {game.seller}</p>
 
-{layout === "character-card" && (
-  <section class="hero hero-card">
-    {shots[0] && (
-      <picture>
-        {shots[0].sources?.avif && <source type="image/avif" srcset={shots[0].sources.avif} />}
-        <source type="image/webp" srcset={shots[0].sources?.webp || shots[0].srcset} />
-        <img src={shots[0].src} alt={shots[0].alt} width="800" height="1200" fetchpriority="high" loading="eager" />
-      </picture>
-    )}
-    <div class="card-meta">
-      <h1>{game.name}</h1>
+    <div class="pill-row">
+      {game.archetype && <span class="pill primary">{cap(game.archetype)}</span>}
+      <span class="pill">{price}</span>
+      {game.sessionLength && <span class="pill">{game.sessionLength}</span>}
+      {game.rating > 0 && <span class="pill">★ {game.rating.toFixed(1)} · {game.ratingCount}</span>}
+    </div>
+
+    {(game.uniqueHook || game.coreLoop) && (
       <p class="hook">{game.uniqueHook || game.coreLoop}</p>
-      <dl class="stats">
-        <div><dt>Type</dt><dd>{game.archetype}</dd></div>
-        <div><dt>Session</dt><dd>{game.sessionLength}</dd></div>
-        {game.rating > 0 && <div><dt>Rating</dt><dd>{game.rating}★ ({game.ratingCount})</dd></div>}
-      </dl>
-    </div>
-  </section>
-)}
-
-{layout === "isometric" && (
-  <section class="hero hero-iso">
-    <h1>{game.name}</h1>
-    <p class="hook">{game.uniqueHook || game.coreLoop}</p>
-    {shots[0] && <img src={shots[0].src} srcset={shots[0].srcset} alt={shots[0].alt} width="1200" height="800" fetchpriority="high" />}
-  </section>
-)}
-
-{layout === "action-still" && (
-  <section class="hero hero-action">
-    {shots[0] && (
-      <picture>
-        {shots[0].sources?.avif && <source type="image/avif" srcset={shots[0].sources.avif} />}
-        <source type="image/webp" srcset={shots[0].sources?.webp} />
-        <img src={shots[0].src} alt={shots[0].alt} width="1200" height="675" fetchpriority="high" />
-      </picture>
     )}
-    <div class="overlay">
-      <h1>{game.name}</h1>
-      <p class="hook">{game.uniqueHook || game.coreLoop}</p>
-    </div>
-  </section>
-)}
 
-{layout === "screenshot-carousel" && (
-  <section class="hero hero-gallery">
-    <h1>{game.name}</h1>
-    <p class="hook">{game.uniqueHook || game.coreLoop}</p>
+    <a class="cta" href={game.url} rel="nofollow noopener" target="_blank">
+      View on App Store →
+    </a>
+  </div>
+</section>
+
+{shots.length > 0 && (
+  <section>
+    <h2>Screenshots</h2>
     <div class="gallery" role="list">
-      {shots.map((s, i) => (
+      {shots.slice(0, 8).map((s, i) => (
         <picture role="listitem">
-          {s.sources?.avif && <source type="image/avif" srcset={s.sources.avif} />}
-          <source type="image/webp" srcset={s.sources?.webp} />
-          <img src={s.src} alt={s.alt} width="400" height="600" loading={i === 0 ? "eager" : "lazy"} fetchpriority={i === 0 ? "high" : "auto"} />
+          <img src={s} alt={`${game.name} screenshot ${i+1}`} width="400" height="600"
+               loading={i === 0 ? "eager" : "lazy"}
+               fetchpriority={i === 0 ? "high" : "auto"} />
         </picture>
       ))}
     </div>
   </section>
 )}
-
-<style>
-.hero { padding: 1.5rem 0; }
-.hero h1 { font-size: clamp(1.6rem, 5vw, 2.4rem); margin: 0.5rem 0; color: var(--accent); font-family: var(--font); }
-.hero .hook { color: var(--fg); opacity: 0.9; font-size: 1.05rem; max-width: 56ch; }
-.hero img { border-radius: 14px; max-width: 100%; height: auto; }
-
-.hero-grid { position: relative; }
-.hero-grid .grid-bg { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; margin: 1rem 0; }
-.hero-grid .tile { aspect-ratio: 1; border-radius: 8px; background: var(--muted); }
-.hero-grid .t-1 { background: var(--accent); opacity: 0.6; }
-.hero-grid .t-2 { background: var(--accent); opacity: 0.85; }
-.hero-grid .t-3 { background: var(--accent); }
-
-.hero-card { display: grid; grid-template-columns: minmax(180px, 280px) 1fr; gap: 1.5rem; align-items: center; }
-.hero-card .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px,1fr)); gap: .5rem; margin-top: 1rem; }
-.hero-card dt { font-size: .75rem; opacity: .6; text-transform: uppercase; }
-.hero-card dd { font-weight: 600; margin: 0; color: var(--accent); }
-
-.hero-action { position: relative; }
-.hero-action .overlay { position: absolute; inset: auto 0 0 0; padding: 1rem; background: linear-gradient(transparent, rgba(0,0,0,.85)); color: #fff; border-radius: 0 0 14px 14px; }
-.hero-action .overlay h1 { color: #fff; }
-
-.hero-gallery .gallery { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(180px, 240px); gap: .75rem; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: .5rem; }
-.hero-gallery .gallery picture { scroll-snap-align: start; }
-.hero-gallery .gallery img { width: 100%; }
-
-@media (max-width: 640px) {
-  .hero-card { grid-template-columns: 1fr; }
-}
-</style>

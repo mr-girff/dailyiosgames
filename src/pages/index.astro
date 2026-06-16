@@ -2,36 +2,106 @@
 import Base from "../layouts/Base.astro"
 import fs from "node:fs"
 import path from "node:path"
+
 const dataPath = path.join(process.cwd(), "data/latest.json")
-const data = fs.existsSync(dataPath) ? JSON.parse(fs.readFileSync(dataPath, "utf8")) : { date: "n/a", newReleases: [], updates: [] }
-const SITE_NAME = import.meta.env.PUBLIC_SITE_NAME || "Daily New Games"
-const tagline = `Every US App Store new game release & top-chart update, every day. ${data.date}.`
+const data = fs.existsSync(dataPath)
+  ? JSON.parse(fs.readFileSync(dataPath, "utf8"))
+  : { date: "n/a", newReleases: [], updates: [] }
+
+const enrichedPath = path.join(process.cwd(), "data/enriched.json")
+const enriched = fs.existsSync(enrichedPath) ? JSON.parse(fs.readFileSync(enrichedPath, "utf8")) : { all: [] }
+const byId = new Map(enriched.all.map(g => [g.id, g]))
+
+// Merge enriched fields back into list
+const newReleases = data.newReleases.map(g => ({ ...g, ...(byId.get(g.id) || {}) }))
+const updates = data.updates.map(g => ({ ...g, ...(byId.get(g.id) || {}) }))
+
+const SITE_NAME = import.meta.env.PUBLIC_SITE_NAME || "Daily iOS Games"
+const tagline = "Every new game release & meaningful update on the US App Store, refreshed every morning."
+const dateFmt = new Date(data.date + "T00:00:00Z").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric", timeZone: "UTC" })
+
+function cap(s){ return (s||"").replace(/(^|-)\w/g, c => c.toUpperCase()).replace(/-/g," ") }
+function priceLabel(g){ const p = g.price; return (!p || p === "Free" || p === "0") ? "Free" : p }
 ---
 <Base title={`${SITE_NAME} — US App Store Daily`} description={tagline}>
-  <h1>{SITE_NAME}</h1>
-  <p class="lead">{tagline}</p>
-  <p><strong>{data.newReleases.length}</strong> new games · <strong>{data.updates.length}</strong> updates today.</p>
+  <section class="hero-band">
+    <div class="eyebrow">{dateFmt}</div>
+    <h1>{SITE_NAME}</h1>
+    <p class="lead">{tagline}</p>
 
-  <h2>Top new releases</h2>
-  <ul>
-    {data.newReleases.slice(0, 10).map(g => (
-      <li>
-        <a href={g.url} rel="nofollow noopener">{g.name}</a> — {g.seller} · {g.releaseDate}
-        {g.verdict === "build" && <span title="High keyword signal"> 🟢</span>}
-      </li>
-    ))}
-  </ul>
+    <div class="stat-row">
+      <div class="stat"><span class="num">{newReleases.length}</span><span class="lbl">New today</span></div>
+      <div class="stat"><span class="num">{updates.length}</span><span class="lbl">Updates</span></div>
+      <div class="stat"><span class="num">{enriched.all.length}</span><span class="lbl">Tracked total</span></div>
+    </div>
+  </section>
 
-  <h2>Top updates</h2>
-  <ul>
-    {data.updates.slice(0, 10).map(g => (
-      <li>
-        <a href={g.url} rel="nofollow noopener">{g.name}</a> — v{g.version} · {g.daysSinceUpdate}d ago
-      </li>
-    ))}
-  </ul>
+  {newReleases.length > 0 && (
+    <section>
+      <div class="section-head">
+        <h2>Today's new releases</h2>
+        <a class="more" href="/games/">All games →</a>
+      </div>
+      <ul class="game-grid">
+        {newReleases.slice(0, 1).map(g => (
+          <li>
+            <a class="game-card featured" href={`/games/${g.id}/`}>
+              {g.icon && <img class="icon" src={g.icon} alt="" width="96" height="96" loading="eager" />}
+              <div class="meta">
+                <div class="name">{g.name}</div>
+                <div class="dev">{g.seller}</div>
+                {(g.uniqueHook || g.coreLoop) && <p class="hook">{g.uniqueHook || g.coreLoop}</p>}
+                <div class="tags">
+                  {g.archetype && <span class="tag">{cap(g.archetype)}</span>}
+                  <span class={`tag ${priceLabel(g)==='Free' ? 'price-free' : ''}`}>{priceLabel(g)}</span>
+                  {g.verdict === "build" && <span class="tag signal">High signal</span>}
+                </div>
+              </div>
+            </a>
+          </li>
+        ))}
+        {newReleases.slice(1, 13).map(g => (
+          <li>
+            <a class="game-card" href={`/games/${g.id}/`}>
+              {g.icon && <img class="icon" src={g.icon} alt="" width="64" height="64" loading="lazy" />}
+              <div class="meta">
+                <div class="name">{g.name}</div>
+                <div class="dev">{g.seller}</div>
+                <div class="tags">
+                  {g.archetype && <span class="tag">{cap(g.archetype)}</span>}
+                  <span class={`tag ${priceLabel(g)==='Free' ? 'price-free' : ''}`}>{priceLabel(g)}</span>
+                </div>
+              </div>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )}
 
-  <p><a href="/posts/">→ All daily reports</a></p>
+  {updates.length > 0 && (
+    <section>
+      <div class="section-head"><h2>Notable updates</h2></div>
+      <ul class="update-list">
+        {updates.slice(0, 10).map(g => (
+          <li>
+            {g.icon && <img class="icon" src={g.icon} alt="" width="40" height="40" loading="lazy" />}
+            <div class="ux">
+              <a href={`/games/${g.id}/`}>{g.name}</a>
+              <div class="when">v{g.version} · {g.seller}</div>
+            </div>
+            <span class="when">{g.daysSinceUpdate}d ago</span>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )}
+
+  <section>
+    <p style="color:var(--fg-muted);font-size:.9rem;">
+      <a href="/about/">About</a> · <a href="/methodology/">Methodology</a> · <a href="/rss.xml">RSS</a> · <a href="/api/data.json">Open data feed</a>
+    </p>
+  </section>
 
   <script type="application/ld+json" set:html={JSON.stringify({
     "@context":"https://schema.org",

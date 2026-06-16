@@ -3,7 +3,6 @@ import Base from "../../layouts/Base.astro"
 import Hero from "../../components/Hero.astro"
 import TrendSparkline from "../../components/TrendSparkline.astro"
 import Reviews from "../../components/Reviews.astro"
-import { paletteFor, cssVars } from "../../lib/palette"
 import fs from "node:fs"
 import path from "node:path"
 
@@ -15,7 +14,6 @@ export async function getStaticPaths() {
 }
 
 const { game, all } = Astro.props
-const palette = paletteFor(game.designPalette)
 const robots = game.indexDirective || "index,follow"
 const canonical = `${Astro.site || ""}games/${game.id}/`.replace(/\/+/g,"/").replace(":/","://")
 
@@ -33,8 +31,8 @@ function capitalize(s){ return (s||"").replace(/(^|-)\w/g, c => c.toUpperCase())
   description={description}
   canonical={canonical}
   robots={robots}
-  styleVars={cssVars(palette)}
-  bodyClass={`theme-${game.designPalette}`}
+  image={game.icon}
+  bodyClass={`theme-${game.archetype}`}
 >
   <nav class="crumbs" aria-label="Breadcrumb">
     <a href="/">Home</a> › <a href={`/archetype/${game.archetype}/`}>{capitalize(game.archetype)}</a> › <span>{game.name}</span>
@@ -42,7 +40,6 @@ function capitalize(s){ return (s||"").replace(/(^|-)\w/g, c => c.toUpperCase())
 
   <Hero game={game} />
 
-  <!-- Auto-generated gameplay teaser (15s) -->
   {game.video?.mp4 && (
     <section>
       <h2>15-second look</h2>
@@ -53,8 +50,7 @@ function capitalize(s){ return (s||"").replace(/(^|-)\w/g, c => c.toUpperCase())
     </section>
   )}
 
-  <!-- TL;DR for GEO / Google snippet -->
-  <p class="tldr"><strong>TL;DR.</strong> {description}</p>
+  <p class="tldr"><strong>TL;DR</strong><br/>{description}</p>
 
   {game.trends && (
     <section>
@@ -63,15 +59,14 @@ function capitalize(s){ return (s||"").replace(/(^|-)\w/g, c => c.toUpperCase())
     </section>
   )}
 
-  <!-- Hands-on observations (Experience signal) -->
   <section>
     <h2>What kind of game this is</h2>
     <dl class="facts">
-      <div><dt>Genre</dt><dd>{(game.genres || []).join(", ")}</dd></div>
+      <div><dt>Genre</dt><dd>{(game.genres || []).join(", ") || "Games"}</dd></div>
       <div><dt>Core loop</dt><dd>{game.coreLoop || "—"}</dd></div>
-      <div><dt>Typical session</dt><dd>{game.sessionLength}</dd></div>
-      <div><dt>Built for</dt><dd>{game.audience}</dd></div>
-      <div><dt>Monetization</dt><dd>{game.monetization}</dd></div>
+      <div><dt>Typical session</dt><dd>{game.sessionLength || "—"}</dd></div>
+      <div><dt>Built for</dt><dd>{game.audience || "—"}</dd></div>
+      <div><dt>Monetization</dt><dd>{game.monetization || "—"}</dd></div>
       {game.tags?.length > 0 && <div><dt>Features</dt><dd>{game.tags.join(" · ")}</dd></div>}
     </dl>
   </section>
@@ -87,14 +82,7 @@ function capitalize(s){ return (s||"").replace(/(^|-)\w/g, c => c.toUpperCase())
     <section>
       <h2>Things to watch out for</h2>
       <ul>{game.redFlags.map(f => <li>{f}</li>)}</ul>
-      <p class="caveat">Observations from official App Store metadata; verify in-game before purchasing.</p>
-    </section>
-  )}
-
-  {game.competitors?.length > 0 && (
-    <section>
-      <h2>If you like {game.name}, also try</h2>
-      <ul>{game.competitors.map(c => <li>{c}</li>)}</ul>
+      <p class="caveat">Observations based on official App Store metadata; verify in-game before purchasing.</p>
     </section>
   )}
 
@@ -115,7 +103,7 @@ function capitalize(s){ return (s||"").replace(/(^|-)\w/g, c => c.toUpperCase())
     <section>
       <h2>Similar {capitalize(game.archetype)} games</h2>
       <ul class="link-grid">
-        {similar.map(s => <li><a href={`/games/${s.id}/`}>{s.name}</a> — {s.seller}</li>)}
+        {similar.map(s => <li><a href={`/games/${s.id}/`}>{s.name}</a><small>{s.seller}</small></li>)}
       </ul>
     </section>
   )}
@@ -131,20 +119,19 @@ function capitalize(s){ return (s||"").replace(/(^|-)\w/g, c => c.toUpperCase())
 
   <Reviews gameId={game.id} gameName={game.name} />
 
-  <section>
-    <h2>Where to download</h2>
-    <p><a class="cta" href={game.url} rel="nofollow noopener">Open {game.name} on the App Store →</a></p>
+  <section class="cta-block">
+    <h2 style="margin-top:0">Download {game.name}</h2>
+    <a class="cta" href={game.url} rel="nofollow noopener" target="_blank">Open on the App Store →</a>
   </section>
 
   <section>
     <h2>FAQ</h2>
-    <details><summary>Is {game.name} free?</summary><p>{game.price === "Free" ? `Yes — free to download. Monetization model: ${game.monetization}.` : `It costs ${game.price}.`}</p></details>
-    <details><summary>How long is a typical play session?</summary><p>{game.sessionLength}.</p></details>
-    <details><summary>Does {game.name} work offline?</summary><p>{game.tags?.includes("offline") ? "Yes, it supports offline play." : "Apple's listing does not explicitly mention offline support; expect an internet connection may be required."}</p></details>
+    <details><summary>Is {game.name} free?</summary><p>{game.price === "Free" || !game.price ? `Yes — free to download. Monetization model: ${game.monetization || "unknown"}.` : `It costs ${game.price}.`}</p></details>
+    <details><summary>How long is a typical play session?</summary><p>{game.sessionLength || "Varies by player."}</p></details>
+    <details><summary>Does {game.name} work offline?</summary><p>{game.tags?.includes("offline") ? "Yes, it supports offline play." : "Apple's listing does not explicitly mention offline support; an internet connection may be required."}</p></details>
     <details><summary>When was the last update?</summary><p>Version {game.version} was released on {game.currentVersionDate}, {game.daysSinceUpdate} day(s) ago.</p></details>
   </section>
 
-  <!-- Structured data -->
   {game.video?.mp4 && (
     <script type="application/ld+json" set:html={JSON.stringify({
       "@context":"https://schema.org","@type":"VideoObject",
@@ -166,9 +153,9 @@ function capitalize(s){ return (s||"").replace(/(^|-)\w/g, c => c.toUpperCase())
     "softwareVersion": game.version,
     "datePublished": game.releaseDate,
     "url": canonical,
-    "image": game.images?.icon?.src,
+    "image": game.icon,
     "publisher": { "@type":"Organization", "name": game.seller },
-    "offers": { "@type":"Offer", "price": game.price === "Free" ? "0" : (game.price || "").replace(/[^\d.]/g,""), "priceCurrency":"USD", "url": game.url },
+    "offers": { "@type":"Offer", "price": game.price === "Free" ? "0" : (game.price || "").replace(/[^\d.]/g,"") || "0", "priceCurrency":"USD", "url": game.url },
     ...(game.ratingCount ? { "aggregateRating": { "@type":"AggregateRating", "ratingValue": game.rating, "ratingCount": game.ratingCount }} : {}),
   })} />
   <script type="application/ld+json" set:html={JSON.stringify({
@@ -182,24 +169,10 @@ function capitalize(s){ return (s||"").replace(/(^|-)\w/g, c => c.toUpperCase())
   <script type="application/ld+json" set:html={JSON.stringify({
     "@context":"https://schema.org","@type":"FAQPage",
     "mainEntity":[
-      { "@type":"Question","name":`Is ${game.name} free?`, "acceptedAnswer":{ "@type":"Answer","text": game.price === "Free" ? `Yes — free to download. Monetization model: ${game.monetization}.` : `It costs ${game.price}.`}},
-      { "@type":"Question","name":"How long is a typical play session?", "acceptedAnswer":{"@type":"Answer","text": game.sessionLength}},
+      { "@type":"Question","name":`Is ${game.name} free?`, "acceptedAnswer":{ "@type":"Answer","text": game.price === "Free" || !game.price ? `Yes — free to download.` : `It costs ${game.price}.`}},
+      { "@type":"Question","name":"How long is a typical play session?", "acceptedAnswer":{"@type":"Answer","text": game.sessionLength || "Varies."}},
       { "@type":"Question","name": `Does ${game.name} work offline?`, "acceptedAnswer":{"@type":"Answer","text": game.tags?.includes("offline") ? "Yes." : "Apple's listing does not explicitly mention offline support."}},
       { "@type":"Question","name":"When was the last update?", "acceptedAnswer":{"@type":"Answer","text": `Version ${game.version} on ${game.currentVersionDate}.`}},
     ]
   })} />
 </Base>
-
-<style>
-.crumbs { font-size: .85rem; opacity: .7; margin-bottom: 1rem; }
-.tldr { background: var(--muted); padding: .85rem 1rem; border-radius: 10px; border-left: 4px solid var(--accent); }
-.facts { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: .75rem 1.5rem; }
-.facts dt { font-size: .75rem; text-transform: uppercase; opacity: .6; }
-.facts dd { margin: 0; font-weight: 500; }
-.release-notes { white-space: pre-wrap; background: var(--muted); padding: 1rem; border-radius: 10px; font-size: .9rem; }
-.link-grid { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: .5rem; }
-.link-grid li { padding: .5rem .75rem; background: var(--muted); border-radius: 8px; }
-.cta { display: inline-block; padding: .75rem 1.25rem; background: var(--accent); color: var(--bg); border-radius: 10px; font-weight: 600; }
-.caveat { font-size: .8rem; opacity: .6; }
-blockquote { border-left: 4px solid var(--accent); padding: .25rem 1rem; margin: 0; font-style: italic; }
-</style>

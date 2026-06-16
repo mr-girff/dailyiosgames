@@ -2,34 +2,289 @@
 import Base from "../../layouts/Base.astro"
 import fs from "node:fs"
 import path from "node:path"
+
 const p = path.join(process.cwd(), "data/enriched.json")
-const data = fs.existsSync(p) ? JSON.parse(fs.readFileSync(p,"utf8")) : { all: [] }
-const all = (data.all || []).slice().sort((a,b) => (b.daysSinceRelease == null ? 1 : a.daysSinceRelease - b.daysSinceRelease))
+const data = fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, "utf8")) : { all: [] }
+const all = data.all || []
+
 function cap(s){ return (s||"").replace(/(^|-)\w/g, c => c.toUpperCase()).replace(/-/g," ") }
 function priceLabel(g){ const p = g.price; return (!p || p === "Free" || p === "0") ? "Free" : p }
+
+// ---- Editor's picks: verdict=build, prefer recent ----
+const picks = all
+  .filter(g => g.verdict === "build")
+  .sort((a, b) => (a.daysSinceRelease ?? 9999) - (b.daysSinceRelease ?? 9999))
+  .slice(0, 4)
+const pickIds = new Set(picks.map(g => g.id))
+
+// ---- Buckets ----
+const newToday   = all.filter(g => !pickIds.has(g.id) && (g.daysSinceRelease ?? 9999) <= 1)
+const newMonth   = all.filter(g => !pickIds.has(g.id) && (g.daysSinceRelease ?? 9999) > 1 && (g.daysSinceRelease ?? 9999) <= 30)
+const updatedRec = all.filter(g => !pickIds.has(g.id) && (g.daysSinceRelease ?? 9999) > 30 && (g.daysSinceUpdate ?? 9999) <= 14)
+const older      = all.filter(g => !pickIds.has(g.id)
+                                && (g.daysSinceRelease ?? 9999) > 30
+                                && (g.daysSinceUpdate ?? 9999) > 14)
+
+// ---- Archetype counts (used by filter pills) ----
+const archetypes = Object.entries(
+  all.reduce((acc, g) => { const k = g.archetype || "other"; acc[k] = (acc[k]||0)+1; return acc }, {})
+).sort((a,b) => b[1]-a[1])
+
+function renderCard(g, eager=false) {
+  return { g, eager }
+}
 ---
-<Base title="All Games — Daily iOS Games" description={`Every iOS game we track. ${all.length} titles, sorted by release recency.`}>
+<Base
+  title="All Games — Daily iOS Games"
+  description={`Browse ${all.length} tracked iOS games. Editor's picks, new today, updated recently, by category.`}
+>
   <section class="hero-band">
-    <div class="eyebrow">Catalog</div>
-    <h1>All tracked games</h1>
-    <p class="lead">{all.length} iOS games we follow — every new US App Store release and meaningful update we've seen.</p>
+    <div class="eyebrow">Catalog · {all.length} games</div>
+    <h1>Find your next iOS game</h1>
+    <p class="lead">Start with today's editor picks. Or filter by category. Or skim what changed this week.</p>
   </section>
 
-  <ul class="game-grid">
-    {all.map(g => (
-      <li>
-        <a class="game-card" href={`/games/${g.id}/`}>
-          {g.icon && <img class="icon" src={g.icon} alt="" width="64" height="64" loading="lazy" />}
-          <div class="meta">
-            <div class="name">{g.name}</div>
-            <div class="dev">{g.seller}</div>
-            <div class="tags">
-              {g.archetype && <span class="tag">{cap(g.archetype)}</span>}
-              <span class={`tag ${priceLabel(g)==='Free' ? 'price-free' : ''}`}>{priceLabel(g)}</span>
-            </div>
-          </div>
-        </a>
-      </li>
+  <!-- ===== EDITOR PICKS ===== -->
+  {picks.length > 0 && (
+    <section data-section="picks">
+      <div class="section-head">
+        <h2>★ Editor's picks</h2>
+        <span class="more">{picks.length} hand-flagged from {all.length}</span>
+      </div>
+      <ul class="game-grid">
+        {picks.map((g, i) => (
+          <li data-arch={g.archetype || "other"}>
+            <a class={`game-card ${i === 0 ? "featured" : ""}`} href={`/games/${g.id}/`}>
+              {g.icon && <img class="icon" src={g.icon} alt="" width={i===0?96:64} height={i===0?96:64} loading={i<2?"eager":"lazy"} />}
+              <div class="meta">
+                <div class="name">{g.name}</div>
+                <div class="dev">{g.seller}</div>
+                {i === 0 && (g.uniqueHook || g.coreLoop) && <p class="hook">{g.uniqueHook || g.coreLoop}</p>}
+                <div class="tags">
+                  {g.archetype && <span class="tag">{cap(g.archetype)}</span>}
+                  <span class={`tag ${priceLabel(g)==='Free' ? 'price-free' : ''}`}>{priceLabel(g)}</span>
+                  <span class="tag signal">High signal</span>
+                </div>
+              </div>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )}
+
+  <!-- ===== FILTER PILLS ===== -->
+  <section class="filter-bar" aria-label="Filter by category">
+    <button class="pill active" data-filter="all">All <span class="cnt">{all.length}</span></button>
+    {archetypes.map(([k, n]) => (
+      <button class="pill" data-filter={k}>{cap(k)} <span class="cnt">{n}</span></button>
     ))}
-  </ul>
+  </section>
+
+  <!-- ===== NEW TODAY ===== -->
+  {newToday.length > 0 && (
+    <section data-bucket data-bucket-name="today">
+      <div class="section-head">
+        <h2>New today</h2>
+        <span class="more">{newToday.length} releases</span>
+      </div>
+      <ul class="game-grid compact">
+        {newToday.map(g => (
+          <li data-arch={g.archetype || "other"}>
+            <a class="game-card" href={`/games/${g.id}/`}>
+              {g.icon && <img class="icon" src={g.icon} alt="" width="56" height="56" loading="lazy" />}
+              <div class="meta">
+                <div class="name">{g.name}</div>
+                <div class="dev">{g.seller}</div>
+                <div class="tags">
+                  {g.archetype && <span class="tag">{cap(g.archetype)}</span>}
+                  <span class={`tag ${priceLabel(g)==='Free' ? 'price-free' : ''}`}>{priceLabel(g)}</span>
+                </div>
+              </div>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )}
+
+  <!-- ===== NEW THIS MONTH ===== -->
+  {newMonth.length > 0 && (
+    <section data-bucket data-bucket-name="month">
+      <div class="section-head">
+        <h2>Released this month</h2>
+        <span class="more">{newMonth.length} games</span>
+      </div>
+      <ul class="game-grid compact">
+        {newMonth.map(g => (
+          <li data-arch={g.archetype || "other"}>
+            <a class="game-card" href={`/games/${g.id}/`}>
+              {g.icon && <img class="icon" src={g.icon} alt="" width="56" height="56" loading="lazy" />}
+              <div class="meta">
+                <div class="name">{g.name}</div>
+                <div class="dev">{g.seller} · {g.daysSinceRelease}d ago</div>
+                <div class="tags">
+                  {g.archetype && <span class="tag">{cap(g.archetype)}</span>}
+                  <span class={`tag ${priceLabel(g)==='Free' ? 'price-free' : ''}`}>{priceLabel(g)}</span>
+                </div>
+              </div>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )}
+
+  <!-- ===== RECENTLY UPDATED ===== -->
+  {updatedRec.length > 0 && (
+    <section data-bucket data-bucket-name="updated">
+      <div class="section-head">
+        <h2>Recently updated</h2>
+        <span class="more">{updatedRec.length} games · updated in last 14 days</span>
+      </div>
+      <details class="reveal" open>
+        <summary>Show all</summary>
+        <ul class="game-grid compact">
+          {updatedRec.map(g => (
+            <li data-arch={g.archetype || "other"}>
+              <a class="game-card" href={`/games/${g.id}/`}>
+                {g.icon && <img class="icon" src={g.icon} alt="" width="56" height="56" loading="lazy" />}
+                <div class="meta">
+                  <div class="name">{g.name}</div>
+                  <div class="dev">v{g.version} · {g.daysSinceUpdate}d ago</div>
+                  <div class="tags">
+                    {g.archetype && <span class="tag">{cap(g.archetype)}</span>}
+                    <span class={`tag ${priceLabel(g)==='Free' ? 'price-free' : ''}`}>{priceLabel(g)}</span>
+                  </div>
+                </div>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </details>
+    </section>
+  )}
+
+  <!-- ===== OLDER ===== -->
+  {older.length > 0 && (
+    <section data-bucket data-bucket-name="older">
+      <div class="section-head">
+        <h2>Older in catalog</h2>
+        <span class="more">{older.length} games</span>
+      </div>
+      <details class="reveal">
+        <summary>Show all {older.length}</summary>
+        <ul class="game-grid compact">
+          {older.map(g => (
+            <li data-arch={g.archetype || "other"}>
+              <a class="game-card" href={`/games/${g.id}/`}>
+                {g.icon && <img class="icon" src={g.icon} alt="" width="56" height="56" loading="lazy" />}
+                <div class="meta">
+                  <div class="name">{g.name}</div>
+                  <div class="dev">{g.seller}</div>
+                  <div class="tags">
+                    {g.archetype && <span class="tag">{cap(g.archetype)}</span>}
+                    <span class={`tag ${priceLabel(g)==='Free' ? 'price-free' : ''}`}>{priceLabel(g)}</span>
+                  </div>
+                </div>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </details>
+    </section>
+  )}
+
+  <!-- ===== EMPTY STATE (when filter matches nothing in a bucket) ===== -->
+  <p class="empty-msg" id="emptyMsg" hidden>No games in this category right now. Try another filter.</p>
+
+  <!-- Client-side filter -->
+  <script is:inline>
+    (function() {
+      const pills = document.querySelectorAll('.pill[data-filter]');
+      const items = document.querySelectorAll('li[data-arch]');
+      const buckets = document.querySelectorAll('[data-bucket]');
+      const empty = document.getElementById('emptyMsg');
+
+      function apply(filter) {
+        let visibleTotal = 0;
+        items.forEach(li => {
+          const match = filter === 'all' || li.dataset.arch === filter;
+          li.style.display = match ? '' : 'none';
+          if (match) visibleTotal++;
+        });
+        buckets.forEach(b => {
+          const visible = b.querySelectorAll('li[data-arch]:not([style*="display: none"])').length;
+          b.style.display = visible === 0 ? 'none' : '';
+        });
+        if (empty) empty.hidden = visibleTotal > 0;
+        // Update URL hash for sharing
+        if (filter === 'all') {
+          history.replaceState(null, '', location.pathname);
+        } else {
+          history.replaceState(null, '', '#' + filter);
+        }
+      }
+
+      pills.forEach(p => p.addEventListener('click', () => {
+        pills.forEach(x => x.classList.remove('active'));
+        p.classList.add('active');
+        apply(p.dataset.filter);
+      }));
+
+      // Apply hash on load
+      const initial = location.hash.replace('#','') || 'all';
+      const target = document.querySelector(`.pill[data-filter="${initial}"]`);
+      if (target) target.click();
+    })();
+  </script>
 </Base>
+
+<style>
+.filter-bar {
+  display: flex; flex-wrap: wrap; gap: .4rem;
+  padding: 1rem 0; margin: 1rem 0 2rem;
+  border-bottom: 1px solid var(--border);
+  position: sticky; top: 56px; z-index: 10;
+  background: rgba(250,247,242,.92);
+  backdrop-filter: saturate(180%) blur(10px);
+}
+.pill {
+  font-family: var(--font-sans); font-size: .82rem;
+  background: var(--bg-elev); color: var(--fg-muted);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: .35rem .85rem; cursor: pointer;
+  transition: all .15s;
+  display: inline-flex; align-items: center; gap: .35rem;
+}
+.pill:hover { border-color: var(--border-strong); color: var(--fg); }
+.pill.active {
+  background: var(--fg); color: var(--bg);
+  border-color: var(--fg);
+}
+.pill .cnt {
+  font-size: .72rem; opacity: .65;
+  font-variant-numeric: tabular-nums;
+}
+.pill.active .cnt { opacity: .8; }
+
+.game-grid.compact { gap: .65rem; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+.game-grid.compact .game-card { padding: .8rem .9rem; gap: .75rem; }
+.game-grid.compact .game-card .icon { flex-basis: 56px; width: 56px; height: 56px; border-radius: 12px; }
+.game-grid.compact .game-card .name { font-size: .98rem; }
+.game-grid.compact .game-card .dev { font-size: .78rem; margin-bottom: .4rem; }
+
+details.reveal { margin: 0; padding: 0; background: transparent; border: 0; }
+details.reveal > summary {
+  font-family: var(--font-sans); font-size: .88rem; color: var(--fg-muted);
+  padding: .6rem 0; margin-bottom: .5rem;
+  border-bottom: 1px dashed var(--border);
+}
+details.reveal[open] > summary { margin-bottom: 1rem; }
+
+.empty-msg {
+  text-align: center; padding: 3rem 1rem;
+  color: var(--fg-muted); font-family: var(--font-serif);
+}
+</style>

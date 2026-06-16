@@ -1,0 +1,121 @@
+---
+// Email capture — Cloudflare Pages Forms (data-static-form-name).
+// Submissions appear in Cloudflare dashboard → Pages → Forms.
+// variant: "hero" | "inline" | "page"
+const { variant = "inline", source = "unknown" } = Astro.props
+const headlines = {
+  hero:   "Get tomorrow's iOS games in your inbox",
+  inline: "Never miss a launch like this",
+  page:   "Daily iOS Games — by email",
+}
+const subs = {
+  hero:   "One short email every morning with the day's new US App Store game releases and notable updates. No spam, unsubscribe anytime.",
+  inline: "Subscribe and get the next day's new releases delivered before you open the App Store.",
+  page:   "Every morning, the complete list of yesterday's US App Store new game releases and meaningful updates — curated, structured, and read in under a minute. Free, forever.",
+}
+---
+<section class={`sub-box sub-${variant}`}>
+  <div class="sub-inner">
+    <div class="sub-copy">
+      <div class="eyebrow">📬 Newsletter</div>
+      <h2>{headlines[variant]}</h2>
+      <p>{subs[variant]}</p>
+    </div>
+    <form
+      class="sub-form"
+      data-static-form-name="newsletter"
+      method="POST"
+      action="/subscribe/thanks/"
+    >
+      <input type="hidden" name="source" value={source} />
+      <label class="visually-hidden" for={`email-${variant}`}>Email address</label>
+      <input
+        id={`email-${variant}`}
+        type="email"
+        name="email"
+        placeholder="your@email.com"
+        autocomplete="email"
+        required
+      />
+      <button type="submit">Subscribe</button>
+    </form>
+    <p class="sub-fineprint">Free · One email/day · One-click unsubscribe</p>
+  </div>
+</section>
+
+<style>
+.sub-box {
+  margin: 3rem 0;
+  padding: 2rem 1.75rem;
+  background: var(--bg-elev);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: 0 1px 2px rgba(31,29,26,.04);
+}
+.sub-hero {
+  background: linear-gradient(180deg, #fdfaf3 0%, var(--bg-elev) 100%);
+  border-color: var(--border-strong);
+}
+.sub-page {
+  padding: 3rem 2rem;
+  max-width: 600px;
+  margin: 0 auto;
+}
+.sub-inner { max-width: 560px; margin: 0 auto; text-align: center; }
+.sub-copy h2 {
+  margin: .25rem 0 .75rem;
+  font-size: clamp(1.4rem, 3vw, 1.75rem);
+}
+.sub-copy p {
+  color: var(--fg-muted);
+  font-family: var(--font-serif);
+  font-size: 1.02rem; line-height: 1.55;
+  max-width: 46ch; margin: 0 auto 1.5rem;
+}
+.eyebrow {
+  text-transform: uppercase; letter-spacing: .12em;
+  font-size: .72rem; font-weight: 600;
+  color: var(--accent-ink); margin-bottom: .5rem;
+}
+.sub-form {
+  display: flex; gap: .5rem;
+  max-width: 440px; margin: 0 auto;
+}
+.sub-form input[type="email"] {
+  flex: 1; min-width: 0;
+  padding: .75rem 1rem;
+  font-family: var(--font-sans); font-size: 1rem;
+  background: var(--bg);
+  border: 1px solid var(--border-strong);
+  border-radius: 10px;
+  color: var(--fg);
+  transition: border-color .15s, box-shadow .15s;
+}
+.sub-form input[type="email"]:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(193,95,60,.15);
+}
+.sub-form button {
+  padding: .75rem 1.25rem;
+  background: var(--fg); color: var(--bg);
+  font-family: var(--font-sans); font-size: 1rem; font-weight: 500;
+  border: 0; border-radius: 10px;
+  cursor: pointer;
+  transition: opacity .15s;
+  white-space: nowrap;
+}
+.sub-form button:hover { opacity: .88; }
+.sub-fineprint {
+  font-size: .78rem; color: var(--fg-subtle);
+  margin: 1rem 0 0;
+}
+.visually-hidden {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0,0,0,0); border: 0;
+}
+@media (max-width: 540px) {
+  .sub-form { flex-direction: column; }
+  .sub-form button { width: 100%; }
+}
+</style>

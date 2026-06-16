@@ -1,0 +1,25 @@
+---
+import Base from "../../layouts/Base.astro"
+const SITE_NAME = import.meta.env.PUBLIC_SITE_NAME || "Daily iOS Games"
+---
+<Base
+  title={`Subscribed — ${SITE_NAME}`}
+  description="You're on the list."
+  robots="noindex,follow"
+>
+  <section style="max-width:520px; margin: 4rem auto; text-align:center;">
+    <div style="font-size:3rem; margin-bottom: 1rem;">✓</div>
+    <h1 style="margin-bottom:.75rem;">You're on the list</h1>
+    <p class="lead" style="margin:0 auto 2rem;">
+      Thanks for subscribing. Your first email will arrive tomorrow morning with the
+      latest US App Store game releases and updates.
+    </p>
+    <p style="color:var(--fg-muted); font-size:.95rem;">
+      In the meantime, browse <a href="/games/">today's tracked games</a>
+      or learn about <a href="/methodology/">how we track them</a>.
+    </p>
+    <p style="margin-top:3rem;">
+      <a href="/" style="display:inline-block; padding:.7rem 1.4rem; background:var(--fg); color:var(--bg); border-radius:10px; border:0; font-weight:500;">← Back to homepage</a>
+    </p>
+  </section>
+</Base>

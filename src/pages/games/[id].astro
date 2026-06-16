@@ -3,6 +3,7 @@ import Base from "../../layouts/Base.astro"
 import Hero from "../../components/Hero.astro"
 import TrendSparkline from "../../components/TrendSparkline.astro"
 import Reviews from "../../components/Reviews.astro"
+import Subscribe from "../../components/Subscribe.astro"
 import fs from "node:fs"
 import path from "node:path"
 
@@ -123,6 +124,8 @@ function capitalize(s){ return (s||"").replace(/(^|-)\w/g, c => c.toUpperCase())
     <h2 style="margin-top:0">Download {game.name}</h2>
     <a class="cta" href={game.url} rel="nofollow noopener" target="_blank">Open on the App Store →</a>
   </section>
+
+  <Subscribe variant="inline" source={`game-${game.id}`} />
 
   <section>
     <h2>FAQ</h2>

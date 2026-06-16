@@ -1,5 +1,6 @@
 ---
 import Base from "../layouts/Base.astro"
+import Subscribe from "../components/Subscribe.astro"
 import fs from "node:fs"
 import path from "node:path"
 
@@ -35,6 +36,8 @@ function priceLabel(g){ const p = g.price; return (!p || p === "Free" || p === "
       <div class="stat"><span class="num">{enriched.all.length}</span><span class="lbl">Tracked total</span></div>
     </div>
   </section>
+
+  <Subscribe variant="hero" source="homepage-hero" />
 
   {newReleases.length > 0 && (
     <section>

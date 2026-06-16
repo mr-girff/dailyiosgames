@@ -1,0 +1,54 @@
+---
+const { title, description, canonical, robots = "index,follow", styleVars = "", bodyClass = "", image } = Astro.props
+const ADSENSE = import.meta.env.PUBLIC_ADSENSE_CLIENT
+const site = Astro.site?.toString().replace(/\/$/, "") || ""
+const ogImage = image || `${site}/og-default.png`
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="robots" content={robots} />
+    {canonical && <link rel="canonical" href={canonical} />}
+    <link rel="alternate" type="application/rss+xml" href="/rss.xml" title="Daily updates" />
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    {ogImage && <meta property="og:image" content={ogImage} />}
+    {canonical && <meta property="og:url" content={canonical} />}
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="/styles.css" />
+    {ADSENSE && (
+      <script async src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE}`} crossorigin="anonymous" data-loadafter="3000"></script>
+    )}
+    {styleVars && <style set:html={`:root{${styleVars}}`}></style>}
+  </head>
+  <body class={`themed ${bodyClass}`}>
+    <a href="#main" class="skip">Skip to content</a>
+    <header class="site-header">
+      <nav aria-label="Primary">
+        <a href="/" class="brand">{import.meta.env.PUBLIC_SITE_NAME || "Daily Games"}</a>
+        <ul>
+          <li><a href="/posts/">Daily</a></li>
+          <li><a href="/games/">Games</a></li>
+          <li><a href="/archetype/">Categories</a></li>
+          <li><a href="/about/">About</a></li>
+        </ul>
+      </nav>
+    </header>
+    <main id="main" class="site-main">
+      <slot />
+    </main>
+    <footer class="site-footer">
+      <p>Data: Apple iTunes RSS &amp; Lookup. Not affiliated with Apple.</p>
+      <p><a href="/about/">About</a> · <a href="/methodology/">Methodology</a> · <a href="/llms.txt">llms.txt</a> · <a href="/rss.xml">RSS</a></p>
+    </footer>
+  </body>
+</html>

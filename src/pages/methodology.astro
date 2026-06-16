@@ -1,0 +1,24 @@
+---
+import Base from "../layouts/Base.astro"
+---
+<Base title="Methodology" description="How we collect, classify, and rank the games on this site.">
+  <h1>Methodology</h1>
+
+  <h2>Data collection</h2>
+  <p>Every morning at 07:00 UTC, a scheduled job queries Apple's official iTunes RSS feeds for the US Games genre (<code>newapplications</code>, <code>topfreeapplications</code>, <code>topgrossingapplications</code>) and enriches each entry with the iTunes Lookup API. Raw data is committed to the public source repository.</p>
+
+  <h2>Classification</h2>
+  <p>Each game is classified into one of ~16 archetypes (match-3, idle, RPG, etc.) using a rule-based detector applied to the description and release notes. Where signal is strong enough (Google + YouTube Suggest combined ≥ 8), an LLM pass refines archetype, core loop, audience, and visual treatment.</p>
+
+  <h2>Indexing decisions</h2>
+  <p>Pages without organic demand signal AND without substantive metadata are marked <code>noindex,follow</code> to keep the site lean. Pages with no traffic after 30 days are removed (HTTP 410). We index quality, not quantity.</p>
+
+  <h2>Images</h2>
+  <p>App icons and screenshots are downloaded from Apple's CDN, converted to AVIF + WebP at multiple resolutions, and served from our own static host. Alt text describes the gameplay moment, not a generic "screenshot".</p>
+
+  <h2>Editorial limits</h2>
+  <p>Observations are derived from Apple's official metadata. We do not claim hands-on play unless explicitly stated. Red-flag warnings reflect patterns common to the mechanic, not personal experience.</p>
+
+  <h2>Update frequency</h2>
+  <p>Data refreshes once daily. Per-game pages rebuild automatically on each refresh. The full source code is open and the data feed is available as JSON.</p>
+</Base>

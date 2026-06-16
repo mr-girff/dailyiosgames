@@ -1,0 +1,17 @@
+---
+import Base from "../../layouts/Base.astro"
+import fs from "node:fs"
+import path from "node:path"
+const p = path.join(process.cwd(), "data/enriched.json")
+const data = fs.existsSync(p) ? JSON.parse(fs.readFileSync(p,"utf8")) : { all: [] }
+const counts = {}
+for (const g of data.all) counts[g.archetype] = (counts[g.archetype]||0)+1
+const list = Object.entries(counts).sort((a,b)=>b[1]-a[1])
+function cap(s){ return (s||"").replace(/(^|-)\w/g, c => c.toUpperCase()).replace(/-/g," ") }
+---
+<Base title="Game categories" description="Browse iOS games by mechanic.">
+  <h1>Categories</h1>
+  <ul>
+    {list.map(([a,n]) => <li><a href={`/archetype/${a}/`}>{cap(a)}</a> · {n} games</li>)}
+  </ul>
+</Base>

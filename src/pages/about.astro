@@ -1,0 +1,16 @@
+---
+import Base from "../layouts/Base.astro"
+---
+<Base title="About" description="What this site is and how it's built.">
+  <h1>About</h1>
+  <p>This site tracks every new game release and every notable top-chart update on the US Apple App Store, every day. Data is pulled from Apple's official iTunes RSS and Lookup APIs.</p>
+  <h2>How it works</h2>
+  <ul>
+    <li>A scheduled job fetches Apple's <code>newapplications</code>, <code>topfreeapplications</code>, and <code>topgrossingapplications</code> feeds for the Games genre.</li>
+    <li>Each app is enriched with the iTunes Lookup API for full metadata.</li>
+    <li>Keyword demand signals come from Google Suggest and YouTube Suggest.</li>
+    <li>Pages are statically generated with Astro and deployed to Cloudflare Pages.</li>
+  </ul>
+  <h2>Contact</h2>
+  <p>Open an issue on the source repository, or email the address listed in the site footer.</p>
+</Base>

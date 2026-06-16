@@ -1,0 +1,24 @@
+---
+import Base from "../../layouts/Base.astro"
+import { getCollection } from "astro:content"
+
+export async function getStaticPaths() {
+  const posts = await getCollection("posts")
+  return posts.map(p => ({ params: { slug: p.slug }, props: { post: p } }))
+}
+const { post } = Astro.props
+const { Content } = await post.render()
+---
+<Base title={post.data.title} description={post.data.description}>
+  <h1>{post.data.title}</h1>
+  <p><time datetime={post.data.pubDate.toISOString()}>{post.data.pubDate.toISOString().slice(0,10)}</time></p>
+  <Content />
+
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context":"https://schema.org",
+    "@type":"Article",
+    "headline": post.data.title,
+    "datePublished": post.data.pubDate.toISOString(),
+    "description": post.data.description,
+  })} />
+</Base>

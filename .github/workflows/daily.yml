@@ -1,0 +1,56 @@
+name: Daily Game Data
+on:
+  schedule:
+    - cron: "0 7 * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: "20", cache: "npm" }
+
+      - name: System deps for video pipeline
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg python3-pip
+          pip3 install --quiet edge-tts
+
+      - run: npm ci
+
+      - name: Fetch
+        run: npm run fetch
+
+      - name: Enrich
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          OPENAI_MODEL: gpt-4o-mini
+        run: npm run enrich
+
+      - name: Trends
+        run: npm run trends
+
+      - name: Images
+        run: npm run images
+
+      - name: Video teasers
+        run: npm run video
+        continue-on-error: true   # video gen is best-effort; never block deploy
+
+      - name: Sync reader reviews
+        env:
+          PUBLIC_REVIEWS_WORKER: ${{ vars.PUBLIC_REVIEWS_WORKER }}
+        run: npm run reviews
+
+      - name: Commit
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/ public/img/ public/video/ src/content/posts/
+          git diff --cached --quiet || git commit -m "data: daily refresh $(date -u +%F)"
+          git push

@@ -1,0 +1,71 @@
+---
+// Reader impressions. Read from data/reviews.json (pulled at build by scripts/reviews.mjs).
+// Falls back to a CTA inviting a first impression.
+import fs from "node:fs"
+import path from "node:path"
+const { gameId, gameName } = Astro.props
+const file = path.join(process.cwd(), "data/reviews.json")
+const all = fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, "utf8")) : {}
+const reviews = (all[gameId] || []).slice(0, 5)
+const formAction = import.meta.env.PUBLIC_REVIEWS_WORKER || ""  // your Cloudflare Worker URL
+---
+<section>
+  <h2>Reader impressions</h2>
+  {reviews.length > 0 ? (
+    <ul class="reviews">
+      {reviews.map(r => (
+        <li>
+          <blockquote>{r.text}</blockquote>
+          <p class="meta">— {r.author || "Anonymous reader"}, <time datetime={r.date}>{r.date}</time>{r.rating && <span> · {"★".repeat(r.rating)}</span>}</p>
+        </li>
+      ))}
+    </ul>
+  ) : (
+    <p class="empty">No reader impressions yet. Played <strong>{gameName}</strong>? Share a one-line take below.</p>
+  )}
+
+  {formAction ? (
+    <form class="rev-form" method="POST" action={formAction}>
+      <input type="hidden" name="gameId" value={gameId} />
+      <input type="hidden" name="gameName" value={gameName} />
+      <label>One-line impression
+        <textarea name="text" maxlength="280" required placeholder={`What did you think of ${gameName}?`}></textarea>
+      </label>
+      <label>Rating
+        <select name="rating">
+          <option value="">No rating</option>
+          <option value="5">★★★★★</option>
+          <option value="4">★★★★</option>
+          <option value="3">★★★</option>
+          <option value="2">★★</option>
+          <option value="1">★</option>
+        </select>
+      </label>
+      <label>Email (we'll send a magic link to confirm)
+        <input type="email" name="email" required autocomplete="email" />
+      </label>
+      <label class="opt">Display name (optional)
+        <input type="text" name="author" maxlength="40" />
+      </label>
+      <button type="submit">Submit for review</button>
+      <p class="caveat">We send one email to confirm you're a real person. No newsletter, no tracking. Confirmed reviews appear within 24 hours.</p>
+    </form>
+  ) : (
+    <p class="caveat">Reviews are not yet enabled on this site.</p>
+  )}
+</section>
+<style>
+.reviews { list-style: none; padding: 0; display: grid; gap: 1rem; }
+.reviews li { background: var(--muted); padding: 1rem; border-radius: 10px; }
+.reviews blockquote { margin: 0; border: none; padding: 0; font-style: normal; }
+.reviews .meta { font-size: .8rem; opacity: .7; margin: .5rem 0 0; }
+.empty { opacity: .8; }
+.rev-form { display: grid; gap: .65rem; margin-top: 1rem; padding: 1rem; background: var(--muted); border-radius: 10px; }
+.rev-form label { display: grid; gap: .25rem; font-size: .85rem; }
+.rev-form input, .rev-form textarea, .rev-form select {
+  font: inherit; padding: .5rem; border-radius: 6px; border: 1px solid color-mix(in oklab, var(--fg) 20%, transparent); background: var(--bg); color: var(--fg);
+}
+.rev-form textarea { min-height: 70px; resize: vertical; }
+.rev-form button { padding: .65rem 1rem; background: var(--accent); color: var(--bg); border: 0; border-radius: 8px; font-weight: 600; cursor: pointer; }
+.caveat { font-size: .75rem; opacity: .65; margin: .25rem 0 0; }
+</style>

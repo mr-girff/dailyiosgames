@@ -1,0 +1,10 @@
+name = "reviews-worker"
+main = "src/index.js"
+compatibility_date = "2024-11-01"
+
+# Run `wrangler kv:namespace create REVIEWS` and paste the id here
+[[kv_namespaces]]
+binding = "REVIEWS"
+id = "PASTE_KV_ID_HERE"
+
+# Set with: wrangler secret put RESEND_API_KEY / FROM_EMAIL / ALLOWED_ORIGINS / PUBLIC_BASE_URL

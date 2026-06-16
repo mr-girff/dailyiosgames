@@ -1,0 +1,14 @@
+---
+import Base from "../../layouts/Base.astro"
+import fs from "node:fs"
+import path from "node:path"
+const p = path.join(process.cwd(), "data/latest.json")
+const data = fs.existsSync(p) ? JSON.parse(fs.readFileSync(p,"utf8")) : { newReleases: [], updates: [] }
+const all = [...data.newReleases, ...data.updates]
+---
+<Base title="All Games" description="Every tracked iOS game on this site.">
+  <h1>All games ({all.length})</h1>
+  <ul>
+    {all.map(g => <li><a href={`/games/${g.id}/`}>{g.name}</a> — {g.seller}</li>)}
+  </ul>
+</Base>

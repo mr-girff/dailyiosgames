@@ -1,0 +1,42 @@
+---
+import Base from "../layouts/Base.astro"
+import fs from "node:fs"
+import path from "node:path"
+const dataPath = path.join(process.cwd(), "data/latest.json")
+const data = fs.existsSync(dataPath) ? JSON.parse(fs.readFileSync(dataPath, "utf8")) : { date: "n/a", newReleases: [], updates: [] }
+const SITE_NAME = import.meta.env.PUBLIC_SITE_NAME || "Daily New Games"
+const tagline = `Every US App Store new game release & top-chart update, every day. ${data.date}.`
+---
+<Base title={`${SITE_NAME} — US App Store Daily`} description={tagline}>
+  <h1>{SITE_NAME}</h1>
+  <p class="lead">{tagline}</p>
+  <p><strong>{data.newReleases.length}</strong> new games · <strong>{data.updates.length}</strong> updates today.</p>
+
+  <h2>Top new releases</h2>
+  <ul>
+    {data.newReleases.slice(0, 10).map(g => (
+      <li>
+        <a href={g.url} rel="nofollow noopener">{g.name}</a> — {g.seller} · {g.releaseDate}
+        {g.verdict === "build" && <span title="High keyword signal"> 🟢</span>}
+      </li>
+    ))}
+  </ul>
+
+  <h2>Top updates</h2>
+  <ul>
+    {data.updates.slice(0, 10).map(g => (
+      <li>
+        <a href={g.url} rel="nofollow noopener">{g.name}</a> — v{g.version} · {g.daysSinceUpdate}d ago
+      </li>
+    ))}
+  </ul>
+
+  <p><a href="/posts/">→ All daily reports</a></p>
+
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context":"https://schema.org",
+    "@type":"WebSite",
+    "name": SITE_NAME,
+    "url": Astro.site?.toString(),
+  })} />
+</Base>

@@ -1,0 +1,15 @@
+---
+import Base from "../../layouts/Base.astro"
+import { getCollection } from "astro:content"
+const posts = (await getCollection("posts")).sort((a,b)=> +b.data.pubDate - +a.data.pubDate)
+---
+<Base title="Daily Reports" description="Every daily US App Store game report.">
+  <h1>Daily reports</h1>
+  <ul>
+    {posts.map(p => (
+      <li>
+        <a href={`/posts/${p.slug}/`}>{p.data.title}</a>
+      </li>
+    ))}
+  </ul>
+</Base>

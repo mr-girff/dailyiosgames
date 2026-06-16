@@ -54,16 +54,21 @@ async function main() {
   const data = JSON.parse(await fs.readFile(SRC, "utf8"))
   const games = data.all.filter(g => g.indexDirective?.startsWith("index"))
   console.log(`Pulling trends for ${games.length} games`)
-  let ok = 0
+  let ok = 0, fail429 = 0
   for (const g of games) {
+    if (fail429 >= 8) {
+      console.log(`Aborting trends: ${fail429} consecutive 429s. Google Trends is blocking this IP. Skipping remaining ${games.length - games.indexOf(g)} games.`)
+      break
+    }
     try {
       const series = await pullTrend(g.name)
       const s = summarize(series)
-      if (s) { g.trends = s; ok++ }
-      await sleep(800)  // ~75 req/min — Trends usually tolerates this
+      if (s) { g.trends = s; ok++; fail429 = 0 }
+      await sleep(800)
     } catch (e) {
+      if (/429/.test(e.message)) fail429++; else fail429 = 0
       console.warn(`trend fail ${g.name}: ${e.message}`)
-      await sleep(2500)
+      await sleep(1500)
     }
   }
   await fs.writeFile(SRC, JSON.stringify(data, null, 2))

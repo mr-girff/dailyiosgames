@@ -34,6 +34,7 @@ jobs:
 
       - name: Trends
         run: npm run trends
+        continue-on-error: true   # Google Trends frequently blocks cloud IPs; non-fatal
 
       - name: Images
         run: npm run images

@@ -38,7 +38,7 @@ function growthLabel(g){
           <li>
             <a class="mover" href={`/games/${g.id}/`}>
               <span class="rank">{i + 1}</span>
-              {g.icon && <img class="icon" src={g.icon} alt={`${g.name} app icon`} width="48" height="48" loading="lazy" />}
+              {g.icon && <img class="icon" src={g.images?.icon?.src || g.icon} alt={`${g.name} app icon`} width="48" height="48" loading="lazy" />}
               <div class="meta">
                 <div class="name">{g.name}</div>
                 <div class="dev">{g.seller}{g.archetype ? ` · ${cap(g.archetype)}` : ""}</div>

@@ -23,7 +23,7 @@ export async function GET({ props, site }) {
     rating: g.rating, ratingCount: g.ratingCount,
     appStoreUrl: appStoreUrl(g),
     pageUrl: `${base}/games/${g.id}/`,
-    icon: g.images?.icon?.src ? `${base}${g.images.icon.src}` : null,
+    icon: g.images?.icon?.src ? (/^https?:\/\//.test(g.images.icon.src) ? g.images.icon.src : `${base}${g.images.icon.src}`) : (g.icon || null),
     teaserVideo: g.video?.mp4 ? `${base}${g.video.mp4}` : null,
     trends: g.trends ? { slopePct: g.trends.slopePct, recentAvg: g.trends.recentAvg } : null,
   }, null, 2), {

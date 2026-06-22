@@ -4,7 +4,7 @@
 import { appStoreUrl } from "../lib/appstore"
 const { game } = Astro.props
 const storeUrl = appStoreUrl(game)
-const icon = game.icon
+const icon = game.images?.icon?.src || game.icon
 const shots = Array.isArray(game.screenshots) ? game.screenshots.filter(Boolean) : []
 const price = game.price === "Free" || game.price === "0" ? "Free" : (game.price || "Free")
 function cap(s){ return (s||"").replace(/(^|-)\w/g, c => c.toUpperCase()).replace(/-/g," ") }

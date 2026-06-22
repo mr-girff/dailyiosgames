@@ -19,7 +19,7 @@ export async function GET({ site }) {
     rating: g.rating, ratingCount: g.ratingCount,
     appStoreUrl: appStoreUrl(g),
     pageUrl: `${base}/games/${g.id}/`,
-    icon: g.images?.icon?.src ? `${base}${g.images.icon.src}` : null,
+    icon: g.images?.icon?.src ? (/^https?:\/\//.test(g.images.icon.src) ? g.images.icon.src : `${base}${g.images.icon.src}`) : (g.icon || null),
     trendsSlopePct: g.trends?.slopePct ?? null,
     signal: g.signal ?? null,
   }))

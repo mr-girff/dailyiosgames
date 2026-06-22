@@ -1,0 +1,143 @@
+---
+import Base from "../layouts/Base.astro"
+import fs from "node:fs"
+import path from "node:path"
+
+const p = path.join(process.cwd(), "data/enriched.json")
+const data = fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, "utf8")) : { all: [] }
+const all = data.all || []
+
+const movers = all
+  .filter(g => typeof g.heatScore === "number" && g.heatScore > 0)
+  .sort((a, b) => (b.heatScore || 0) - (a.heatScore || 0))
+
+const surging = movers.filter(g => g.momentum === "surging").length
+const strong  = movers.filter(g => g.traction === "strong").length
+
+function cap(s){ return (s||"").replace(/(^|-)\w/g, c => c.toUpperCase()).replace(/-/g," ") }
+function priceLabel(g){ const p = g.price; return (!p || p === "Free" || p === "0") ? "Free" : p }
+function growthLabel(g){
+  const v = g.velocity?.rcGrowthPct
+  if (v == null) return null
+  return `+${v >= 1000 ? Math.round(v/1000)+"k" : v}% / 7d`
+}
+const MOMENTUM = {
+  surging: { label: "🔥 Surging", cls: "m-surging" },
+  rising:  { label: "📈 Rising",  cls: "m-rising"  },
+  steady:  { label: "Steady",     cls: "m-steady"  },
+  fading:  { label: "Fading",     cls: "m-fading"  },
+}
+const dateFmt = data.date ? new Date(data.date + "T00:00:00Z").toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" }) : ""
+const canonical = `${(Astro.site||"").toString().replace(/\/$/,"")}/movers/`
+---
+<Base
+  title="Rising iOS Games — Early Traction Radar"
+  description={`${movers.length} iOS games ranked by early-traction heat: download velocity, relative growth and chart momentum. ${surging} surging, ${strong} with strong traction. Updated ${dateFmt}.`}
+  canonical={canonical}
+>
+  <section class="hero-band">
+    <div class="eyebrow">Updated {dateFmt} · {movers.length} games tracked</div>
+    <h1>Rising iOS Games</h1>
+    <p class="lead">Which new and updated games are actually taking off — ranked by a heat score built from rating-count velocity, relative growth and chart momentum. Built for developers and scouts who want the signal before a game is obvious.</p>
+    <div class="stat-row">
+      <div class="stat"><span class="num">{surging}</span><span class="lbl">Surging</span></div>
+      <div class="stat"><span class="num">{strong}</span><span class="lbl">Strong traction</span></div>
+      <div class="stat"><span class="num">{movers.length}</span><span class="lbl">Total movers</span></div>
+    </div>
+  </section>
+
+  <div class="filters" role="tablist" aria-label="Filter movers">
+    <button class="pill active" data-filter="all" aria-pressed="true">All</button>
+    <button class="pill" data-filter="surging" aria-pressed="false">🔥 Surging</button>
+    <button class="pill" data-filter="strong" aria-pressed="false">Strong traction</button>
+    <button class="pill" data-filter="free" aria-pressed="false">Free</button>
+    <a class="pill ghost" href="/api/movers.json">Export JSON ↗</a>
+  </div>
+
+  <ol class="mover-list">
+    {movers.map((g, i) => {
+      const m = MOMENTUM[g.momentum] || MOMENTUM.steady
+      const gl = growthLabel(g)
+      const free = priceLabel(g) === "Free"
+      return (
+        <li data-momentum={g.momentum} data-traction={g.traction} data-free={free ? "1" : "0"}>
+          <a class="mover" href={`/games/${g.id}/`}>
+            <span class="rank">{i + 1}</span>
+            {g.icon && <img class="icon" src={g.images?.icon?.src || g.icon} alt={`${g.name} app icon`} width="48" height="48" loading={i < 8 ? "eager" : "lazy"} />}
+            <div class="meta">
+              <div class="name">{g.name}</div>
+              <div class="dev">{g.seller}{g.archetype ? ` · ${cap(g.archetype)}` : ""}</div>
+              <div class="badges">
+                <span class={`badge ${m.cls}`}>{m.label}</span>
+                {g.traction === "strong" && <span class="badge t-strong">Strong traction</span>}
+                {gl && <span class="badge grow">{gl}</span>}
+                <span class={`badge ${free ? "price-free" : ""}`}>{priceLabel(g)}</span>
+              </div>
+            </div>
+            <div class="heat" title="Heat score (0–100)">
+              <span class="heat-num">{g.heatScore}</span>
+              <span class="heat-lbl">heat</span>
+            </div>
+          </a>
+        </li>
+      )
+    })}
+  </ol>
+
+  <p class="caveat">Heat is a relative, cohort-normalized signal derived from our own daily App Store snapshots (rating count is a public proxy for downloads). Rank momentum becomes available as history accrues. Not affiliated with Apple.</p>
+
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context":"https://schema.org","@type":"ItemList",
+    "name":"Rising iOS Games",
+    "numberOfItems": movers.length,
+    "itemListElement": movers.slice(0, 20).map((g, i) => ({
+      "@type":"ListItem","position":i+1,"name":g.name,"url":`${(Astro.site||"")}games/${g.id}/`
+    }))
+  })} />
+</Base>
+
+<script is:inline>
+  const list = document.querySelector(".mover-list");
+  const pills = document.querySelectorAll(".filters .pill[data-filter]");
+  pills.forEach(btn => btn.addEventListener("click", () => {
+    pills.forEach(b => { b.classList.remove("active"); b.setAttribute("aria-pressed","false"); });
+    btn.classList.add("active"); btn.setAttribute("aria-pressed","true");
+    const f = btn.dataset.filter;
+    list.querySelectorAll("li").forEach(li => {
+      let show = true;
+      if (f === "surging") show = li.dataset.momentum === "surging";
+      else if (f === "strong") show = li.dataset.traction === "strong";
+      else if (f === "free") show = li.dataset.free === "1";
+      li.style.display = show ? "" : "none";
+    });
+  }));
+</script>
+
+<style>
+  .filters { display:flex; gap:.5rem; flex-wrap:wrap; margin:1.25rem 0; }
+  .pill { font-size:.85rem; padding:.35rem .85rem; border-radius:999px; border:1px solid var(--border, rgba(127,127,127,.25));
+    background:var(--muted); color:inherit; cursor:pointer; text-decoration:none; line-height:1.5; }
+  .pill.active { background:var(--accent); color:#fff; border-color:var(--accent); }
+  .pill.ghost { margin-left:auto; color:var(--fg-muted); }
+  .mover-list { list-style:none; padding:0; margin:1rem 0 0; display:grid; gap:.5rem; }
+  .mover { display:flex; align-items:center; gap:.75rem; padding:.6rem .75rem; border-radius:12px;
+    background:var(--muted); text-decoration:none; color:inherit; transition:background .15s; }
+  .mover:hover { background:var(--card-hover, rgba(127,127,127,.12)); }
+  .mover .rank { width:1.75rem; text-align:center; font-weight:700; color:var(--fg-muted); font-variant-numeric:tabular-nums; }
+  .mover .icon { border-radius:11px; flex:none; }
+  .mover .meta { flex:1; min-width:0; }
+  .mover .name { font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .mover .dev { font-size:.8rem; color:var(--fg-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .mover .badges { display:flex; gap:.35rem; flex-wrap:wrap; margin-top:.3rem; }
+  .badge { font-size:.68rem; padding:.1rem .45rem; border-radius:999px; line-height:1.5; white-space:nowrap; background:rgba(127,127,127,.12); }
+  .m-surging { background:rgba(255,99,71,.18); color:#ff6347; }
+  .m-rising  { background:rgba(92,214,133,.18); color:#3fae63; }
+  .m-steady, .m-fading { background:rgba(127,127,127,.15); color:var(--fg-muted); }
+  .t-strong  { background:rgba(255,165,0,.18); color:#d68a00; font-weight:600; }
+  .grow      { background:rgba(92,214,133,.12); color:#3fae63; font-variant-numeric:tabular-nums; }
+  .price-free { color:#3fae63; }
+  .mover .heat { text-align:center; flex:none; width:3rem; }
+  .mover .heat-num { display:block; font-weight:700; font-size:1.15rem; color:var(--accent); font-variant-numeric:tabular-nums; }
+  .mover .heat-lbl { display:block; font-size:.6rem; text-transform:uppercase; letter-spacing:.05em; color:var(--fg-muted); }
+  .caveat { font-size:.78rem; color:var(--fg-muted); margin-top:1.5rem; }
+</style>

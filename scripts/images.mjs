@@ -86,12 +86,21 @@ function altScreenshot(g, i) {
 }
 function truncate(s, n) { return s.length > n ? s.slice(0, n - 1) + "…" : s }
 
+// Run async tasks with bounded concurrency.
+async function pool(items, limit, worker) {
+  let i = 0
+  const runners = Array.from({ length: Math.min(limit, items.length) }, async () => {
+    while (i < items.length) { const idx = i++; await worker(items[idx], idx) }
+  })
+  await Promise.all(runners)
+}
+
 async function main() {
   const data = JSON.parse(await fs.readFile(SRC, "utf8"))
   const games = data.all.filter(g => g.indexDirective.startsWith("index")) // only for indexable pages
   console.log(`Processing ${games.length} indexable games (${USE_R2 ? "R2: " + R2_BUCKET : "local public/img"})`)
   let ok = 0
-  for (const g of games) {
+  await pool(games, USE_R2 ? 8 : 4, async (g) => {
     const images = { icon: null, screenshots: [] }
     try {
       if (g.icon) {
@@ -121,7 +130,7 @@ async function main() {
     } catch (e) {
       console.warn(`Image failed for ${g.name}:`, e.message)
     }
-  }
+  })
   await fs.writeFile(SRC, JSON.stringify(data, null, 2))
   console.log(`Images done. ${ok}/${games.length} games processed.`)
 }

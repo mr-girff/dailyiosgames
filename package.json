@@ -14,7 +14,7 @@
     "data":          "npm run fetch && npm run enrich && npm run velocity && npm run trends && npm run images && npm run video && npm run reviews",
     "data:cloudflare": "npm run fetch && npm run enrich && npm run velocity && npm run trends && npm run images && npm run reviews",
     "dev":           "astro dev",
-    "build":         "npm run data:cloudflare && astro build",
+    "build":         "astro build",
     "preview": "astro preview"
   },
   "dependencies": {

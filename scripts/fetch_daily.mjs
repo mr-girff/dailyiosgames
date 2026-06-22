@@ -62,6 +62,11 @@ async function main() {
   const allIds = [...new Set([...newIds, ...freeIds, ...grossIds])]
   const apps = await lookup(allIds)
 
+  // Chart position maps (1-based rank within each feed). Stored per game so a
+  // later step can compute rank momentum over time. Absent => not on that chart.
+  const rankIn = (ids) => { const m = new Map(); ids.forEach((id, i) => m.set(String(id), i + 1)); return m }
+  const newRank = rankIn(newIds), freeRank = rankIn(freeIds), grossRank = rankIn(grossIds)
+
   const now = Date.now(), DAY = 86400000
   const games = apps.filter(a => (a.genres || []).includes("Games"))
 
@@ -79,6 +84,11 @@ async function main() {
     ratingCount: a.userRatingCount || 0,
     size_mb: a.fileSizeBytes ? Math.round(+a.fileSizeBytes / 1024 / 1024) : null,
     url: a.trackViewUrl,
+    rank: {
+      new:      newRank.get(String(a.trackId))   ?? null,
+      free:     freeRank.get(String(a.trackId))  ?? null,
+      grossing: grossRank.get(String(a.trackId)) ?? null,
+    },
     icon: a.artworkUrl512 || a.artworkUrl100,
     screenshots: (a.screenshotUrls || []).slice(0, 4),
     desc: (a.description || "").slice(0, 1500),

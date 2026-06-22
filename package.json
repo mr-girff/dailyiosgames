@@ -6,12 +6,13 @@
   "scripts": {
     "fetch":   "node scripts/fetch_daily.mjs",
     "enrich":  "node scripts/enrich.mjs",
+    "velocity":"node scripts/velocity.mjs",
     "images":  "node scripts/images.mjs",
     "trends":  "node scripts/trends.mjs",
     "video":   "node scripts/video.mjs",
     "reviews": "node scripts/reviews.mjs",
-    "data":          "npm run fetch && npm run enrich && npm run trends && npm run images && npm run video && npm run reviews",
-    "data:cloudflare": "npm run fetch && npm run enrich && npm run trends && npm run images && npm run reviews",
+    "data":          "npm run fetch && npm run enrich && npm run velocity && npm run trends && npm run images && npm run video && npm run reviews",
+    "data:cloudflare": "npm run fetch && npm run enrich && npm run velocity && npm run trends && npm run images && npm run reviews",
     "dev":           "astro dev",
     "build":         "npm run data:cloudflare && astro build",
     "preview": "astro preview"

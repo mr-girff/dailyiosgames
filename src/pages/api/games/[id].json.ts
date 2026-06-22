@@ -1,6 +1,7 @@
 // Per-game JSON endpoint, CORS open.
 import fs from "node:fs"
 import path from "node:path"
+import { appStoreUrl } from "../../../lib/appstore"
 
 export async function getStaticPaths() {
   const p = path.join(process.cwd(), "data/enriched.json")
@@ -20,7 +21,7 @@ export async function GET({ props, site }) {
     competitors: g.competitors, version: g.version,
     releaseDate: g.releaseDate, currentVersionDate: g.currentVersionDate,
     rating: g.rating, ratingCount: g.ratingCount,
-    appStoreUrl: g.url,
+    appStoreUrl: appStoreUrl(g),
     pageUrl: `${base}/games/${g.id}/`,
     icon: g.images?.icon?.src ? `${base}${g.images.icon.src}` : null,
     teaserVideo: g.video?.mp4 ? `${base}${g.video.mp4}` : null,

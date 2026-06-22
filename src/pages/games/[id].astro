@@ -6,6 +6,7 @@ import Reviews from "../../components/Reviews.astro"
 import Subscribe from "../../components/Subscribe.astro"
 import fs from "node:fs"
 import path from "node:path"
+import { appStoreUrl } from "../../lib/appstore"
 
 export async function getStaticPaths() {
   const p = path.join(process.cwd(), "data/enriched.json")
@@ -15,6 +16,7 @@ export async function getStaticPaths() {
 }
 
 const { game, all } = Astro.props
+const storeUrl = appStoreUrl(game)
 const robots = game.indexDirective || "index,follow"
 const canonical = `${Astro.site || ""}games/${game.id}/`.replace(/\/+/g,"/").replace(":/","://")
 
@@ -123,7 +125,7 @@ function capitalize(s){ return (s||"").replace(/(^|-)\w/g, c => c.toUpperCase())
 
   <section class="cta-block">
     <h2 style="margin-top:0">Download {game.name}</h2>
-    <a class="cta" href={game.url} rel="nofollow noopener" target="_blank">Open on the App Store →</a>
+    <a class="cta" href={storeUrl} rel="nofollow noopener" target="_blank">Open on the App Store →</a>
   </section>
 
   <Subscribe variant="inline" source={`game-${game.id}`} />
@@ -159,7 +161,7 @@ function capitalize(s){ return (s||"").replace(/(^|-)\w/g, c => c.toUpperCase())
     "url": canonical,
     "image": game.icon,
     "publisher": { "@type":"Organization", "name": game.seller },
-    "offers": { "@type":"Offer", "price": game.price === "Free" ? "0" : (game.price || "").replace(/[^\d.]/g,"") || "0", "priceCurrency":"USD", "url": game.url },
+    "offers": { "@type":"Offer", "price": game.price === "Free" ? "0" : (game.price || "").replace(/[^\d.]/g,"") || "0", "priceCurrency":"USD", "url": storeUrl },
     ...(game.ratingCount ? { "aggregateRating": { "@type":"AggregateRating", "ratingValue": game.rating, "ratingCount": game.ratingCount }} : {}),
   })} />
   <script type="application/ld+json" set:html={JSON.stringify({

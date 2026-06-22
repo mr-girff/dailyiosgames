@@ -3,6 +3,7 @@
 
 import fs from "node:fs"
 import path from "node:path"
+import { appStoreUrl } from "../../lib/appstore"
 
 export async function GET({ site }) {
   const p = path.join(process.cwd(), "data/enriched.json")
@@ -16,7 +17,7 @@ export async function GET({ site }) {
     price: g.price, version: g.version,
     releaseDate: g.releaseDate, currentVersionDate: g.currentVersionDate,
     rating: g.rating, ratingCount: g.ratingCount,
-    appStoreUrl: g.url,
+    appStoreUrl: appStoreUrl(g),
     pageUrl: `${base}/games/${g.id}/`,
     icon: g.images?.icon?.src ? `${base}${g.images.icon.src}` : null,
     trendsSlopePct: g.trends?.slopePct ?? null,

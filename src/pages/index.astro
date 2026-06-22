@@ -1,6 +1,7 @@
 ---
 import Base from "../layouts/Base.astro"
 import Subscribe from "../components/Subscribe.astro"
+import Movers from "../components/Movers.astro"
 import fs from "node:fs"
 import path from "node:path"
 
@@ -38,6 +39,8 @@ function priceLabel(g){ const p = g.price; return (!p || p === "Free" || p === "
   </section>
 
   <Subscribe variant="hero" source="homepage-hero" />
+
+  <Movers games={enriched.all} limit={12} />
 
   {newReleases.length > 0 && (
     <section>

@@ -2,6 +2,7 @@
 import Base from "../../layouts/Base.astro"
 import Hero from "../../components/Hero.astro"
 import TrendSparkline from "../../components/TrendSparkline.astro"
+import HeatSparkline from "../../components/HeatSparkline.astro"
 import Reviews from "../../components/Reviews.astro"
 import Subscribe from "../../components/Subscribe.astro"
 import fs from "node:fs"
@@ -55,6 +56,21 @@ function capitalize(s){ return (s||"").replace(/(^|-)\w/g, c => c.toUpperCase())
   )}
 
   <p class="tldr"><strong>TL;DR</strong><br/>{description}</p>
+
+  {game.velocity?.rcSeries?.length >= 2 && (
+    <section>
+      <h2>Momentum</h2>
+      <div class="momentum-row">
+        {game.momentum && <span class={`mbadge m-${game.momentum}`}>{
+          { surging:"🔥 Surging", rising:"📈 Rising", steady:"Steady", fading:"Fading" }[game.momentum] || game.momentum
+        }</span>}
+        {game.traction === "strong" && <span class="mbadge t-strong">Strong traction</span>}
+        {typeof game.heatScore === "number" && <span class="mbadge heat">Heat {game.heatScore}/100</span>}
+      </div>
+      <HeatSparkline velocity={game.velocity} />
+      <p class="caveat">Rating count is a public proxy for downloads. Trajectory derived from our own daily App Store snapshots.</p>
+    </section>
+  )}
 
   {game.trends && (
     <section>
@@ -181,4 +197,14 @@ function capitalize(s){ return (s||"").replace(/(^|-)\w/g, c => c.toUpperCase())
       { "@type":"Question","name":"When was the last update?", "acceptedAnswer":{"@type":"Answer","text": `Version ${game.version} on ${game.currentVersionDate}.`}},
     ]
   })} />
+
+  <style>
+    .momentum-row { display:flex; gap:.5rem; flex-wrap:wrap; margin:.25rem 0 .5rem; }
+    .mbadge { font-size:.78rem; padding:.2rem .6rem; border-radius:999px; line-height:1.6; }
+    .mbadge.m-surging { background:rgba(255,99,71,.18); color:#ff6347; }
+    .mbadge.m-rising  { background:rgba(92,214,133,.18); color:#3fae63; }
+    .mbadge.m-steady, .mbadge.m-fading { background:rgba(127,127,127,.15); color:var(--fg-muted); }
+    .mbadge.t-strong  { background:rgba(255,165,0,.18); color:#d68a00; font-weight:600; }
+    .mbadge.heat      { background:rgba(127,127,127,.12); font-variant-numeric:tabular-nums; }
+  </style>
 </Base>

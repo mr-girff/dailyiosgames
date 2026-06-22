@@ -1,0 +1,48 @@
+---
+// Rating-count trajectory sparkline, server-rendered from velocity.rcSeries.
+// rating count is a public proxy for downloads; its slope is the "is it taking
+// off" signal. Renders nothing if there's no usable history yet.
+const { velocity } = Astro.props
+const series = velocity?.rcSeries || []
+if (series.length < 2) return null
+
+const w = 280, h = 60, pad = 4
+const vals = series.map(p => p.rc)
+const min = Math.min(...vals)
+const max = Math.max(...vals)
+const span = (max - min) || 1
+const stepX = (w - pad * 2) / (series.length - 1)
+const path = series.map((p, i) => {
+  const x = pad + i * stepX
+  const y = h - pad - ((p.rc - min) / span) * (h - pad * 2)
+  return `${i === 0 ? "M" : "L"}${x.toFixed(1)},${y.toFixed(1)}`
+}).join(" ")
+const lastX = pad + (series.length - 1) * stepX
+const lastY = h - pad - ((vals[vals.length - 1] - min) / span) * (h - pad * 2)
+
+const growth = velocity?.rcGrowthPct
+const up = (velocity?.rcVelocity || 0) > 0
+const growthTxt = growth == null ? null : `${growth >= 0 ? "+" : ""}${growth >= 1000 ? Math.round(growth/1000)+"k" : growth}%`
+const fmt = n => n >= 1000 ? (n/1000).toFixed(n >= 10000 ? 0 : 1) + "k" : String(n)
+---
+<figure class="heatspark">
+  <figcaption class="top">
+    <span>Rating count · last {series.length} days</span>
+    {growthTxt && <strong style={`color:${up ? '#3fae63' : '#e07070'}`}>{growthTxt} / 7d</strong>}
+  </figcaption>
+  <svg viewBox={`0 0 ${w} ${h}`} role="img"
+       aria-label={`Rating count trajectory over the last ${series.length} days${growthTxt ? `, ${growthTxt} over 7 days` : ""}`}>
+    <path d={path} fill="none" stroke="var(--accent)" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" />
+    <circle cx={lastX.toFixed(1)} cy={lastY.toFixed(1)} r="3" fill="var(--accent)" />
+  </svg>
+  <figcaption class="ends">
+    <span>{fmt(vals[0])}</span>
+    <span>{fmt(vals[vals.length - 1])} reviews</span>
+  </figcaption>
+</figure>
+<style>
+.heatspark { margin: .75rem 0; }
+.heatspark svg { width: 100%; max-width: 280px; height: auto; background: var(--muted); border-radius: 8px; padding: 4px; }
+.heatspark .top { display:flex; justify-content:space-between; gap:1rem; font-size:.78rem; max-width:280px; margin-bottom:.25rem; }
+.heatspark .ends { display:flex; justify-content:space-between; max-width:280px; font-size:.68rem; color:var(--fg-muted); margin-top:.15rem; }
+</style>

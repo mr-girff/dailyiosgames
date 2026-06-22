@@ -1,0 +1,87 @@
+---
+// "Today's Movers" — games ranked by heatScore (computed by velocity.mjs).
+// Surfaces small/mid games taking off early, not just incumbents.
+// Renders nothing until velocity data exists, so it degrades gracefully on
+// the first deploy before the daily pipeline has run the velocity step.
+const { games = [], limit = 12 } = Astro.props
+
+const ranked = games
+  .filter(g => typeof g.heatScore === "number" && g.heatScore > 0)
+  .sort((a, b) => (b.heatScore || 0) - (a.heatScore || 0))
+  .slice(0, limit)
+
+function cap(s){ return (s||"").replace(/(^|-)\w/g, c => c.toUpperCase()).replace(/-/g," ") }
+
+const MOMENTUM = {
+  surging: { label: "🔥 Surging", cls: "m-surging" },
+  rising:  { label: "📈 Rising",  cls: "m-rising"  },
+  steady:  { label: "Steady",     cls: "m-steady"  },
+  fading:  { label: "Fading",     cls: "m-fading"  },
+}
+function growthLabel(g){
+  const p = g.velocity?.rcGrowthPct
+  if (p == null) return null
+  return `+${p >= 1000 ? Math.round(p/1000)+"k" : p}% / 7d`
+}
+---
+{ranked.length > 0 && (
+  <section class="movers">
+    <div class="section-head">
+      <h2>Today's Movers</h2>
+      <span class="sub">Ranked by early-traction heat · {ranked.length} games</span>
+    </div>
+    <ol class="mover-list">
+      {ranked.map((g, i) => {
+        const m = MOMENTUM[g.momentum] || MOMENTUM.steady
+        const gl = growthLabel(g)
+        return (
+          <li>
+            <a class="mover" href={`/games/${g.id}/`}>
+              <span class="rank">{i + 1}</span>
+              {g.icon && <img class="icon" src={g.icon} alt={`${g.name} app icon`} width="48" height="48" loading="lazy" />}
+              <div class="meta">
+                <div class="name">{g.name}</div>
+                <div class="dev">{g.seller}{g.archetype ? ` · ${cap(g.archetype)}` : ""}</div>
+                <div class="badges">
+                  <span class={`badge ${m.cls}`}>{m.label}</span>
+                  {g.traction === "strong" && <span class="badge t-strong">Strong traction</span>}
+                  {gl && <span class="badge grow">{gl}</span>}
+                </div>
+              </div>
+              <div class="heat" title="Heat score (0–100)">
+                <span class="heat-num">{g.heatScore}</span>
+                <span class="heat-lbl">heat</span>
+              </div>
+            </a>
+          </li>
+        )
+      })}
+    </ol>
+  </section>
+)}
+
+<style>
+.movers { margin: 2rem 0; }
+.movers .section-head { display:flex; align-items:baseline; justify-content:space-between; gap:1rem; flex-wrap:wrap; }
+.movers .sub { font-size:.8rem; color:var(--fg-muted); }
+.mover-list { list-style:none; padding:0; margin:1rem 0 0; display:grid; gap:.5rem; }
+.mover { display:flex; align-items:center; gap:.75rem; padding:.6rem .75rem; border-radius:12px;
+  background:var(--muted); text-decoration:none; color:inherit; transition:background .15s; }
+.mover:hover { background:var(--card-hover, rgba(127,127,127,.12)); }
+.mover .rank { width:1.5rem; text-align:center; font-weight:700; color:var(--fg-muted); font-variant-numeric:tabular-nums; }
+.mover .icon { border-radius:11px; flex:none; }
+.mover .meta { flex:1; min-width:0; }
+.mover .name { font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.mover .dev { font-size:.8rem; color:var(--fg-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.mover .badges { display:flex; gap:.35rem; flex-wrap:wrap; margin-top:.3rem; }
+.badge { font-size:.68rem; padding:.1rem .45rem; border-radius:999px; line-height:1.5; white-space:nowrap; }
+.m-surging { background:rgba(255,99,71,.18); color:#ff6347; }
+.m-rising  { background:rgba(92,214,133,.18); color:#3fae63; }
+.m-steady  { background:rgba(127,127,127,.15); color:var(--fg-muted); }
+.m-fading  { background:rgba(127,127,127,.12); color:var(--fg-muted); }
+.t-strong  { background:rgba(255,165,0,.18); color:#d68a00; font-weight:600; }
+.grow      { background:rgba(92,214,133,.12); color:#3fae63; font-variant-numeric:tabular-nums; }
+.mover .heat { text-align:center; flex:none; width:3rem; }
+.mover .heat-num { display:block; font-weight:700; font-size:1.15rem; color:var(--accent); font-variant-numeric:tabular-nums; }
+.mover .heat-lbl { display:block; font-size:.6rem; text-transform:uppercase; letter-spacing:.05em; color:var(--fg-muted); }
+</style>

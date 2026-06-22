@@ -12,6 +12,8 @@ const ogImage = image || `${site}/og-default.png`
     <title>{title}</title>
     <meta name="description" content={description} />
     <meta name="robots" content={robots} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/favicon.svg" />
     {canonical && <link rel="canonical" href={canonical} />}
     <link rel="alternate" type="application/rss+xml" href="/rss.xml" title="Daily updates" />
     <link rel="alternate" type="application/rss+xml" href="/movers.xml" title="Rising iOS Games" />
@@ -35,7 +37,20 @@ const ogImage = image || `${site}/og-default.png`
     <a href="#main" class="skip">Skip to content</a>
     <header class="site-header">
       <nav aria-label="Primary">
-        <a href="/" class="brand">{import.meta.env.PUBLIC_SITE_NAME || "Daily Games"}</a>
+        <a href="/" class="brand" aria-label={import.meta.env.PUBLIC_SITE_NAME || "Daily iOS Games"}>
+          <svg class="brand-logo" width="30" height="30" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+            <defs>
+              <linearGradient id="brandg" x1="0" y1="0" x2="1" y2="1">
+                <stop offset="0" stop-color="#d97a4f"/>
+                <stop offset="1" stop-color="#b34a2a"/>
+              </linearGradient>
+            </defs>
+            <rect x="1" y="1" width="30" height="30" rx="8" fill="url(#brandg)"/>
+            <path d="M6.5 21.5 L12.5 14.5 L16.5 18 L24.5 9" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="24.8" cy="9" r="2.7" fill="#fff"/>
+          </svg>
+          <span class="brand-name">{import.meta.env.PUBLIC_SITE_NAME || "Daily iOS Games"}</span>
+        </a>
         <ul>
           <li><a href="/posts/">Daily</a></li>
           <li><a href="/movers/">Rising</a></li>
@@ -50,8 +65,29 @@ const ogImage = image || `${site}/og-default.png`
       <slot />
     </main>
     <footer class="site-footer">
-      <p>Data: Apple iTunes RSS &amp; Lookup. Not affiliated with Apple.</p>
-      <p><a href="/about/">About</a> · <a href="/methodology/">Methodology</a> · <a href="/llms.txt">llms.txt</a> · <a href="/rss.xml">RSS</a> · <a href="/movers.xml">Rising RSS</a></p>
+      <div class="foot-cols">
+        <div class="foot-brand">
+          <svg width="26" height="26" viewBox="0 0 32 32" aria-hidden="true">
+            <rect x="1" y="1" width="30" height="30" rx="8" fill="#c15f3c"/>
+            <path d="M6.5 21.5 L12.5 14.5 L16.5 18 L24.5 9" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="24.8" cy="9" r="2.7" fill="#fff"/>
+          </svg>
+          <span>{import.meta.env.PUBLIC_SITE_NAME || "Daily iOS Games"}</span>
+        </div>
+        <nav class="foot-nav" aria-label="Footer">
+          <a href="/movers/">Rising</a>
+          <a href="/games/">Games</a>
+          <a href="/archetype/">Categories</a>
+          <a href="/posts/">Daily reports</a>
+          <a href="/about/">About</a>
+          <a href="/team/">Team</a>
+          <a href="/methodology/">Methodology</a>
+          <a href="/privacy/">Privacy</a>
+          <a href="/rss.xml">RSS</a>
+          <a href="/movers.xml">Rising RSS</a>
+        </nav>
+      </div>
+      <p class="foot-fine">Data: Apple iTunes RSS &amp; Lookup APIs. Heat scores are our own estimates. Not affiliated with, endorsed by, or sponsored by Apple Inc. iOS and App Store are trademarks of Apple Inc.</p>
     </footer>
   </body>
 </html>

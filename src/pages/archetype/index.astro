@@ -5,13 +5,47 @@ import path from "node:path"
 const p = path.join(process.cwd(), "data/enriched.json")
 const data = fs.existsSync(p) ? JSON.parse(fs.readFileSync(p,"utf8")) : { all: [] }
 const counts = {}
-for (const g of data.all) counts[g.archetype] = (counts[g.archetype]||0)+1
+for (const g of data.all) counts[g.archetype || "other"] = (counts[g.archetype || "other"]||0)+1
 const list = Object.entries(counts).sort((a,b)=>b[1]-a[1])
+const total = data.all.length
 function cap(s){ return (s||"").replace(/(^|-)\w/g, c => c.toUpperCase()).replace(/-/g," ") }
+const site = Astro.site?.toString().replace(/\/$/, "") || ""
+// accent per archetype (mirrors body.theme-* in styles.css)
+const ACCENT = {
+  racing:"#c96442", puzzle:"#5b6b8c", rpg:"#5a7152", casino:"#b8893c", "match-3":"#b85a72",
+  shooter:"#666e7a", strategy:"#6a5f8c", arcade:"#c97862", action:"#b3503d", simulation:"#6e8a6a",
+  sports:"#4d7c8a", "casual-arcade":"#c97862", casual:"#c97862",
+}
+function accent(a){ return ACCENT[a] || "#c15f3c" }
 ---
-<Base title="Game categories" description="Browse iOS games by mechanic.">
-  <h1>Categories</h1>
-  <ul>
-    {list.map(([a,n]) => <li><a href={`/archetype/${a}/`}>{cap(a)}</a> · {n} games</li>)}
+<Base title="Game categories — Daily iOS Games" description={`Browse ${total} tracked iOS games across ${list.length} mechanics. New releases, recent updates and what makes each one different.`} canonical={`${site}/archetype/`}>
+  <section class="page-hero">
+    <div>
+      <div class="eyebrow">Browse by mechanic</div>
+      <h1>Categories</h1>
+      <p class="lead">{total} games across {list.length} categories. Pick a mechanic to see what's new, what's rising and what makes each title different.</p>
+    </div>
+    <svg class="art" viewBox="0 0 200 200" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+      <rect x="24" y="24" width="68" height="68" rx="16" fill="#c15f3c" opacity=".9"/>
+      <rect x="108" y="24" width="68" height="68" rx="16" fill="#5b6b8c" opacity=".85"/>
+      <rect x="24" y="108" width="68" height="68" rx="16" fill="#5a7152" opacity=".85"/>
+      <rect x="108" y="108" width="68" height="68" rx="16" fill="#b8893c" opacity=".85"/>
+    </svg>
+  </section>
+
+  <ul class="cat-grid">
+    {list.map(([a,n]) => (
+      <li>
+        <a class="cat-card" href={`/archetype/${a}/`}>
+          <span class="dot" style={`background:${accent(a)}1f`}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={accent(a)} stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="3 17 9 11 13 15 21 6"/></svg>
+          </span>
+          <span>
+            <span class="ct-name">{cap(a)}</span>
+            <span class="ct-count">{n} game{n===1?"":"s"}</span>
+          </span>
+        </a>
+      </li>
+    ))}
   </ul>
 </Base>

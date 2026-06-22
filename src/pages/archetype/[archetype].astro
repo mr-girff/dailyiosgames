@@ -8,30 +8,54 @@ export async function getStaticPaths() {
   if (!fs.existsSync(p)) return []
   const data = JSON.parse(fs.readFileSync(p, "utf8"))
   const byArch = {}
-  for (const g of data.all || []) (byArch[g.archetype] ||= []).push(g)
+  for (const g of data.all || []) (byArch[g.archetype || "other"] ||= []).push(g)
   return Object.entries(byArch).map(([archetype, games]) => ({ params: { archetype }, props: { archetype, games } }))
 }
 const { archetype, games } = Astro.props
-const title = `${cap(archetype)} games on the US App Store`
-const description = `${games.length} ${archetype} games tracked. Updated daily. Find new releases, recent updates, and what makes each one different.`
 function cap(s){ return (s||"").replace(/(^|-)\w/g, c => c.toUpperCase()).replace(/-/g," ") }
+const title = `${cap(archetype)} games on the US App Store`
+const description = `${games.length} ${cap(archetype)} games tracked daily. New releases, recent updates and rising titles — ranked by signal.`
+const site = Astro.site?.toString().replace(/\/$/, "") || ""
+const THEME = ["racing","puzzle","rpg","casino","match-3","shooter","strategy","arcade","action","simulation","sports"]
+const themeClass = THEME.includes(archetype) ? `theme-${archetype}` : ""
+const sorted = [...games].sort((a,b)=>(b.heatScore||0)-(a.heatScore||0) || (b.signal||0)-(a.signal||0))
+function priceLabel(g){ const p=g.price; return (!p||p==="Free"||p==="0")?"Free":p }
 ---
-<Base title={title} description={description} canonical={`${Astro.site}archetype/${archetype}/`}>
-  <h1>{cap(archetype)} games</h1>
-  <p class="lead">{description}</p>
-  <ul>
-    {games.sort((a,b)=>(b.signal||0)-(a.signal||0)).map(g => (
+<Base title={title} description={description} canonical={`${site}/archetype/${archetype}/`} bodyClass={themeClass}>
+  <nav class="crumbs"><a href="/archetype/">Categories</a> › {cap(archetype)}</nav>
+  <section class="page-hero">
+    <div>
+      <div class="eyebrow">Category · {games.length} games</div>
+      <h1>{cap(archetype)} games</h1>
+      <p class="lead">{description}</p>
+    </div>
+    <svg class="art" viewBox="0 0 200 200" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+      <rect x="30" y="30" width="140" height="140" rx="34" fill="var(--accent)" opacity=".12"/>
+      <path d="M55 130 L88 98 L110 116 L150 70" stroke="var(--accent)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      <circle cx="150" cy="70" r="8" fill="var(--accent)"/>
+    </svg>
+  </section>
+
+  <ol class="rank-list">
+    {sorted.map((g,i) => (
       <li>
-        <a href={`/games/${g.id}/`}><strong>{g.name}</strong></a> — {g.seller}
-        <small> · {g.sessionLength} · {g.monetization}{g.signal>=10?" · 🟢":""}</small>
+        <span class="rl-rank">{i+1}</span>
+        {(g.images?.icon?.src || g.icon) && <img class="rl-icon" src={g.images?.icon?.src || g.icon} alt={`${g.name} icon`} width="44" height="44" loading={i<8?"eager":"lazy"} />}
+        <span class="rl-body">
+          <span class="rl-name"><a href={`/games/${g.id}/`}>{g.name}</a></span>
+          <span class="rl-meta">{g.seller}{g.sessionLength ? ` · ${g.sessionLength}` : ""}{g.monetization ? ` · ${g.monetization}` : ""}</span>
+        </span>
+        {typeof g.heatScore === "number" && g.heatScore > 0 && <span class="rl-tag hot">heat {g.heatScore}</span>}
+        <span class="rl-tag">{priceLabel(g)}</span>
       </li>
     ))}
-  </ul>
+  </ol>
+
   <script type="application/ld+json" set:html={JSON.stringify({
     "@context":"https://schema.org","@type":"CollectionPage",
     "name": title, "description": description,
     "mainEntity": { "@type":"ItemList", "numberOfItems": games.length,
-      "itemListElement": games.slice(0,20).map((g,i)=>({ "@type":"ListItem","position":i+1,"name":g.name,"url":`${Astro.site}games/${g.id}/`}))
+      "itemListElement": sorted.slice(0,20).map((g,i)=>({ "@type":"ListItem","position":i+1,"name":g.name,"url":`${site}/games/${g.id}/`}))
     }
   })} />
 </Base>

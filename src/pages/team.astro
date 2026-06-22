@@ -1,0 +1,46 @@
+---
+import Base from "../layouts/Base.astro"
+const site = Astro.site?.toString().replace(/\/$/, "") || ""
+const team = [
+  { initials: "DR", name: "Data & Radar", role: "Pipeline", color: "#c15f3c",
+    bio: "Runs the daily collection pipeline, the heat-score model and the time-series store that powers the Rising radar." },
+  { initials: "ED", name: "Editorial", role: "Curation", color: "#5b6b8c",
+    bio: "Writes the daily reports, picks the titles worth a closer look and keeps category descriptions sharp." },
+  { initials: "PD", name: "Product & Design", role: "Experience", color: "#5a7152",
+    bio: "Shapes the pages, the data exports and the developer-facing tools — and keeps everything fast and readable." },
+]
+---
+<Base title="Team — Daily iOS Games" description="The small, independent team behind Daily iOS Games — the early-traction radar for the US App Store." canonical={`${site}/team/`}>
+  <section class="page-hero">
+    <div>
+      <div class="eyebrow">Who we are</div>
+      <h1>The team</h1>
+      <p class="lead">Daily iOS Games is an independent project run by a small group obsessed with how mobile games find their first players. We build in the open and let the data lead.</p>
+    </div>
+    <svg class="art" viewBox="0 0 200 200" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+      <circle cx="70" cy="78" r="30" fill="#c15f3c" opacity=".9"/>
+      <circle cx="130" cy="78" r="30" fill="#5b6b8c" opacity=".85"/>
+      <circle cx="100" cy="128" r="30" fill="#5a7152" opacity=".85"/>
+    </svg>
+  </section>
+
+  <ul class="team-grid">
+    {team.map(m => (
+      <li class="team-card">
+        <svg class="avatar" viewBox="0 0 76 76" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+          <circle cx="38" cy="38" r="38" fill={`${m.color}22`}/>
+          <text x="38" y="38" dy=".35em" text-anchor="middle" font-family="Source Serif 4, Georgia, serif" font-size="26" font-weight="600" fill={m.color}>{m.initials}</text>
+        </svg>
+        <div class="tm-name">{m.name}</div>
+        <div class="tm-role">{m.role}</div>
+        <p class="tm-bio">{m.bio}</p>
+      </li>
+    ))}
+  </ul>
+
+  <div class="prose" style="margin-top:2.5rem;">
+    <h2>Work with us</h2>
+    <p>Building a game and want to know how it's tracking, or scouting the next breakout? We'd love to hear what would be useful. Reach out via the source repository or the contact noted on the <a href="/about/">about page</a>.</p>
+    <p>See how we measure things in our <a href="/methodology/">methodology</a>, or read the latest <a href="/posts/">daily reports</a>.</p>
+  </div>
+</Base>

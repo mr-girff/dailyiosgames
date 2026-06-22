@@ -2,13 +2,34 @@
 import Base from "../../layouts/Base.astro"
 import { getCollection } from "astro:content"
 const posts = (await getCollection("posts")).sort((a,b)=> +b.data.pubDate - +a.data.pubDate)
+const site = Astro.site?.toString().replace(/\/$/, "") || ""
+function fmt(d){ return new Date(d).toLocaleDateString("en-US",{ month:"long", day:"numeric", year:"numeric", timeZone:"UTC" }) }
 ---
-<Base title="Daily Reports" description="Every daily US App Store game report.">
-  <h1>Daily reports</h1>
-  <ul>
+<Base title="Daily Reports — Daily iOS Games" description="Every daily US App Store games report: new releases, top-chart updates and the highest-signal title of the day." canonical={`${site}/posts/`}>
+  <section class="page-hero">
+    <div>
+      <div class="eyebrow">Archive · {posts.length} reports</div>
+      <h1>Daily reports</h1>
+      <p class="lead">A dated record of what shipped on the US App Store — new game releases, notable top-chart updates and the day's highest-signal title. One post per day.</p>
+    </div>
+    <svg class="art" viewBox="0 0 200 200" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+      <rect x="42" y="30" width="116" height="146" rx="14" fill="#fffdf8" stroke="#e0d6c2" stroke-width="2"/>
+      <rect x="62" y="22" width="76" height="20" rx="6" fill="#c15f3c"/>
+      <line x1="60" y1="70" x2="140" y2="70" stroke="#e0d6c2" stroke-width="4" stroke-linecap="round"/>
+      <line x1="60" y1="92" x2="124" y2="92" stroke="#ece3d3" stroke-width="4" stroke-linecap="round"/>
+      <line x1="60" y1="114" x2="140" y2="114" stroke="#ece3d3" stroke-width="4" stroke-linecap="round"/>
+      <line x1="60" y1="136" x2="110" y2="136" stroke="#ece3d3" stroke-width="4" stroke-linecap="round"/>
+    </svg>
+  </section>
+
+  <ul class="post-cards">
     {posts.map(p => (
       <li>
-        <a href={`/posts/${p.slug}/`}>{p.data.title}</a>
+        <a class="post-card" href={`/posts/${p.slug}/`}>
+          <span class="pc-date">{fmt(p.data.pubDate)}</span>
+          <div class="pc-title">{p.data.title}</div>
+          {p.data.description && <p class="pc-desc">{p.data.description}</p>}
+        </a>
       </li>
     ))}
   </ul>

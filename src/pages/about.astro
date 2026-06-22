@@ -1,16 +1,68 @@
 ---
 import Base from "../layouts/Base.astro"
+const site = Astro.site?.toString().replace(/\/$/, "") || ""
 ---
-<Base title="About" description="What this site is and how it's built.">
-  <h1>About</h1>
-  <p>This site tracks every new game release and every notable top-chart update on the US Apple App Store, every day. Data is pulled from Apple's official iTunes RSS and Lookup APIs.</p>
-  <h2>How it works</h2>
-  <ul>
-    <li>A scheduled job fetches Apple's <code>newapplications</code>, <code>topfreeapplications</code>, and <code>topgrossingapplications</code> feeds for the Games genre.</li>
-    <li>Each app is enriched with the iTunes Lookup API for full metadata.</li>
-    <li>Keyword demand signals come from Google Suggest and YouTube Suggest.</li>
-    <li>Pages are statically generated with Astro and deployed to Cloudflare Pages.</li>
-  </ul>
-  <h2>Contact</h2>
-  <p>Open an issue on the source repository, or email the address listed in the site footer.</p>
+<Base title="About — Daily iOS Games" description="An early-traction radar for the US App Store: every new game and notable update, ranked daily by a heat score built from download velocity and chart momentum." canonical={`${site}/about/`}>
+  <section class="page-hero">
+    <div>
+      <div class="eyebrow">About</div>
+      <h1>An early-traction radar for iOS games</h1>
+      <p class="lead">We track every new game release and every notable top-chart move on the US Apple App Store — every day — and rank them by a heat score that surfaces what's taking off before it's obvious.</p>
+    </div>
+    <svg class="art" viewBox="0 0 200 200" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="a1" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="#c15f3c"/><stop offset="1" stop-color="#e0a06f"/></linearGradient>
+      </defs>
+      <circle cx="100" cy="100" r="92" fill="#f1ebde"/>
+      <circle cx="100" cy="100" r="62" fill="none" stroke="#e0d6c2" stroke-width="1.5"/>
+      <circle cx="100" cy="100" r="32" fill="none" stroke="#e0d6c2" stroke-width="1.5"/>
+      <path d="M40 140 L78 104 L104 124 L160 64" stroke="url(#a1)" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      <circle cx="160" cy="64" r="8" fill="#c15f3c"/>
+      <circle cx="78" cy="104" r="4.5" fill="#c15f3c"/>
+      <circle cx="104" cy="124" r="4.5" fill="#c15f3c"/>
+    </svg>
+  </section>
+
+  <div class="prose">
+    <h2>How it works</h2>
+    <ol class="step-grid">
+      <li>
+        <div class="step-ico" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.2-8.6"/><polyline points="21 3 21 9 15 9"/></svg>
+        </div>
+        <h3>1 · Collect, daily</h3>
+        <p>A scheduled job pulls Apple's <code>new</code>, <code>top free</code> and <code>top grossing</code> Games feeds, then enriches every app via the iTunes Lookup API.</p>
+      </li>
+      <li>
+        <div class="step-ico" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="3" x2="3" y2="21"/><line x1="3" y1="21" x2="21" y2="21"/><polyline points="7 14 11 10 14 13 19 7"/></svg>
+        </div>
+        <h3>2 · Measure velocity</h3>
+        <p>Each day's snapshot is stored as a time series. We compute rating-count velocity, relative growth and chart momentum from the accumulating history.</p>
+      </li>
+      <li>
+        <div class="step-ico" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a7 7 0 0 0-4 12.7V17a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-2.3A7 7 0 0 0 12 2Z"/><line x1="9" y1="22" x2="15" y2="22"/></svg>
+        </div>
+        <h3>3 · Score the heat</h3>
+        <p>A cohort-normalized 0–100 heat score weights small, fast-rising games over incumbents — so genuine discoveries outrank the usual giants.</p>
+      </li>
+      <li>
+        <div class="step-ico" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 11a9 9 0 0 1 9 9"/><path d="M4 4a16 16 0 0 1 16 16"/><circle cx="5" cy="19" r="1.5"/></svg>
+        </div>
+        <h3>4 · Publish &amp; export</h3>
+        <p>Everything is statically generated with Astro on Cloudflare Pages, with a <a href="/movers.xml">Rising RSS feed</a> and a <a href="/api/movers.json">JSON export</a>.</p>
+      </li>
+    </ol>
+
+    <h2>Who it's for</h2>
+    <p>Indie developers, studio scouts and investors who want the signal early — which mechanics are heating up, which fresh titles are pulling downloads, and which studios to watch. Players are welcome too: the <a href="/movers/">Rising</a> and <a href="/games/">Games</a> pages are a fast way to find what's actually new and good.</p>
+
+    <h2>What the heat score is — and isn't</h2>
+    <p>Heat is our own estimate, derived from public App Store signals (rating count is a proxy for downloads). It's a relative, comparative indicator — not an official Apple metric, not a download count, and not investment advice. Rank momentum sharpens as our history deepens.</p>
+
+    <h2>Contact</h2>
+    <p>Questions, corrections or partnership ideas? Open an issue on the source repository, or reach the team via the <a href="/team/">team page</a>. See also our <a href="/methodology/">methodology</a> and <a href="/privacy/">privacy policy</a>.</p>
+  </div>
 </Base>

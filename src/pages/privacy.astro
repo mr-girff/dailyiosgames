@@ -1,0 +1,55 @@
+---
+import Base from "../layouts/Base.astro"
+const site = Astro.site?.toString().replace(/\/$/, "") || ""
+const updated = "June 2026"
+---
+<Base title="Privacy Policy — Daily iOS Games" description="How Daily iOS Games handles data and privacy. We don't sell personal data; we publish aggregated public App Store information." canonical={`${site}/privacy/`} robots="index,follow">
+  <section class="page-hero">
+    <div>
+      <div class="eyebrow">Legal · Updated {updated}</div>
+      <h1>Privacy policy</h1>
+      <p class="lead">Short version: we publish aggregated, public App Store information. We don't sell your personal data, and we collect as little as possible.</p>
+    </div>
+    <svg class="art" viewBox="0 0 200 200" fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">
+      <path d="M100 26 L160 50 V104 C160 142 132 166 100 176 C68 166 40 142 40 104 V50 Z" fill="#f1ebde" stroke="#e0d6c2" stroke-width="2"/>
+      <path d="M76 100 L94 118 L128 80" stroke="#c15f3c" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    </svg>
+  </section>
+
+  <div class="prose">
+    <h2>What we collect</h2>
+    <ul class="step-grid">
+      <li>
+        <h3>Public App Store data</h3>
+        <p>We aggregate publicly available metadata from Apple's iTunes RSS and Lookup APIs (titles, developers, ratings, release dates). This is about apps, not about you.</p>
+      </li>
+      <li>
+        <h3>Basic analytics</h3>
+        <p>Our host (Cloudflare) records standard, aggregated request logs (page, country, timing) to keep the site fast and secure. These are not used to identify individuals.</p>
+      </li>
+      <li>
+        <h3>Subscriptions you opt into</h3>
+        <p>If you subscribe to updates, we store only the address you give us, solely to send what you asked for. Unsubscribe any time.</p>
+      </li>
+    </ul>
+
+    <h2>Cookies &amp; advertising</h2>
+    <p>The core site sets no tracking cookies. If advertising is enabled, third-party ad partners (e.g. Google AdSense) may use cookies to serve and measure ads; you can manage these via your browser settings and <a href="https://adssettings.google.com" rel="nofollow noopener" target="_blank">Google Ad Settings</a>.</p>
+
+    <h2>What we don't do</h2>
+    <ul>
+      <li>We don't sell or rent personal data.</li>
+      <li>We don't build advertising profiles ourselves.</li>
+      <li>We don't require an account to read the site.</li>
+    </ul>
+
+    <h2>Your choices</h2>
+    <p>You can browse without providing any personal information, unsubscribe from emails at any time, and request deletion of any address you've shared with us. To make a request, contact us via the <a href="/team/">team page</a>.</p>
+
+    <h2>Third parties</h2>
+    <p>Outbound links (including App Store links) lead to services with their own privacy policies. We're not responsible for their practices. We are not affiliated with Apple Inc.</p>
+
+    <h2>Changes</h2>
+    <p>We'll update this page when our practices change and revise the date above. Last updated {updated}.</p>
+  </div>
+</Base>

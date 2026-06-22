@@ -32,6 +32,26 @@ jobs:
           OPENAI_MODEL: gpt-4o-mini
         run: npm run enrich
 
+      - name: Sanity check (guard against empty/broken data)
+        run: |
+          node -e '
+            const fs = require("fs");
+            const MIN = 50; // site has been ~130; 50 = generous floor
+            const d = JSON.parse(fs.readFileSync("data/enriched.json", "utf8"));
+            const n = (d.all || []).length;
+            const today = new Date().toISOString().slice(0,10);
+            if (n < MIN) {
+              console.error(`SANITY FAIL: enriched.json has ${n} games (< ${MIN}). Aborting before commit to protect data + site.`);
+              process.exit(1);
+            }
+            const snap = `data/${today}.json`;
+            if (!fs.existsSync(snap)) {
+              console.error(`SANITY FAIL: today snapshot ${snap} missing. Fetch likely failed.`);
+              process.exit(1);
+            }
+            console.log(`Sanity OK: ${n} games enriched, snapshot ${snap} present.`);
+          '
+
       - name: Velocity (heat signals from snapshot history)
         run: npm run velocity
 

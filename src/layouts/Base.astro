@@ -14,6 +14,7 @@ const ogImage = image || `${site}/og-default.png`
     <meta name="robots" content={robots} />
     {canonical && <link rel="canonical" href={canonical} />}
     <link rel="alternate" type="application/rss+xml" href="/rss.xml" title="Daily updates" />
+    <link rel="alternate" type="application/rss+xml" href="/movers.xml" title="Rising iOS Games" />
     <meta property="og:type" content={ogType} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
@@ -50,7 +51,7 @@ const ogImage = image || `${site}/og-default.png`
     </main>
     <footer class="site-footer">
       <p>Data: Apple iTunes RSS &amp; Lookup. Not affiliated with Apple.</p>
-      <p><a href="/about/">About</a> · <a href="/methodology/">Methodology</a> · <a href="/llms.txt">llms.txt</a> · <a href="/rss.xml">RSS</a></p>
+      <p><a href="/about/">About</a> · <a href="/methodology/">Methodology</a> · <a href="/llms.txt">llms.txt</a> · <a href="/rss.xml">RSS</a> · <a href="/movers.xml">Rising RSS</a></p>
     </footer>
   </body>
 </html>

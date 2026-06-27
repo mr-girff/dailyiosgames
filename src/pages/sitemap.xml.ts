@@ -2,10 +2,14 @@
 import fs from "node:fs"
 import path from "node:path"
 
-export async function GET({ site }) {
+// Canonical site URL — hardcoded to avoid Cloudflare Pages env overrides
+// pointing the sitemap at the old preview domain.
+const CANONICAL_SITE = "https://ios.querygame.com"
+
+export async function GET() {
   const p = path.join(process.cwd(), "data/enriched.json")
   const data = fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, "utf8")) : { all: [] }
-  const base = (site?.toString() || "https://ios.querygame.com").replace(/\/$/, "")
+  const base = CANONICAL_SITE
   const today = new Date().toISOString().slice(0, 10)
 
   const indexable = (data.all || []).filter(g => g.indexDirective?.startsWith("index"))

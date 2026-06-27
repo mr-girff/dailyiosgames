@@ -28,9 +28,6 @@
 }
 
 * { box-sizing: border-box; }
-/* Inline icon SVGs must never stretch to fill their flex/grid parent.
-   Any inline <svg> without explicit dimensions is constrained to icon size. */
-svg:not([width]):not([height]) { max-width: 32px; max-height: 32px; }
 html { scroll-behavior: smooth; }
 body.themed {
   margin: 0;

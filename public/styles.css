@@ -28,6 +28,9 @@
 }
 
 * { box-sizing: border-box; }
+/* Inline icon SVGs must never stretch to fill their flex/grid parent.
+   Any inline <svg> without explicit dimensions is constrained to icon size. */
+svg:not([width]):not([height]) { max-width: 32px; max-height: 32px; }
 html { scroll-behavior: smooth; }
 body.themed {
   margin: 0;
@@ -100,7 +103,7 @@ a:hover { border-bottom-color: currentColor; }
   align-items: center; justify-content: center;
 }
 .nav-toggle:hover { background: rgba(0,0,0,.04); }
-.nav-toggle__icon { width: 24px; height: 24px; display: block; }
+.nav-toggle__icon { width: 24px !important; height: 24px !important; display: block; }
 .nav-toggle__icon--close { display: none; }
 .nav-toggle[aria-expanded="true"] .nav-toggle__icon--open { display: none; }
 .nav-toggle[aria-expanded="true"] .nav-toggle__icon--close { display: block; }
@@ -171,7 +174,7 @@ a:hover { border-bottom-color: currentColor; }
   display: inline-flex; align-items: center; justify-content: center;
   z-index: 60;
 }
-.to-top svg { width: 22px; height: 22px; }
+.to-top svg { width: 22px !important; height: 22px !important; }
 .to-top--visible { opacity: 1; transform: translateY(0); pointer-events: auto; }
 @media (min-width: 1024px) { .to-top { display: none; } }
 
@@ -195,7 +198,7 @@ a:hover { border-bottom-color: currentColor; }
   display: inline-flex; align-items: center; gap: .4rem;
   margin-bottom: .4rem;
 }
-.keep-browsing__eyebrow svg { width: 14px; height: 14px; }
+.keep-browsing__eyebrow svg { width: 14px !important; height: 14px !important; flex: none; }
 .keep-browsing h3 {
   margin: 0 0 .9rem; font-size: 1.25rem; line-height: 1.3;
 }
@@ -224,7 +227,7 @@ a:hover { border-bottom-color: currentColor; }
   background: linear-gradient(135deg, #fde0d0, #f5b893);
   color: #a8401f;
 }
-.kb-card__icon svg { width: 22px; height: 22px; }
+.kb-card__icon svg { width: 22px !important; height: 22px !important; flex: none; }
 .kb-card__body { min-width: 0; }
 .kb-card__title {
   display: block; font-weight: 600; font-size: .98rem;

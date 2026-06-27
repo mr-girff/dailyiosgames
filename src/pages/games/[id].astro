@@ -5,6 +5,7 @@ import TrendSparkline from "../../components/TrendSparkline.astro"
 import HeatSparkline from "../../components/HeatSparkline.astro"
 import Reviews from "../../components/Reviews.astro"
 import Subscribe from "../../components/Subscribe.astro"
+import KeepBrowsing from "../../components/KeepBrowsing.astro"
 import fs from "node:fs"
 import path from "node:path"
 import { appStoreUrl } from "../../lib/appstore"
@@ -23,6 +24,22 @@ const canonical = `${Astro.site || ""}games/${game.id}/`.replace(/\/+/g,"/").rep
 
 const similar = (game.similar || []).map(s => all.find(g => g.id === s.id)).filter(Boolean).slice(0, 6)
 const sameStudio = all.filter(g => g.id !== game.id && g.seller === game.seller).slice(0, 4)
+
+// Prev / next within the same archetype, ranked by heat (then name)
+const sameArch = all
+  .filter(g => g.archetype === game.archetype && g.indexDirective?.startsWith("index"))
+  .sort((a, b) => (b.heatScore || 0) - (a.heatScore || 0) || (a.name || "").localeCompare(b.name || ""))
+const idx = sameArch.findIndex(g => g.id === game.id)
+const prevGame = idx > 0 ? sameArch[idx - 1] : null
+const nextGame = idx >= 0 && idx < sameArch.length - 1 ? sameArch[idx + 1] : null
+
+// "Keep browsing" card items (top of funnel into other site sections)
+const kbItems = [
+  { href: `/archetype/${game.archetype}/`, title: `More ${capitalize(game.archetype)} games`, sub: `${sameArch.length} tracked`, icon: "tag" },
+  { href: "/movers/", title: "Rising right now", sub: "Today's hottest movers", icon: "fire" },
+  { href: "/posts/",  title: "Today's daily report", sub: "Every new game on the US App Store", icon: "calendar" },
+  { href: "/games/",  title: "All tracked games",  sub: `${all.length} games`, icon: "list" },
+]
 
 const title = `${game.name} — ${capitalize(game.archetype)} game by ${game.seller}`
 const description = oneLine(`${game.name} is a ${game.archetype} game by ${game.seller}. ${game.uniqueHook || game.coreLoop || ""} Latest version ${game.version} (${game.currentVersionDate}). Rating ${game.rating || "n/a"} from ${game.ratingCount || 0} reviews.`)
@@ -153,6 +170,31 @@ function capitalize(s){ return (s||"").replace(/(^|-)\w/g, c => c.toUpperCase())
     <details><summary>Does {game.name} work offline?</summary><p>{game.tags?.includes("offline") ? "Yes, it supports offline play." : "Apple's listing does not explicitly mention offline support; an internet connection may be required."}</p></details>
     <details><summary>When was the last update?</summary><p>Version {game.version} was released on {game.currentVersionDate}, {game.daysSinceUpdate} day(s) ago.</p></details>
   </section>
+
+  <KeepBrowsing title="Don't stop here" eyebrow="Keep browsing" items={kbItems} />
+
+  {(prevGame || nextGame) && (
+    <nav class="prev-next" aria-label={`Other ${capitalize(game.archetype)} games`}>
+      {prevGame ? (
+        <a class="pn-prev" href={`/games/${prevGame.id}/`} rel="prev">
+          <span class="pn-dir">
+            <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+            Higher heat
+          </span>
+          <span class="pn-title">{prevGame.name}</span>
+        </a>
+      ) : <span></span>}
+      {nextGame ? (
+        <a class="pn-next" href={`/games/${nextGame.id}/`} rel="next">
+          <span class="pn-dir">
+            Lower heat
+            <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+          </span>
+          <span class="pn-title">{nextGame.name}</span>
+        </a>
+      ) : <span></span>}
+    </nav>
+  )}
 
   {game.video?.mp4 && (
     <script type="application/ld+json" set:html={JSON.stringify({

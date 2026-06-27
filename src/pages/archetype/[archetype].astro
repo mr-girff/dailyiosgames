@@ -1,5 +1,6 @@
 ---
 import Base from "../../layouts/Base.astro"
+import KeepBrowsing from "../../components/KeepBrowsing.astro"
 import fs from "node:fs"
 import path from "node:path"
 
@@ -9,9 +10,13 @@ export async function getStaticPaths() {
   const data = JSON.parse(fs.readFileSync(p, "utf8"))
   const byArch = {}
   for (const g of data.all || []) (byArch[g.archetype || "other"] ||= []).push(g)
-  return Object.entries(byArch).map(([archetype, games]) => ({ params: { archetype }, props: { archetype, games } }))
+  const allArchs = Object.keys(byArch)
+  return Object.entries(byArch).map(([archetype, games]) => ({
+    params: { archetype },
+    props: { archetype, games, allArchs, byArch }
+  }))
 }
-const { archetype, games } = Astro.props
+const { archetype, games, allArchs, byArch } = Astro.props
 function cap(s){ return (s||"").replace(/(^|-)\w/g, c => c.toUpperCase()).replace(/-/g," ") }
 const title = `${cap(archetype)} games on the US App Store`
 const description = `${games.length} ${cap(archetype)} games tracked daily. New releases, recent updates and rising titles — ranked by signal.`
@@ -50,6 +55,18 @@ function priceLabel(g){ const p=g.price; return (!p||p==="Free"||p==="0")?"Free"
       </li>
     ))}
   </ol>
+
+  {(() => {
+    const others = (allArchs || []).filter(a => a !== archetype)
+      .map(a => ({ a, n: (byArch[a] || []).length }))
+      .sort((x, y) => y.n - x.n).slice(0, 4)
+    const items = [
+      { href: "/movers/", title: "Rising games right now", sub: "Top of the heat board", icon: "fire" },
+      { href: "/games/",  title: "All tracked games",     sub: "Editor's picks + filters", icon: "list" },
+      ...others.map(o => ({ href: `/archetype/${o.a}/`, title: cap(o.a) + " games", sub: `${o.n} tracked`, icon: "tag" })),
+    ].slice(0, 6)
+    return <KeepBrowsing title={`Browse other categories`} eyebrow="Keep exploring" items={items} />
+  })()}
 
   <script type="application/ld+json" set:html={JSON.stringify({
     "@context":"https://schema.org","@type":"CollectionPage",

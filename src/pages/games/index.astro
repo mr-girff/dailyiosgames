@@ -1,5 +1,6 @@
 ---
 import Base from "../../layouts/Base.astro"
+import KeepBrowsing from "../../components/KeepBrowsing.astro"
 import fs from "node:fs"
 import path from "node:path"
 
@@ -238,6 +239,19 @@ function renderCard(g, eager=false) {
       if (target) target.click();
     })();
   </script>
+
+  <KeepBrowsing
+    title="Find more games to play"
+    eyebrow="Keep browsing"
+    items={[
+      { href: "/movers/", title: "Rising right now", sub: "Highest heat today", icon: "fire" },
+      { href: "/posts/",  title: "Daily reports",   sub: "Every morning's new releases", icon: "calendar" },
+      { href: "/archetype/", title: "Browse by category", sub: `${archetypes.length} archetypes`, icon: "grid" },
+      ...archetypes.slice(0, 3).map(([a, n]) => ({
+        href: `/archetype/${a}/`, title: cap(a) + " games", sub: `${n} tracked`, icon: "tag"
+      })),
+    ]}
+  />
 </Base>
 
 <style>

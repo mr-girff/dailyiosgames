@@ -91,13 +91,21 @@ const computedCanonical = canonical || `${site}${Astro.url.pathname}`
           </svg>
           <span class="brand-name">{SITE_NAME}</span>
         </a>
-        <ul>
+        <button class="nav-toggle" type="button" aria-controls="primary-menu" aria-expanded="false" aria-label="Open menu">
+          <svg class="nav-toggle__icon nav-toggle__icon--open" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+          <svg class="nav-toggle__icon nav-toggle__icon--close" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+            <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </button>
+        <ul id="primary-menu">
           <li><a href="/posts/">Daily</a></li>
           <li><a href="/movers/">Rising</a></li>
           <li><a href="/games/">Games</a></li>
           <li><a href="/archetype/">Categories</a></li>
           <li><a href="/about/">About</a></li>
-          <li><a href="/subscribe/" style="color:var(--accent-ink); font-weight:500;">Subscribe</a></li>
+          <li><a href="/subscribe/" class="nav-cta">Subscribe</a></li>
         </ul>
       </nav>
     </header>
@@ -129,5 +137,56 @@ const computedCanonical = canonical || `${site}${Astro.url.pathname}`
       </div>
       <p class="foot-fine">Data: Apple iTunes RSS &amp; Lookup APIs. Heat scores are our own estimates. Not affiliated with, endorsed by, or sponsored by Apple Inc. iOS and App Store are trademarks of Apple Inc.</p>
     </footer>
+
+    {/* Floating "back to top" button — appears after scroll on mobile */}
+    <button class="to-top" type="button" aria-label="Back to top">
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M12 19V5M5 12l7-7 7 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      </svg>
+    </button>
+
+    <script is:inline>
+      (function () {
+        // Mobile hamburger menu
+        var btn = document.querySelector(".nav-toggle");
+        var menu = document.getElementById("primary-menu");
+        var body = document.body;
+        function close() {
+          btn && btn.setAttribute("aria-expanded", "false");
+          body.classList.remove("nav-open");
+        }
+        if (btn && menu) {
+          btn.addEventListener("click", function () {
+            var open = btn.getAttribute("aria-expanded") === "true";
+            btn.setAttribute("aria-expanded", String(!open));
+            body.classList.toggle("nav-open", !open);
+          });
+          // Close on link click
+          menu.addEventListener("click", function (e) {
+            if (e.target.tagName === "A") close();
+          });
+          // Close on Escape
+          document.addEventListener("keydown", function (e) {
+            if (e.key === "Escape") close();
+          });
+        }
+
+        // Back-to-top + visibility
+        var top = document.querySelector(".to-top");
+        if (top) {
+          var on = false;
+          window.addEventListener("scroll", function () {
+            var should = window.scrollY > 600;
+            if (should !== on) {
+              on = should;
+              top.classList.toggle("to-top--visible", on);
+            }
+          }, { passive: true });
+          top.addEventListener("click", function () {
+            window.scrollTo({ top: 0, behavior: "smooth" });
+          });
+        }
+      })();
+    </script>
   </body>
 </html>

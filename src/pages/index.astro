@@ -2,6 +2,7 @@
 import Base from "../layouts/Base.astro"
 import Subscribe from "../components/Subscribe.astro"
 import Movers from "../components/Movers.astro"
+import KeepBrowsing from "../components/KeepBrowsing.astro"
 import fs from "node:fs"
 import path from "node:path"
 
@@ -145,6 +146,25 @@ function priceLabel(g){ const p = g.price; return (!p || p === "Free" || p === "
       </ul>
     </section>
   )}
+
+  {/* Top-level "keep browsing" — invite deeper exploration before footer */}
+  {(() => {
+    const topArchetypes = [...new Set(enriched.all.map(g => g.archetype).filter(Boolean))]
+      .map(a => ({ a, n: enriched.all.filter(g => g.archetype === a).length }))
+      .sort((x, y) => y.n - x.n).slice(0, 4)
+    const items = [
+      { href: "/movers/",    title: "Rising games",    sub: "Hot momentum, ranked",   icon: "fire" },
+      { href: "/posts/",     title: "Daily reports",   sub: "Every morning, the new releases", icon: "calendar" },
+      { href: "/games/",     title: "All tracked games", sub: `${enriched.all.length} games & growing`, icon: "list" },
+      ...topArchetypes.map(t => ({
+        href: `/archetype/${t.a}/`,
+        title: cap(t.a) + " games",
+        sub: `${t.n} tracked`,
+        icon: "tag",
+      })),
+    ].slice(0, 6)
+    return <KeepBrowsing title="Keep exploring" eyebrow="Don't miss" items={items} />
+  })()}
 
   <section>
     <p style="color:var(--fg-muted);font-size:.9rem;">

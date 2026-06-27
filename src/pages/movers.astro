@@ -1,5 +1,6 @@
 ---
 import Base from "../layouts/Base.astro"
+import KeepBrowsing from "../components/KeepBrowsing.astro"
 import fs from "node:fs"
 import path from "node:path"
 
@@ -86,6 +87,19 @@ const canonical = `${(Astro.site||"").toString().replace(/\/$/,"")}/movers/`
   </ol>
 
   <p class="caveat">Heat is a relative, cohort-normalized signal derived from our own daily App Store snapshots (rating count is a public proxy for downloads). Rank momentum becomes available as history accrues. Not affiliated with Apple.</p>
+
+  {(() => {
+    const topArchetypes = [...new Set(movers.map(g => g.archetype).filter(Boolean))]
+      .map(a => ({ a, n: movers.filter(g => g.archetype === a).length }))
+      .sort((x, y) => y.n - x.n).slice(0, 3)
+    const items = [
+      { href: "/posts/",  title: "Today's daily report", sub: "Every new release", icon: "calendar" },
+      { href: "/games/",  title: "All tracked games",   sub: `${all.length} games`, icon: "list" },
+      ...topArchetypes.map(t => ({ href: `/archetype/${t.a}/`, title: cap(t.a) + " games", sub: `${t.n} rising`, icon: "tag" })),
+      { href: "/about/",  title: "How heat is calculated", sub: "Methodology", icon: "star" },
+    ].slice(0, 6)
+    return <KeepBrowsing title="Where to go next" eyebrow="Keep exploring" items={items} />
+  })()}
 
   <script type="application/ld+json" set:html={JSON.stringify({
     "@context":"https://schema.org","@type":"ItemList",

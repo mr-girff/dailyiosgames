@@ -1,0 +1,49 @@
+---
+// KeepBrowsing — inline "keep reading" prompt card.
+// Use anywhere we want to give the reader a clear next step.
+//
+// Props:
+//   title?:   string — heading text
+//   eyebrow?: string — small uppercase label above heading
+//   items:    Array<{ href: string; title: string; sub?: string; icon?: string }>
+//     icon keys: "fire" | "calendar" | "grid" | "trend" | "tag" | "star" | "list"
+const {
+  title = "Keep browsing",
+  eyebrow = "You might also like",
+  items = [],
+} = Astro.props
+const ICONS = {
+  fire:     '<path d="M12 3s4 4 4 8a4 4 0 11-8 0c0-2 1-3 1-3s0 3 2 3c0-3-1-5 1-8z" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linejoin="round"/>',
+  calendar: '<rect x="3.5" y="5" width="17" height="15" rx="2.5" stroke="currentColor" stroke-width="1.6" fill="none"/><path d="M3.5 9.5h17M8 3.5v3M16 3.5v3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>',
+  grid:     '<rect x="3.5" y="3.5" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.6" fill="none"/><rect x="13.5" y="3.5" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.6" fill="none"/><rect x="3.5" y="13.5" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.6" fill="none"/><rect x="13.5" y="13.5" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="1.6" fill="none"/>',
+  trend:    '<path d="M4 17l5-5 4 3 7-8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/><path d="M20 7h-4M20 7v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>',
+  tag:      '<path d="M3.5 12.5L12 4h8v8l-8.5 8.5a2 2 0 01-2.83 0L3.5 15.3a2 2 0 010-2.83z" stroke="currentColor" stroke-width="1.6" fill="none"/><circle cx="15.5" cy="8.5" r="1.4" fill="currentColor"/>',
+  star:     '<path d="M12 3.5l2.7 5.6 6.1.9-4.4 4.3 1.05 6.1L12 17.5l-5.45 2.9L7.6 14.3 3.2 10l6.1-.9z" stroke="currentColor" stroke-width="1.6" fill="none" stroke-linejoin="round"/>',
+  list:     '<path d="M8 6h12M8 12h12M8 18h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><circle cx="4" cy="6" r="1.2" fill="currentColor"/><circle cx="4" cy="12" r="1.2" fill="currentColor"/><circle cx="4" cy="18" r="1.2" fill="currentColor"/>',
+}
+function iconSvg(key) { return ICONS[key] || ICONS.list }
+---
+<aside class="keep-browsing" aria-label={title}>
+  {eyebrow && (
+    <span class="keep-browsing__eyebrow">
+      <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+        <path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      </svg>
+      {eyebrow}
+    </span>
+  )}
+  <h3>{title}</h3>
+  <div class="kb-grid">
+    {items.filter(Boolean).slice(0, 6).map(it => (
+      <a class="kb-card" href={it.href}>
+        <span class="kb-card__icon">
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" set:html={iconSvg(it.icon)} />
+        </span>
+        <span class="kb-card__body">
+          <span class="kb-card__title">{it.title}</span>
+          {it.sub && <span class="kb-card__sub">{it.sub}</span>}
+        </span>
+      </a>
+    ))}
+  </div>
+</aside>

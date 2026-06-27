@@ -1,18 +1,61 @@
 ---
 import Base from "../../layouts/Base.astro"
+import KeepBrowsing from "../../components/KeepBrowsing.astro"
 import { getCollection } from "astro:content"
 
 export async function getStaticPaths() {
-  const posts = await getCollection("posts")
-  return posts.map(p => ({ params: { slug: p.slug }, props: { post: p } }))
+  const posts = (await getCollection("posts")).sort((a, b) => +b.data.pubDate - +a.data.pubDate)
+  return posts.map((p, i) => ({
+    params: { slug: p.slug },
+    props: {
+      post: p,
+      prev: posts[i + 1] || null, // older
+      next: posts[i - 1] || null, // newer
+    },
+  }))
 }
-const { post } = Astro.props
+const { post, prev, next } = Astro.props
 const { Content } = await post.render()
+function fmt(d){ return new Date(d).toLocaleDateString("en-US",{ month:"long", day:"numeric", year:"numeric", timeZone:"UTC" }) }
 ---
 <Base title={post.data.title} description={post.data.description}>
   <h1>{post.data.title}</h1>
   <p><time datetime={post.data.pubDate.toISOString()}>{post.data.pubDate.toISOString().slice(0,10)}</time></p>
   <Content />
+
+  {(prev || next) && (
+    <nav class="prev-next" aria-label="Other daily reports">
+      {next ? (
+        <a class="pn-prev" href={`/posts/${next.slug}/`} rel="next">
+          <span class="pn-dir">
+            <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+            Newer report
+          </span>
+          <span class="pn-title">{next.data.title}</span>
+        </a>
+      ) : <span></span>}
+      {prev ? (
+        <a class="pn-next" href={`/posts/${prev.slug}/`} rel="prev">
+          <span class="pn-dir">
+            Older report
+            <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M9 18l6-6-6-6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+          </span>
+          <span class="pn-title">{prev.data.title}</span>
+        </a>
+      ) : <span></span>}
+    </nav>
+  )}
+
+  <KeepBrowsing
+    title="Don't stop here"
+    eyebrow="Keep exploring"
+    items={[
+      { href: "/movers/", title: "Rising games right now", sub: "Heat-ranked movers",    icon: "fire" },
+      { href: "/games/",  title: "All tracked games",     sub: "Editor's picks + filters", icon: "list" },
+      { href: "/archetype/", title: "Browse by category", sub: "Match-3, puzzle, RPG…",  icon: "grid" },
+      { href: "/subscribe/", title: "Get tomorrow's report by email", sub: "One short morning email", icon: "calendar" },
+    ]}
+  />
 
   <script type="application/ld+json" set:html={JSON.stringify({
     "@context":"https://schema.org",

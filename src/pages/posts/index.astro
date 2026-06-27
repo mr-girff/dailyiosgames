@@ -1,5 +1,6 @@
 ---
 import Base from "../../layouts/Base.astro"
+import KeepBrowsing from "../../components/KeepBrowsing.astro"
 import { getCollection } from "astro:content"
 const posts = (await getCollection("posts")).sort((a,b)=> +b.data.pubDate - +a.data.pubDate)
 const site = Astro.site?.toString().replace(/\/$/, "") || ""
@@ -33,4 +34,15 @@ function fmt(d){ return new Date(d).toLocaleDateString("en-US",{ month:"long", d
       </li>
     ))}
   </ul>
+
+  <KeepBrowsing
+    title="Skip the timeline"
+    eyebrow="Keep browsing"
+    items={[
+      { href: "/movers/", title: "Rising games right now", sub: "Heat-ranked movers", icon: "fire" },
+      { href: "/games/",  title: "All tracked games",     sub: "Editor's picks + filters", icon: "list" },
+      { href: "/archetype/", title: "Browse by category", sub: "Match-3, puzzle, RPG and more", icon: "grid" },
+      { href: "/subscribe/", title: "Get tomorrow's report by email", sub: "One short morning email", icon: "calendar" },
+    ]}
+  />
 </Base>

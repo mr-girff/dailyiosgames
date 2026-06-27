@@ -5,7 +5,7 @@ import path from "node:path"
 export async function GET({ site }) {
   const p = path.join(process.cwd(), "data/enriched.json")
   const data = fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, "utf8")) : { all: [] }
-  const base = (site?.toString() || "https://example.com").replace(/\/$/, "")
+  const base = (site?.toString() || "https://ios.querygame.com").replace(/\/$/, "")
   const today = new Date().toISOString().slice(0, 10)
 
   const indexable = (data.all || []).filter(g => g.indexDirective?.startsWith("index"))

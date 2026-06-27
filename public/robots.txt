@@ -1,23 +1,44 @@
 User-agent: *
 Allow: /
 
+# Block low-value / non-content endpoints from crawl budget
+Disallow: /api/
+Disallow: /subscribe/thanks
+Disallow: /subscribe/thanks/
+Disallow: /video/
+Disallow: /*.json$
+
 # LLM crawlers — explicitly allowed (we want to be cited)
 User-agent: GPTBot
 Allow: /
+Disallow: /api/
 
 User-agent: ClaudeBot
 Allow: /
+Disallow: /api/
 
 User-agent: Claude-Web
 Allow: /
+Disallow: /api/
 
 User-agent: PerplexityBot
 Allow: /
+Disallow: /api/
 
 User-agent: Google-Extended
 Allow: /
+Disallow: /api/
 
 User-agent: CCBot
 Allow: /
+Disallow: /api/
 
-Sitemap: https://dailyiosgames.pages.dev/sitemap.xml
+# AdSense crawler — must be allowed everywhere ads may render
+User-agent: Mediapartners-Google
+Allow: /
+
+# AdsBot for landing page checks
+User-agent: AdsBot-Google
+Allow: /
+
+Sitemap: https://ios.querygame.com/sitemap.xml

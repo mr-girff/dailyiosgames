@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff5ee"/>
+      <stop offset="1" stop-color="#f7d9c4"/>
+    </linearGradient>
+    <linearGradient id="badge" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f0a07b"/>
+      <stop offset=".55" stop-color="#d97a4f"/>
+      <stop offset="1" stop-color="#a8401f"/>
+    </linearGradient>
+    <radialGradient id="glow" cx=".5" cy=".5" r=".6">
+      <stop offset="0" stop-color="#ffd3b8" stop-opacity=".9"/>
+      <stop offset="1" stop-color="#ffd3b8" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="8" stdDeviation="14" flood-color="#000" flood-opacity=".18"/>
+    </filter>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#bg)"/>
+
+  <!-- soft sun glow -->
+  <circle cx="980" cy="180" r="280" fill="url(#glow)"/>
+
+  <!-- floating game cards -->
+  <g filter="url(#softShadow)">
+    <rect x="780" y="140" width="160" height="160" rx="34" fill="#ffffff"/>
+    <rect x="788" y="148" width="144" height="144" rx="28" fill="#fde0d0"/>
+    <circle cx="860" cy="220" r="34" fill="#d97a4f"/>
+    <rect x="826" y="262" width="68" height="10" rx="5" fill="#c15f3c"/>
+  </g>
+  <g filter="url(#softShadow)" transform="rotate(-7 980 360)">
+    <rect x="900" y="300" width="160" height="160" rx="34" fill="#ffffff"/>
+    <rect x="908" y="308" width="144" height="144" rx="28" fill="#fff0e0"/>
+    <path d="M945 410 L985 360 L1015 390 L1055 340" stroke="#d97a4f" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  </g>
+  <g filter="url(#softShadow)" transform="rotate(6 760 460)">
+    <rect x="680" y="380" width="160" height="160" rx="34" fill="#ffffff"/>
+    <rect x="688" y="388" width="144" height="144" rx="28" fill="#fbe6d6"/>
+    <circle cx="730" cy="430" r="12" fill="#d97a4f"/>
+    <circle cx="780" cy="430" r="12" fill="#d97a4f"/>
+    <path d="M720 470 Q760 500 800 470" stroke="#d97a4f" stroke-width="8" fill="none" stroke-linecap="round"/>
+  </g>
+
+  <!-- brand badge -->
+  <g transform="translate(80,90)" filter="url(#softShadow)">
+    <rect width="92" height="92" rx="22" fill="url(#badge)"/>
+    <path d="M22 64 L40 42 L52 52 L74 24" stroke="#fff" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    <circle cx="74" cy="24" r="8" fill="#fff"/>
+  </g>
+
+  <!-- headline -->
+  <text x="80" y="290" font-family="-apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="78" font-weight="800" fill="#2b1a12">Daily iOS Games</text>
+  <text x="80" y="350" font-family="-apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="34" font-weight="500" fill="#5a3a2a">Every new release &amp; meaningful update,</text>
+  <text x="80" y="392" font-family="-apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="34" font-weight="500" fill="#5a3a2a">refreshed every morning.</text>
+
+  <!-- url pill -->
+  <g transform="translate(80,470)">
+    <rect width="430" height="64" rx="32" fill="#c15f3c"/>
+    <text x="32" y="42" font-family="-apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif" font-size="26" font-weight="600" fill="#fff">ios.querygame.com</text>
+  </g>
+</svg>

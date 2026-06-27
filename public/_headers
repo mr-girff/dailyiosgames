@@ -22,3 +22,15 @@
 
 /rss.xml
   Cache-Control: public, max-age=600
+
+/sitemap.xml
+  Cache-Control: public, max-age=600
+  Content-Type: application/xml; charset=utf-8
+
+/ads.txt
+  Cache-Control: public, max-age=3600
+  Content-Type: text/plain; charset=utf-8
+
+/robots.txt
+  Cache-Control: public, max-age=3600
+  Content-Type: text/plain; charset=utf-8

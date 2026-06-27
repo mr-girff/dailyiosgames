@@ -1,8 +1,11 @@
 ---
 const { title, description, canonical, robots = "index,follow", styleVars = "", bodyClass = "", image, ogType = "website" } = Astro.props
-const ADSENSE = import.meta.env.PUBLIC_ADSENSE_CLIENT
-const site = Astro.site?.toString().replace(/\/$/, "") || ""
-const ogImage = image || `${site}/og-default.png`
+const ADSENSE = import.meta.env.PUBLIC_ADSENSE_CLIENT || "ca-pub-5723318931986381"
+const GA_ID = import.meta.env.PUBLIC_GA_ID || "G-VCRWJW6CKF"
+const site = Astro.site?.toString().replace(/\/$/, "") || "https://ios.querygame.com"
+const SITE_NAME = import.meta.env.PUBLIC_SITE_NAME || "Daily iOS Games"
+const ogImage = image || `${site}/og-default.svg`
+const computedCanonical = canonical || `${site}${Astro.url.pathname}`
 ---
 <!doctype html>
 <html lang="en">
@@ -12,44 +15,81 @@ const ogImage = image || `${site}/og-default.png`
     <title>{title}</title>
     <meta name="description" content={description} />
     <meta name="robots" content={robots} />
+    <meta name="theme-color" content="#c15f3c" />
+    <meta name="google-adsense-account" content={ADSENSE} />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/favicon.svg" />
-    {canonical && <link rel="canonical" href={canonical} />}
+    <link rel="canonical" href={computedCanonical} />
     <link rel="alternate" type="application/rss+xml" href="/rss.xml" title="Daily updates" />
     <link rel="alternate" type="application/rss+xml" href="/movers.xml" title="Rising iOS Games" />
     <meta property="og:type" content={ogType} />
+    <meta property="og:site_name" content={SITE_NAME} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
-    {ogImage && <meta property="og:image" content={ogImage} />}
-    {canonical && <meta property="og:url" content={canonical} />}
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:url" content={computedCanonical} />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://pagead2.googlesyndication.com" crossorigin />
+    <link rel="preconnect" href="https://www.googletagmanager.com" crossorigin />
     <link rel="stylesheet" href="/styles.css" />
-    {ADSENSE && (
-      <script async src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE}`} crossorigin="anonymous" data-loadafter="3000"></script>
+
+    {/* Google Analytics 4 */}
+    {GA_ID && (
+      <>
+        <script async src={`https://www.googletagmanager.com/gtag/js?id=${GA_ID}`}></script>
+        <script set:html={`
+          window.dataLayer = window.dataLayer || [];
+          function gtag(){dataLayer.push(arguments);}
+          gtag('js', new Date());
+          gtag('config', '${GA_ID}');
+        `}></script>
+      </>
     )}
+
+    {/* Google AdSense */}
+    {ADSENSE && (
+      <script async src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE}`} crossorigin="anonymous"></script>
+    )}
+
     {styleVars && <style set:html={`:root{${styleVars}}`}></style>}
+
+    {/* Organization JSON-LD for richer SERP */}
+    <script type="application/ld+json" set:html={JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": SITE_NAME,
+      "url": site,
+      "logo": `${site}/favicon.svg`,
+    })}></script>
   </head>
   <body class={`themed ${bodyClass}`}>
     <a href="#main" class="skip">Skip to content</a>
     <header class="site-header">
       <nav aria-label="Primary">
-        <a href="/" class="brand" aria-label={import.meta.env.PUBLIC_SITE_NAME || "Daily iOS Games"}>
-          <svg class="brand-logo" width="30" height="30" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+        <a href="/" class="brand" aria-label={SITE_NAME}>
+          <svg class="brand-logo" width="32" height="32" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
             <defs>
               <linearGradient id="brandg" x1="0" y1="0" x2="1" y2="1">
-                <stop offset="0" stop-color="#d97a4f"/>
-                <stop offset="1" stop-color="#b34a2a"/>
+                <stop offset="0" stop-color="#f0a07b"/>
+                <stop offset=".55" stop-color="#d97a4f"/>
+                <stop offset="1" stop-color="#a8401f"/>
               </linearGradient>
+              <radialGradient id="brandShine" cx=".3" cy=".25" r=".8">
+                <stop offset="0" stop-color="#fff" stop-opacity=".55"/>
+                <stop offset=".6" stop-color="#fff" stop-opacity="0"/>
+              </radialGradient>
             </defs>
             <rect x="1" y="1" width="30" height="30" rx="8" fill="url(#brandg)"/>
+            <rect x="1" y="1" width="30" height="30" rx="8" fill="url(#brandShine)"/>
             <path d="M6.5 21.5 L12.5 14.5 L16.5 18 L24.5 9" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
             <circle cx="24.8" cy="9" r="2.7" fill="#fff"/>
           </svg>
-          <span class="brand-name">{import.meta.env.PUBLIC_SITE_NAME || "Daily iOS Games"}</span>
+          <span class="brand-name">{SITE_NAME}</span>
         </a>
         <ul>
           <li><a href="/posts/">Daily</a></li>
@@ -72,7 +112,7 @@ const ogImage = image || `${site}/og-default.png`
             <path d="M6.5 21.5 L12.5 14.5 L16.5 18 L24.5 9" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
             <circle cx="24.8" cy="9" r="2.7" fill="#fff"/>
           </svg>
-          <span>{import.meta.env.PUBLIC_SITE_NAME || "Daily iOS Games"}</span>
+          <span>{SITE_NAME}</span>
         </div>
         <nav class="foot-nav" aria-label="Footer">
           <a href="/movers/">Rising</a>

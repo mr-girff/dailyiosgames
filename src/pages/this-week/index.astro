@@ -18,7 +18,7 @@ const today = new Date().toISOString().slice(0, 10)
 const title = "New iOS Games This Week — Fresh App Store Releases (2026)"
 const description = `${matching.length} brand-new iPhone and iPad games released in the last 7 days, ranked by traction. Refreshed every morning from the US App Store. Last update ${today}.`
 ---
-<Base title={title} description={description} canonical={canonical} image={`${SITE}/illus/this-week.svg`}>
+<Base title={title} description={description} canonical={`${SITE}/new-this-week/`} image={`${SITE}/illus/this-week.svg`} robots="noindex,follow">
   <LongTailHero
     eyebrow={`Last 7 days · refreshed ${today}`}
     title="New iOS games this week"

@@ -36,7 +36,7 @@ const computedCanonical = canonical || `${site}${Astro.url.pathname}`
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="preconnect" href="https://pagead2.googlesyndication.com" crossorigin />
     <link rel="preconnect" href="https://www.googletagmanager.com" crossorigin />
-    <link rel="stylesheet" href="/styles.css?v=20260628a" />
+    <link rel="stylesheet" href="/styles.css?v=20260628b" />
 
     {/* Google Analytics 4 */}
     {GA_ID && (
@@ -114,40 +114,76 @@ const computedCanonical = canonical || `${site}${Astro.url.pathname}`
       <slot />
     </main>
     <footer class="site-footer">
-      <div class="foot-cols">
-        <div class="foot-brand">
-          <svg width="26" height="26" viewBox="0 0 32 32" aria-hidden="true">
-            <rect x="1" y="1" width="30" height="30" rx="8" fill="#c15f3c"/>
-            <path d="M6.5 21.5 L12.5 14.5 L16.5 18 L24.5 9" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
-            <circle cx="24.8" cy="9" r="2.7" fill="#fff"/>
-          </svg>
-          <span>{SITE_NAME}</span>
+      <div class="foot-top">
+        <div class="foot-brand-block">
+          <div class="foot-brand">
+            <svg width="32" height="32" viewBox="0 0 32 32" aria-hidden="true">
+              <rect x="1" y="1" width="30" height="30" rx="8" fill="#c15f3c"/>
+              <path d="M6.5 21.5 L12.5 14.5 L16.5 18 L24.5 9" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+              <circle cx="24.8" cy="9" r="2.7" fill="#fff"/>
+            </svg>
+            <span>{SITE_NAME}</span>
+          </div>
+          <p class="foot-tag">Every new US App Store game release &amp; meaningful update, refreshed every morning.</p>
+          <div class="foot-feeds">
+            <a href="/rss.xml" aria-label="Daily RSS feed" title="Daily RSS">
+              <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 11a9 9 0 019 9M4 4a16 16 0 0116 16" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/><circle cx="5" cy="19" r="2" fill="currentColor"/></svg>
+              <span>Daily RSS</span>
+            </a>
+            <a href="/movers.xml" aria-label="Rising games RSS" title="Rising RSS">
+              <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 17l5-5 4 3 7-8M20 7h-4M20 7v4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+              <span>Rising RSS</span>
+            </a>
+            <a href="/subscribe/" class="foot-cta">📬 Subscribe</a>
+          </div>
         </div>
-        <nav class="foot-nav" aria-label="Footer">
-          <a href="/new-today/">New today</a>
-          <a href="/new-this-week/">New this week</a>
-          <a href="/this-week/">This week</a>
-          <a href="/movers/">Rising</a>
-          <a href="/hidden-gems/">Hidden gems</a>
-          <a href="/no-iap/">No IAP</a>
-          <a href="/no-ads-no-iap/">No ads / no IAP</a>
-          <a href="/free-no-ads/">Free, no ads</a>
-          <a href="/offline/">Offline</a>
-          <a href="/controller-support/">Controller</a>
-          <a href="/like/">Games like…</a>
-          <a href="/like-monument-valley/">Like Monument Valley</a>
-          <a href="/games/">All games</a>
-          <a href="/archetype/">Categories</a>
-          <a href="/posts/">Daily reports</a>
-          <a href="/about/">About</a>
-          <a href="/team/">Team</a>
-          <a href="/methodology/">Methodology</a>
-          <a href="/privacy/">Privacy</a>
-          <a href="/rss.xml">RSS</a>
-          <a href="/movers.xml">Rising RSS</a>
+
+        <nav class="foot-cols" aria-label="Footer">
+          <div class="foot-col">
+            <h4>Discover</h4>
+            <ul>
+              <li><a href="/new-today/">New today</a></li>
+              <li><a href="/new-this-week/">New this week</a></li>
+              <li><a href="/movers/">Rising games</a></li>
+              <li><a href="/hidden-gems/">Hidden gems</a></li>
+              <li><a href="/posts/">Daily reports</a></li>
+            </ul>
+          </div>
+          <div class="foot-col">
+            <h4>By preference</h4>
+            <ul>
+              <li><a href="/no-iap/">No in-app purchases</a></li>
+              <li><a href="/no-ads-no-iap/">No ads &amp; no IAP</a></li>
+              <li><a href="/free-no-ads/">Free, no ads</a></li>
+              <li><a href="/offline/">Offline games</a></li>
+              <li><a href="/controller-support/">Controller support</a></li>
+            </ul>
+          </div>
+          <div class="foot-col">
+            <h4>Browse</h4>
+            <ul>
+              <li><a href="/games/">All games</a></li>
+              <li><a href="/archetype/">Categories</a></li>
+              <li><a href="/like/">Games like…</a></li>
+              <li><a href="/like/balatro/">Like Balatro</a></li>
+              <li><a href="/like/stardew-valley/">Like Stardew Valley</a></li>
+            </ul>
+          </div>
+          <div class="foot-col">
+            <h4>About</h4>
+            <ul>
+              <li><a href="/about/">About</a></li>
+              <li><a href="/methodology/">Methodology</a></li>
+              <li><a href="/team/">Team</a></li>
+              <li><a href="/privacy/">Privacy</a></li>
+            </ul>
+          </div>
         </nav>
       </div>
-      <p class="foot-fine">Data: Apple iTunes RSS &amp; Lookup APIs. Heat scores are our own estimates. Not affiliated with, endorsed by, or sponsored by Apple Inc. iOS and App Store are trademarks of Apple Inc.</p>
+
+      <div class="foot-bottom">
+        <p class="foot-fine">© {new Date().getUTCFullYear()} {SITE_NAME}. Data sourced from Apple iTunes RSS &amp; Lookup APIs. Heat and signal scores are our own estimates. Not affiliated with, endorsed by, or sponsored by Apple Inc. iOS and App Store are trademarks of Apple Inc.</p>
+      </div>
     </footer>
 
     {/* Floating "back to top" button — appears after scroll on mobile */}

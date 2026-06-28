@@ -24,7 +24,6 @@ export async function GET() {
     // Long-tail SEO landing pages
     { loc: `${base}/new-today/`,             changefreq: "daily",   priority: "0.9", lastmod: today },
     { loc: `${base}/new-this-week/`,         changefreq: "daily",   priority: "0.8", lastmod: today },
-    { loc: `${base}/this-week/`,             changefreq: "daily",   priority: "0.8", lastmod: today },
     { loc: `${base}/hidden-gems/`,           changefreq: "daily",   priority: "0.8", lastmod: today },
     { loc: `${base}/no-iap/`,                changefreq: "daily",   priority: "0.7", lastmod: today },
     { loc: `${base}/no-ads-no-iap/`,         changefreq: "daily",   priority: "0.7", lastmod: today },
@@ -32,7 +31,6 @@ export async function GET() {
     { loc: `${base}/controller-support/`,    changefreq: "daily",   priority: "0.7", lastmod: today },
     { loc: `${base}/offline/`,               changefreq: "daily",   priority: "0.7", lastmod: today },
     { loc: `${base}/like/`,                  changefreq: "weekly",  priority: "0.6", lastmod: today },
-    { loc: `${base}/like-monument-valley/`,  changefreq: "daily",   priority: "0.6", lastmod: today },
     { loc: `${base}/about/`,                 changefreq: "monthly", priority: "0.3", lastmod: today },
     { loc: `${base}/methodology/`,           changefreq: "monthly", priority: "0.3", lastmod: today },
   ]

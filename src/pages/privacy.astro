@@ -3,7 +3,7 @@ import Base from "../layouts/Base.astro"
 const site = Astro.site?.toString().replace(/\/$/, "") || ""
 const updated = "June 2026"
 ---
-<Base title="Privacy Policy — Daily iOS Games" description="How Daily iOS Games handles data and privacy. We don't sell personal data; we publish aggregated public App Store information." canonical={`${site}/privacy/`} robots="index,follow">
+<Base title="Privacy Policy — Daily iOS Games" description="How Daily iOS Games handles data and privacy. We don't sell personal data; we publish aggregated public App Store information." canonical={`${site}/privacy/`} robots="noindex,follow">
   <section class="page-hero">
     <div>
       <div class="eyebrow">Legal · Updated {updated}</div>

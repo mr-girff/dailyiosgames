@@ -1,0 +1,99 @@
+---
+import Base from "../../layouts/Base.astro"
+import LongTailHero from "../../components/LongTailHero.astro"
+import GameCardList from "../../components/GameCardList.astro"
+import KeepBrowsing from "../../components/KeepBrowsing.astro"
+import { loadAll, rankByHeat, isIndexable } from "../../lib/enriched"
+
+const all = loadAll()
+const fresh = all.filter(
+  g => isIndexable(g) && typeof g.daysSinceRelease === "number" && g.daysSinceRelease <= 7
+)
+const matching = rankByHeat(fresh).slice(0, 60)
+
+const SITE = "https://ios.querygame.com"
+const path = "/this-week/"
+const canonical = `${SITE}${path}`
+const today = new Date().toISOString().slice(0, 10)
+const title = "New iOS Games This Week — Fresh App Store Releases (2026)"
+const description = `${matching.length} brand-new iPhone and iPad games released in the last 7 days, ranked by traction. Refreshed every morning from the US App Store. Last update ${today}.`
+---
+<Base title={title} description={description} canonical={canonical} image={`${SITE}/illus/this-week.svg`}>
+  <LongTailHero
+    eyebrow={`Last 7 days · refreshed ${today}`}
+    title="New iOS games this week"
+    lead="The fresh batch — iPhone and iPad games released in the last seven days, ranked by how quickly they're picking up ratings on the US App Store. Updated every morning so you don't have to scroll a stale &quot;new in&quot; chart."
+    illustration="/illus/this-week.svg"
+    illustrationAlt="A wall calendar showing seven days, with small game-app icons landing on each day"
+    stats={[
+      { num: matching.length, lbl: "Released in last 7 days" },
+      { num: fresh.filter(g => (g.daysSinceRelease ?? 99) <= 1).length, lbl: "Released today or yesterday" },
+      { num: "24h", lbl: "Refresh cadence" },
+    ]}
+  />
+
+  <section>
+    <h2>What &quot;this week&quot; means here</h2>
+    <p>Every game on this page was first released on the US App Store within the last <strong>seven days</strong>, based on Apple's <code>releaseDate</code> field. We rank by our heat score (rating-count velocity) instead of raw date, so games gaining real traction land at the top — not just whatever was uploaded an hour ago.</p>
+    <p>It's the page we wish existed when we were tired of Apple's curated &quot;New Games We Love&quot; rail showing the same titles for a month. This refreshes every morning.</p>
+  </section>
+
+  <section>
+    <h2>Released this week ({matching.length})</h2>
+    <GameCardList games={matching} emptyText="Nothing major shipped in the last 7 days. Try again tomorrow — the App Store moves fast." />
+  </section>
+
+  <section>
+    <h2>FAQ</h2>
+    <details><summary>How fresh is &quot;this week&quot;?</summary><p>Seven days from Apple's listed release date. Games released today appear here; games older than a week roll off automatically.</p></details>
+    <details><summary>Why aren't games ranked strictly by date?</summary><p>Because brand-new games with zero ratings would dominate. We sort by heat score — rating-count velocity — to surface the ones people are actually downloading and rating, then break ties by recency.</p></details>
+    <details><summary>How often does this list update?</summary><p>Every morning when our crawler hits the US App Store and re-enriches new entries.</p></details>
+    <details><summary>Where do these games come from?</summary><p>Apple's iTunes RSS and Lookup APIs, then enriched by our own classifier for archetype, monetization, and tags like offline / no-ads.</p></details>
+  </section>
+
+  <KeepBrowsing
+    title="Keep exploring"
+    eyebrow="Related lists"
+    items={[
+      { href: "/movers/",                 title: "Rising games right now",            sub: "Today's hot movers",      icon: "trend" },
+      { href: "/free-no-ads/",            title: "Free iOS games with no ads",        sub: "Free, but actually nice", icon: "fire" },
+      { href: "/no-ads-no-iap/",          title: "No ads & no in-app purchases",      sub: "Pay once, own it",        icon: "tag" },
+      { href: "/offline/",                title: "Best offline iOS games",            sub: "Play with no Wi-Fi",      icon: "list" },
+      { href: "/like-monument-valley/",   title: "Games like Monument Valley",        sub: "Quiet art puzzles",       icon: "star" },
+      { href: "/archetype/",              title: "Browse by category",                sub: "All archetypes",          icon: "grid" },
+    ]}
+  />
+
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": title,
+    "description": description,
+    "url": canonical,
+    "image": `${SITE}/illus/this-week.svg`,
+    "mainEntity": {
+      "@type": "ItemList",
+      "numberOfItems": matching.length,
+      "itemListElement": matching.slice(0, 20).map((g, i) => ({
+        "@type": "ListItem", "position": i + 1, "name": g.name, "url": `${SITE}/games/${g.id}/`,
+      })),
+    },
+  })} />
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      { "@type": "Question", "name": "How fresh is this week?", "acceptedAnswer": { "@type": "Answer", "text": "Seven days from Apple's listed release date." } },
+      { "@type": "Question", "name": "Why aren't games ranked strictly by date?", "acceptedAnswer": { "@type": "Answer", "text": "We sort by heat score (rating velocity) to surface games people are actually downloading." } },
+      { "@type": "Question", "name": "How often does this list update?", "acceptedAnswer": { "@type": "Answer", "text": "Every morning when our crawler refreshes the US App Store." } },
+    ],
+  })} />
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": SITE + "/" },
+      { "@type": "ListItem", "position": 2, "name": "This week", "item": canonical },
+    ],
+  })} />
+</Base>

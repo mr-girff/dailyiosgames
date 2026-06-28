@@ -149,20 +149,14 @@ function priceLabel(g){ const p = g.price; return (!p || p === "Free" || p === "
 
   {/* Top-level "keep browsing" — invite deeper exploration before footer */}
   {(() => {
-    const topArchetypes = [...new Set(enriched.all.map(g => g.archetype).filter(Boolean))]
-      .map(a => ({ a, n: enriched.all.filter(g => g.archetype === a).length }))
-      .sort((x, y) => y.n - x.n).slice(0, 4)
     const items = [
-      { href: "/movers/",    title: "Rising games",    sub: "Hot momentum, ranked",   icon: "fire" },
-      { href: "/posts/",     title: "Daily reports",   sub: "Every morning, the new releases", icon: "calendar" },
-      { href: "/games/",     title: "All tracked games", sub: `${enriched.all.length} games & growing`, icon: "list" },
-      ...topArchetypes.map(t => ({
-        href: `/archetype/${t.a}/`,
-        title: cap(t.a) + " games",
-        sub: `${t.n} tracked`,
-        icon: "tag",
-      })),
-    ].slice(0, 6)
+      { href: "/this-week/",            title: "New iOS games this week",      sub: "Fresh releases, ranked",  icon: "calendar" },
+      { href: "/no-ads-no-iap/",        title: "No ads & no in-app purchases", sub: "Pay once, own it",        icon: "tag" },
+      { href: "/free-no-ads/",          title: "Free iOS games with no ads",   sub: "Free, but actually nice", icon: "fire" },
+      { href: "/offline/",              title: "Best offline iOS games",       sub: "Play with no Wi-Fi",      icon: "list" },
+      { href: "/like-monument-valley/", title: "Games like Monument Valley",   sub: "Quiet art puzzles",       icon: "star" },
+      { href: "/movers/",               title: "Rising games right now",       sub: "Today's hot movers",      icon: "trend" },
+    ]
     return <KeepBrowsing title="Keep exploring" eyebrow="Don't miss" items={items} />
   })()}
 

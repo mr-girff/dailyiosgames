@@ -1,0 +1,102 @@
+---
+import Base from "../../layouts/Base.astro"
+import LongTailHero from "../../components/LongTailHero.astro"
+import GameCardList from "../../components/GameCardList.astro"
+import KeepBrowsing from "../../components/KeepBrowsing.astro"
+import { loadAll, rankByHeat, isIndexable } from "../../lib/enriched"
+
+const all = loadAll()
+// Visual / art-puzzle bucket: any archetype that's puzzle-flavored
+const matching = rankByHeat(
+  all.filter(g =>
+    isIndexable(g) &&
+    typeof g.archetype === "string" &&
+    /puzzle|match|narrative|art/i.test(g.archetype)
+  )
+).slice(0, 60)
+
+const SITE = "https://ios.querygame.com"
+const path = "/like-monument-valley/"
+const canonical = `${SITE}${path}`
+const title = "Games Like Monument Valley on iOS (Art Puzzles, 2026)"
+const description = `${matching.length} iPhone & iPad puzzle games with the same calm, beautiful, story-led feel as Monument Valley — pulled from our daily US App Store crawl.`
+---
+<Base title={title} description={description} canonical={canonical} image={`${SITE}/illus/like-monument-valley.svg`}>
+  <LongTailHero
+    eyebrow="Art puzzles · narrative · calm"
+    title="iOS games like Monument Valley"
+    lead="Monument Valley defined a whole feeling — quiet, beautiful, gently surreal puzzles you finish on a long evening. These iPhone and iPad games share that DNA: hand-crafted art, no twitch reflexes, no leaderboard pressure, just one elegant idea explored fully."
+    illustration="/illus/like-monument-valley.svg"
+    illustrationAlt="Warm isometric impossible-geometry architecture with a small silhouette walking the path"
+    stats={[
+      { num: matching.length, lbl: "Art-puzzle picks" },
+      { num: matching.filter(g => g.monetization === "premium").length, lbl: "Premium (no IAP)" },
+      { num: matching.filter(g => (g.tags||[]).includes("offline")).length, lbl: "Playable offline" },
+    ]}
+  />
+
+  <section>
+    <h2>What makes a game &quot;like Monument Valley&quot;</h2>
+    <p>It's a feeling more than a genre. The games on this page share at least three of these traits: <strong>hand-crafted visual style</strong>, <strong>single-elegant-idea puzzles</strong>, <strong>a calm pace</strong>, <strong>no time pressure or twitch reflexes</strong>, and <strong>a story that emerges from environment rather than dialogue</strong>. We pick from our daily-tagged puzzle, narrative, and art-leaning archetypes.</p>
+    <p>If you want the closest spiritual cousins — short, premium, finishable in a weekend — sort by &quot;Premium (no IAP)&quot; in the stat strip above and skip past the bigger free-to-play entries.</p>
+  </section>
+
+  <section>
+    <h2>The list ({matching.length})</h2>
+    <GameCardList games={matching} emptyText="No matches today. The crawler refreshes every morning." />
+  </section>
+
+  <section>
+    <h2>FAQ</h2>
+    <details><summary>Are any of these made by ustwo (Monument Valley's studio)?</summary><p>If they currently rank on the US App Store, yes — Monument Valley itself or its sequels may appear when they're in the active dataset. We don't hand-pick; the list is generated from our daily crawl + archetype classifier.</p></details>
+    <details><summary>How is this different from a generic &quot;puzzle&quot; list?</summary><p>We narrow to the visual/narrative end of the puzzle spectrum — fewer match-3 sugar bombs, more hand-drawn worlds and clever single-mechanic games.</p></details>
+    <details><summary>Will these all be premium?</summary><p>No, some are free with IAP. The price tag on each card shows the current US App Store price. For pay-once-and-done options, check our <a href="/no-ads-no-iap/">no ads / no IAP list</a>.</p></details>
+    <details><summary>Can I play these on iPad?</summary><p>Most modern App Store games include universal builds. Check the game's detail page for the specific device support.</p></details>
+  </section>
+
+  <KeepBrowsing
+    title="Keep exploring"
+    eyebrow="Related lists"
+    items={[
+      { href: "/no-ads-no-iap/",  title: "No ads & no in-app purchases",  sub: "Pay once, own it",        icon: "tag" },
+      { href: "/offline/",        title: "Best offline iOS games",        sub: "Play with no Wi-Fi",      icon: "list" },
+      { href: "/free-no-ads/",    title: "Free iOS games with no ads",    sub: "Free, but actually nice", icon: "fire" },
+      { href: "/this-week/",      title: "New iOS games this week",       sub: "Fresh releases",          icon: "calendar" },
+      { href: "/movers/",         title: "Rising games right now",        sub: "Today's hot movers",      icon: "trend" },
+      { href: "/archetype/",      title: "Browse by category",            sub: "All archetypes",          icon: "grid" },
+    ]}
+  />
+
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": title,
+    "description": description,
+    "url": canonical,
+    "image": `${SITE}/illus/like-monument-valley.svg`,
+    "mainEntity": {
+      "@type": "ItemList",
+      "numberOfItems": matching.length,
+      "itemListElement": matching.slice(0, 20).map((g, i) => ({
+        "@type": "ListItem", "position": i + 1, "name": g.name, "url": `${SITE}/games/${g.id}/`,
+      })),
+    },
+  })} />
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      { "@type": "Question", "name": "How is this different from a generic puzzle list?", "acceptedAnswer": { "@type": "Answer", "text": "We narrow to the visual / narrative end of puzzle — hand-drawn worlds and clever single-mechanic games." } },
+      { "@type": "Question", "name": "Will these all be premium?", "acceptedAnswer": { "@type": "Answer", "text": "No, some are free with IAP. Use the no-ads / no-IAP list for pay-once options." } },
+      { "@type": "Question", "name": "Can I play these on iPad?", "acceptedAnswer": { "@type": "Answer", "text": "Most modern App Store games include universal builds." } },
+    ],
+  })} />
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": SITE + "/" },
+      { "@type": "ListItem", "position": 2, "name": "Like Monument Valley", "item": canonical },
+    ],
+  })} />
+</Base>

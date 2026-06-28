@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="420" viewBox="0 0 640 420" role="img" aria-label="An airplane next to a phone showing a game running with no Wi-Fi">
+  <title>Best offline iOS games — illustration</title>
+  <desc>A paper-style airplane flies past an iPhone whose status bar shows "No Wi-Fi" yet a game continues to play on screen, illustrating offline iOS gaming.</desc>
+  <defs>
+    <linearGradient id="ofBg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff7f0"/>
+      <stop offset="1" stop-color="#f7d9c4"/>
+    </linearGradient>
+    <linearGradient id="ofPhone" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2b1a12"/>
+      <stop offset="1" stop-color="#3a261b"/>
+    </linearGradient>
+    <linearGradient id="ofScreen" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fff5ee"/>
+      <stop offset="1" stop-color="#f5b893"/>
+    </linearGradient>
+    <filter id="ofShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#000" flood-opacity=".18"/>
+    </filter>
+  </defs>
+  <rect width="640" height="420" fill="url(#ofBg)"/>
+
+  <!-- dotted flight path -->
+  <path d="M40 80 C 150 60, 260 180, 380 120 S 580 110, 600 80"
+        stroke="#d97a4f" stroke-width="2.5" stroke-dasharray="2 8" fill="none" opacity=".6"/>
+
+  <!-- paper airplane -->
+  <g transform="translate(120,80) rotate(-15)" filter="url(#ofShadow)">
+    <path d="M0 0 L 90 32 L 38 40 L 30 70 L 22 44 Z" fill="#fff"/>
+    <path d="M0 0 L 38 40 L 30 70 Z" fill="#fde0d0"/>
+    <path d="M0 0 L 90 32 L 38 40 Z" fill="#f0a07b"/>
+  </g>
+
+  <!-- phone -->
+  <g filter="url(#ofShadow)" transform="translate(330,40)">
+    <rect width="200" height="340" rx="34" fill="url(#ofPhone)"/>
+    <rect x="10" y="12" width="180" height="316" rx="26" fill="url(#ofScreen)"/>
+    <!-- notch -->
+    <rect x="78" y="20" width="44" height="14" rx="7" fill="#2b1a12"/>
+    <!-- status: signal slashed -->
+    <g transform="translate(28,46)" font-family="-apple-system, Segoe UI, sans-serif" font-size="10" font-weight="600" fill="#2b1a12">
+      <text x="0" y="10">9:41</text>
+      <g transform="translate(120,2)">
+        <!-- wifi icon, faded -->
+        <path d="M0 8 Q 6 3 12 8 M 2 11 Q 6 8 10 11 M 5 13.5 q 1 -1 2 0" stroke="#6b655c" stroke-width="1.5" fill="none" opacity=".4"/>
+        <line x1="-2" y1="-2" x2="14" y2="16" stroke="#a8401f" stroke-width="2" stroke-linecap="round"/>
+      </g>
+    </g>
+    <!-- game scene: treasure hunt -->
+    <g transform="translate(28,90)">
+      <rect x="0" y="0" width="144" height="180" rx="16" fill="#fde0d0"/>
+      <!-- ground -->
+      <path d="M0 130 Q 72 110 144 130 L 144 180 L 0 180 Z" fill="#d97a4f"/>
+      <!-- character -->
+      <g transform="translate(48,90)">
+        <circle r="14" fill="#fff"/>
+        <circle r="14" fill="none" stroke="#a8401f" stroke-width="2"/>
+        <circle cx="-4" cy="-2" r="2" fill="#2b1a12"/>
+        <circle cx="4" cy="-2" r="2" fill="#2b1a12"/>
+        <path d="M-5 4 Q 0 8 5 4" stroke="#2b1a12" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+      </g>
+      <!-- treasure chest -->
+      <g transform="translate(96,110)">
+        <rect x="-12" y="0" width="24" height="16" rx="3" fill="#8a3f23"/>
+        <rect x="-12" y="-5" width="24" height="6" rx="2" fill="#a8401f"/>
+        <rect x="-2" y="3" width="4" height="6" fill="#ffe4c2"/>
+      </g>
+      <!-- sun -->
+      <circle cx="118" cy="22" r="10" fill="#ffd3b8"/>
+    </g>
+    <!-- play indicator -->
+    <g transform="translate(100,300)" fill="#3fae63">
+      <circle r="8"/>
+      <polygon points="-2,-4 -2,4 4,0" fill="#fff"/>
+    </g>
+  </g>
+
+  <!-- caption -->
+  <g transform="translate(60,310)">
+    <rect width="240" height="48" rx="24" fill="#c15f3c"/>
+    <text x="22" y="31" font-family="-apple-system, Segoe UI, sans-serif" font-size="18" font-weight="700" fill="#fff">No Wi-Fi? No problem.</text>
+  </g>
+</svg>

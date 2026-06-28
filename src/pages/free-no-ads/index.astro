@@ -1,0 +1,101 @@
+---
+import Base from "../../layouts/Base.astro"
+import LongTailHero from "../../components/LongTailHero.astro"
+import GameCardList from "../../components/GameCardList.astro"
+import KeepBrowsing from "../../components/KeepBrowsing.astro"
+import { loadAll, rankByHeat, isIndexable, priceLabel } from "../../lib/enriched"
+
+const all = loadAll()
+const matching = rankByHeat(
+  all.filter(g =>
+    isIndexable(g) &&
+    priceLabel(g) === "Free" &&
+    (g.tags || []).includes("no-ads")
+  )
+).slice(0, 60)
+
+const SITE = "https://ios.querygame.com"
+const path = "/free-no-ads/"
+const canonical = `${SITE}${path}`
+const title = "Free iOS Games With No Ads (Updated Daily, 2026)"
+const description = `${matching.length} genuinely free iPhone and iPad games with no banner ads or video ad walls — pulled from our daily US App Store crawl. Updated ${new Date().toISOString().slice(0,10)}.`
+---
+<Base title={title} description={description} canonical={canonical} image={`${SITE}/illus/free-no-ads.svg`}>
+  <LongTailHero
+    eyebrow="Free · no ads · daily"
+    title="Free iOS games with no ads"
+    lead="Free iPhone and iPad games that don't bombard you with banner ads, rewarded video, or &quot;watch this to continue&quot; walls. Every entry passes both our free-price filter and our no-ads tag — re-checked every morning from the live US App Store."
+    illustration="/illus/free-no-ads.svg"
+    illustrationAlt="A FREE price tag next to a clean game screen, with three faded ad popups drifting away"
+    stats={[
+      { num: matching.length, lbl: "Free + no-ads games" },
+      { num: all.filter(g => priceLabel(g) === "Free").length, lbl: "Total free titles tracked" },
+      { num: "24h", lbl: "Refresh cadence" },
+    ]}
+  />
+
+  <section>
+    <h2>Why free + no-ads is rarer than it sounds</h2>
+    <p>Most &quot;free&quot; iPhone games make money one of two ways: ads, or aggressive in-app purchases. The games on this page have been flagged by our daily enrichment pass as <strong>free to download and free of advertising</strong>. Some may still offer optional in-app purchases (skins, level packs) — if you want to filter those out too, jump to <a href="/no-ads-no-iap/">our no-ads + no-IAP list</a>.</p>
+    <p>We rank by heat score (rating-count velocity) so the games gaining traction this week float to the top. Anything that quietly adds ads in an update drops off within 24 hours of our next crawl.</p>
+  </section>
+
+  <section>
+    <h2>The list ({matching.length})</h2>
+    <GameCardList games={matching} emptyText="No free no-ads games match today. Check back tomorrow — the crawler refreshes every morning." />
+  </section>
+
+  <section>
+    <h2>FAQ</h2>
+    <details><summary>How do you verify a game has no ads?</summary><p>We classify each App Store listing's monetization signals (description copy, IAP product list, developer metadata) on every crawl. Anything that signals advertising — banner SDKs, rewarded video copy, &quot;remove ads&quot; IAP — is excluded. We re-check daily.</p></details>
+    <details><summary>Do these games have in-app purchases?</summary><p>Some do (cosmetic, optional). If you want zero IAP <em>and</em> zero ads, use <a href="/no-ads-no-iap/">/no-ads-no-iap/</a> instead.</p></details>
+    <details><summary>Why is the list short?</summary><p>Because genuinely free, genuinely ad-free games are rare on iOS. We'd rather show you ten honest options than 200 with asterisks.</p></details>
+    <details><summary>Is this list region-specific?</summary><p>Yes — US App Store. Availability and ad presence can differ by country.</p></details>
+  </section>
+
+  <KeepBrowsing
+    title="Keep exploring"
+    eyebrow="Related lists"
+    items={[
+      { href: "/no-ads-no-iap/",          title: "No ads & no in-app purchases",      sub: "Pay once, own it",        icon: "tag" },
+      { href: "/offline/",                title: "Best offline iOS games",            sub: "Play with no Wi-Fi",      icon: "list" },
+      { href: "/this-week/",              title: "New iOS games this week",           sub: "Fresh releases",          icon: "calendar" },
+      { href: "/like-monument-valley/",   title: "Games like Monument Valley",        sub: "Quiet art puzzles",       icon: "star" },
+      { href: "/movers/",                 title: "Rising games right now",            sub: "Today's hot movers",      icon: "trend" },
+      { href: "/archetype/",              title: "Browse by category",                sub: "All archetypes",          icon: "grid" },
+    ]}
+  />
+
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": title,
+    "description": description,
+    "url": canonical,
+    "image": `${SITE}/illus/free-no-ads.svg`,
+    "mainEntity": {
+      "@type": "ItemList",
+      "numberOfItems": matching.length,
+      "itemListElement": matching.slice(0, 20).map((g, i) => ({
+        "@type": "ListItem", "position": i + 1, "name": g.name, "url": `${SITE}/games/${g.id}/`,
+      })),
+    },
+  })} />
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      { "@type": "Question", "name": "How do you verify a game has no ads?", "acceptedAnswer": { "@type": "Answer", "text": "We classify each App Store listing's monetization signals on every daily crawl. Anything signaling advertising is excluded." } },
+      { "@type": "Question", "name": "Do these games have in-app purchases?", "acceptedAnswer": { "@type": "Answer", "text": "Some do (optional). For zero IAP plus zero ads, use the /no-ads-no-iap/ list." } },
+      { "@type": "Question", "name": "Is this list region-specific?", "acceptedAnswer": { "@type": "Answer", "text": "Yes, US App Store." } },
+    ],
+  })} />
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": SITE + "/" },
+      { "@type": "ListItem", "position": 2, "name": "Free / no ads", "item": canonical },
+    ],
+  })} />
+</Base>

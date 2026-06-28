@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="420" viewBox="0 0 640 420" role="img" aria-label="A weekly calendar with game cards arriving each day">
+  <title>New iOS games this week — illustration</title>
+  <desc>A wall calendar showing seven days, with small floating game-app icons landing on each day to represent fresh weekly iOS game releases.</desc>
+  <defs>
+    <linearGradient id="twBg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff7f0"/>
+      <stop offset="1" stop-color="#f7d9c4"/>
+    </linearGradient>
+    <linearGradient id="twPaper" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fffdf8"/>
+      <stop offset="1" stop-color="#fcf2e3"/>
+    </linearGradient>
+    <linearGradient id="twHeader" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#d97a4f"/>
+      <stop offset="1" stop-color="#a8401f"/>
+    </linearGradient>
+    <filter id="twShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#000" flood-opacity=".18"/>
+    </filter>
+  </defs>
+  <rect width="640" height="420" fill="url(#twBg)"/>
+
+  <!-- decorative confetti -->
+  <g fill="#f0a07b" opacity=".5">
+    <rect x="40" y="40" width="6" height="6" rx="1" transform="rotate(20 43 43)"/>
+    <rect x="600" y="60" width="8" height="8" rx="1.5" transform="rotate(-15 604 64)"/>
+    <rect x="80" y="380" width="6" height="6" rx="1" transform="rotate(35 83 383)"/>
+    <rect x="580" y="370" width="8" height="8" rx="1.5" transform="rotate(-25 584 374)"/>
+  </g>
+
+  <!-- calendar -->
+  <g filter="url(#twShadow)" transform="translate(120,70)">
+    <rect width="400" height="280" rx="18" fill="url(#twPaper)"/>
+    <rect width="400" height="60"  rx="18" fill="url(#twHeader)"/>
+    <rect y="50" width="400" height="14" fill="url(#twHeader)"/>
+    <!-- bind rings -->
+    <circle cx="80"  cy="-2" r="8" fill="#8a3f23"/>
+    <circle cx="200" cy="-2" r="8" fill="#8a3f23"/>
+    <circle cx="320" cy="-2" r="8" fill="#8a3f23"/>
+    <text x="20" y="40" font-family="-apple-system, Segoe UI, sans-serif" font-size="22" font-weight="700" fill="#fff">This week on iOS</text>
+    <!-- weekday headers -->
+    <g font-family="-apple-system, Segoe UI, sans-serif" font-size="11" font-weight="600" fill="#8a3f23" text-anchor="middle">
+      <text x="40"  y="90">MON</text>
+      <text x="93"  y="90">TUE</text>
+      <text x="146" y="90">WED</text>
+      <text x="199" y="90">THU</text>
+      <text x="252" y="90">FRI</text>
+      <text x="305" y="90">SAT</text>
+      <text x="358" y="90">SUN</text>
+    </g>
+    <!-- day cells -->
+    <g>
+      <rect x="20"  y="100" width="40" height="56" rx="8" fill="#fde0d0"/>
+      <rect x="73"  y="100" width="40" height="56" rx="8" fill="#fde0d0"/>
+      <rect x="126" y="100" width="40" height="56" rx="8" fill="#fde0d0"/>
+      <rect x="179" y="100" width="40" height="56" rx="8" fill="#fde0d0"/>
+      <rect x="232" y="100" width="40" height="56" rx="8" fill="#fde0d0"/>
+      <rect x="285" y="100" width="40" height="56" rx="8" fill="#fde0d0"/>
+      <rect x="338" y="100" width="40" height="56" rx="8" fill="#fde0d0"/>
+    </g>
+    <!-- "new" pill on a few days -->
+    <g font-family="-apple-system, Segoe UI, sans-serif" font-size="9" font-weight="700" fill="#fff" text-anchor="middle">
+      <rect x="20"  y="120" width="40" height="14" fill="#c15f3c"/><text x="40" y="131">NEW</text>
+      <rect x="126" y="120" width="40" height="14" fill="#c15f3c"/><text x="146" y="131">NEW</text>
+      <rect x="232" y="120" width="40" height="14" fill="#c15f3c"/><text x="252" y="131">NEW</text>
+      <rect x="338" y="120" width="40" height="14" fill="#c15f3c"/><text x="358" y="131">NEW</text>
+    </g>
+    <!-- mini app icons stacked along bottom -->
+    <g transform="translate(20,180)">
+      <g><rect width="40" height="40" rx="9" fill="#d97a4f"/><circle cx="20" cy="20" r="9" fill="#fff"/></g>
+      <g transform="translate(53,0)"><rect width="40" height="40" rx="9" fill="#a8401f"/><path d="M14 26 l6 -8 l4 4 l8 -12" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g>
+      <g transform="translate(106,0)"><rect width="40" height="40" rx="9" fill="#c15f3c"/><rect x="11" y="11" width="18" height="18" rx="5" fill="#fff"/></g>
+      <g transform="translate(159,0)"><rect width="40" height="40" rx="9" fill="#f0a07b"/><path d="M12 20 q 8 -10 16 0 q -8 10 -16 0" fill="#fff"/></g>
+      <g transform="translate(212,0)"><rect width="40" height="40" rx="9" fill="#8a3f23"/><polygon points="20,9 25,18 35,19 27,26 30,36 20,31 10,36 13,26 5,19 15,18" fill="#ffe4c2"/></g>
+      <g transform="translate(265,0)"><rect width="40" height="40" rx="9" fill="#d97a4f"/><circle cx="20" cy="20" r="9" fill="none" stroke="#fff" stroke-width="3"/></g>
+      <g transform="translate(318,0)"><rect width="40" height="40" rx="9" fill="#a8401f"/><path d="M12 25 l4 -6 l4 3 l6 -10 l4 5" stroke="#fff" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/></g>
+    </g>
+  </g>
+
+  <!-- caption -->
+  <g transform="translate(220,360)">
+    <rect width="200" height="40" rx="20" fill="#c15f3c"/>
+    <text x="100" y="26" text-anchor="middle" font-family="-apple-system, Segoe UI, sans-serif" font-size="16" font-weight="700" fill="#fff">Fresh every morning</text>
+  </g>
+</svg>

@@ -1,0 +1,102 @@
+---
+import Base from "../../layouts/Base.astro"
+import LongTailHero from "../../components/LongTailHero.astro"
+import GameCardList from "../../components/GameCardList.astro"
+import KeepBrowsing from "../../components/KeepBrowsing.astro"
+import { loadAll, rankByHeat, isIndexable } from "../../lib/enriched"
+
+const all = loadAll()
+const matching = rankByHeat(
+  all.filter(g =>
+    isIndexable(g) && (
+      g.monetization === "premium" ||
+      (g.tags || []).includes("no-ads")
+    )
+  )
+).slice(0, 60)
+
+const SITE = "https://ios.querygame.com"
+const path = "/no-ads-no-iap/"
+const canonical = `${SITE}${path}`
+const title = "iOS Games With No Ads or In-App Purchases (2026 List)"
+const description = `${matching.length} curated iPhone & iPad games with no ads and no microtransactions — premium one-time purchases tracked daily from the US App Store. Updated for ${new Date().toISOString().slice(0,7)}.`
+---
+<Base title={title} description={description} canonical={canonical} image={`${SITE}/illus/no-iap.svg`}>
+  <LongTailHero
+    eyebrow="Curated · updated daily"
+    title="iOS games with no ads or in-app purchases"
+    lead="Premium iPhone and iPad games where you pay once and own the whole thing. No banner ads, no rewarded video, no &quot;remove ads&quot; pop-ups, no $9.99 gem packs. Pulled from our daily App Store crawl and filtered by monetization model."
+    illustration="/illus/no-iap.svg"
+    illustrationAlt="Open treasure chest with a single padlock — a game where everything is unlocked when you buy it"
+    stats={[
+      { num: matching.length, lbl: "Games on this list" },
+      { num: all.filter(g => g.monetization === "premium").length, lbl: "Pure premium titles" },
+      { num: all.filter(g => (g.tags||[]).includes("no-ads")).length, lbl: "Tagged no-ads" },
+    ]}
+  />
+
+  <section>
+    <h2>What &quot;no ads, no in-app purchases&quot; really means here</h2>
+    <p>Every game below is flagged as either a <strong>premium</strong> (one-time price) title <em>or</em> tagged <strong>no-ads</strong> in our daily enrichment pass. That means after you launch the app you will not see banner ads, video ad walls, energy timers, or paid currency stores. Some are free, some cost a few dollars — but none try to extract more money once you're playing.</p>
+    <p>If you've been hunting for an iPhone game that respects your time the way a Nintendo or Steam title would, this is your list. We rank by our internal heat score (rating-count velocity + relative growth on the US App Store) so the top entries are the ones gaining real traction right now.</p>
+  </section>
+
+  <section>
+    <h2>The list ({matching.length})</h2>
+    <GameCardList games={matching} emptyText="No premium games match today — our crawler refreshes every morning, check back soon." />
+  </section>
+
+  <section>
+    <h2>FAQ</h2>
+    <details><summary>How do you confirm a game has no in-app purchases?</summary><p>We pull the App Store listing and run an automated classifier on the description, monetization signals, and IAP product list visible in the metadata. Premium titles with no listed in-app purchases are flagged <code>monetization: premium</code>. We re-check daily — if a previously-premium game ships an update that adds IAP, it drops off this list within 24 hours.</p></details>
+    <details><summary>Are all of these games free?</summary><p>No. Most are one-time purchases between $1.99 and $9.99. A small number are genuinely free with no monetization (often passion projects or studio promos). The price tag on each card shows the current US App Store price.</p></details>
+    <details><summary>Why isn't [popular game] on the list?</summary><p>Because it has in-app purchases. Even &quot;cosmetic only&quot; IAP disqualifies a game from this list — we kept the bar strict because that's what people search for.</p></details>
+    <details><summary>How often does this list change?</summary><p>Daily. Every morning our crawler refreshes the US App Store rankings and re-enriches new entries.</p></details>
+  </section>
+
+  <KeepBrowsing
+    title="Keep exploring"
+    eyebrow="Related lists"
+    items={[
+      { href: "/free-no-ads/",            title: "Free iOS games with no ads",        sub: "Free, but actually nice", icon: "fire" },
+      { href: "/offline/",                title: "Best offline iOS games",            sub: "Play with no Wi-Fi",      icon: "list" },
+      { href: "/this-week/",              title: "New iOS games this week",           sub: "Fresh releases",          icon: "calendar" },
+      { href: "/like-monument-valley/",   title: "Games like Monument Valley",        sub: "Quiet art puzzles",       icon: "star" },
+      { href: "/movers/",                 title: "Rising games right now",            sub: "Today's hot movers",      icon: "trend" },
+      { href: "/archetype/",              title: "Browse by category",                sub: "All archetypes",          icon: "grid" },
+    ]}
+  />
+
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": title,
+    "description": description,
+    "url": canonical,
+    "image": `${SITE}/illus/no-iap.svg`,
+    "mainEntity": {
+      "@type": "ItemList",
+      "numberOfItems": matching.length,
+      "itemListElement": matching.slice(0, 20).map((g, i) => ({
+        "@type": "ListItem", "position": i + 1, "name": g.name, "url": `${SITE}/games/${g.id}/`,
+      })),
+    },
+  })} />
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      { "@type": "Question", "name": "How do you confirm a game has no in-app purchases?", "acceptedAnswer": { "@type": "Answer", "text": "We pull the App Store listing and classify monetization on every daily crawl. Premium titles with no listed IAP are flagged premium. We re-check daily." } },
+      { "@type": "Question", "name": "Are all of these games free?", "acceptedAnswer": { "@type": "Answer", "text": "No, most are one-time purchases between $1.99 and $9.99." } },
+      { "@type": "Question", "name": "How often does the list change?", "acceptedAnswer": { "@type": "Answer", "text": "Daily — every morning our crawler refreshes the US App Store rankings." } },
+    ],
+  })} />
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": SITE + "/" },
+      { "@type": "ListItem", "position": 2, "name": "No ads / no IAP", "item": canonical },
+    ],
+  })} />
+</Base>

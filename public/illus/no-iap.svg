@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="420" viewBox="0 0 640 420" role="img" aria-label="Open treasure chest holding a single padlock instead of microtransactions">
+  <title>iOS games with no in-app purchases — illustration</title>
+  <desc>A warm, open treasure chest containing a single lock — a metaphor for premium iOS games where everything is unlocked once you pay, with no in-app purchase paywalls.</desc>
+  <defs>
+    <linearGradient id="iapBg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff7f0"/>
+      <stop offset="1" stop-color="#f7d9c4"/>
+    </linearGradient>
+    <linearGradient id="chestLid" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#f0a07b"/>
+      <stop offset="1" stop-color="#a8401f"/>
+    </linearGradient>
+    <linearGradient id="chestBody" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#d97a4f"/>
+      <stop offset="1" stop-color="#8a3f23"/>
+    </linearGradient>
+    <radialGradient id="iapShine" cx=".5" cy=".5" r=".6">
+      <stop offset="0" stop-color="#fff3d0" stop-opacity="1"/>
+      <stop offset="1" stop-color="#fff3d0" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="iapShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#000" flood-opacity=".18"/>
+    </filter>
+  </defs>
+  <rect width="640" height="420" fill="url(#iapBg)"/>
+
+  <!-- floating coin sparkles -->
+  <g fill="#f0a07b" opacity=".55">
+    <circle cx="120" cy="80"  r="6"/>
+    <circle cx="540" cy="110" r="8"/>
+    <circle cx="80"  cy="280" r="5"/>
+    <circle cx="560" cy="320" r="7"/>
+    <circle cx="200" cy="60"  r="4"/>
+  </g>
+
+  <!-- glow behind chest -->
+  <ellipse cx="320" cy="240" rx="220" ry="100" fill="url(#iapShine)"/>
+
+  <!-- chest -->
+  <g filter="url(#iapShadow)" transform="translate(180,140)">
+    <!-- lid open -->
+    <path d="M0 90 Q140 -10 280 90 L280 110 L0 110 Z" fill="url(#chestLid)"/>
+    <path d="M0 90 Q140 -10 280 90" fill="none" stroke="#5a2a16" stroke-width="3" stroke-linejoin="round"/>
+    <!-- body -->
+    <rect x="0" y="110" width="280" height="130" rx="14" fill="url(#chestBody)"/>
+    <!-- bands -->
+    <rect x="0" y="138" width="280" height="10" fill="#5a2a16"/>
+    <rect x="0" y="200" width="280" height="10" fill="#5a2a16"/>
+    <!-- center plate with lock -->
+    <rect x="118" y="155" width="44" height="56" rx="6" fill="#5a2a16"/>
+    <!-- the single lock = "one purchase, all unlocked" -->
+    <g transform="translate(140,165)">
+      <rect x="-12" y="6" width="24" height="22" rx="3" fill="#ffe4c2"/>
+      <path d="M-7 6 v-6 a7 7 0 0 1 14 0 v6" stroke="#ffe4c2" stroke-width="3" fill="none"/>
+      <circle cx="0" cy="17" r="2.5" fill="#a8401f"/>
+    </g>
+    <!-- check mark indicating "all yours" -->
+    <g transform="translate(220,90)">
+      <circle r="22" fill="#fff"/>
+      <path d="M-10 0 L -2 9 L 12 -7" stroke="#3fae63" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    </g>
+  </g>
+
+  <!-- caption -->
+  <g transform="translate(60,330)">
+    <rect width="280" height="48" rx="24" fill="#c15f3c"/>
+    <text x="22" y="31" font-family="-apple-system, Segoe UI, sans-serif" font-size="18" font-weight="700" fill="#fff">Pay once. Own it all.</text>
+  </g>
+</svg>

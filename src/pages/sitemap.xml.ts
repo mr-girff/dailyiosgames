@@ -22,6 +22,12 @@ export async function GET() {
     { loc: `${base}/archetype/`,   changefreq: "weekly",  priority: "0.6", lastmod: today },
     { loc: `${base}/about/`,       changefreq: "monthly", priority: "0.3", lastmod: today },
     { loc: `${base}/methodology/`, changefreq: "monthly", priority: "0.3", lastmod: today },
+    // Long-tail landing pages
+    { loc: `${base}/no-ads-no-iap/`,        changefreq: "daily", priority: "0.7", lastmod: today },
+    { loc: `${base}/free-no-ads/`,          changefreq: "daily", priority: "0.7", lastmod: today },
+    { loc: `${base}/offline/`,              changefreq: "daily", priority: "0.7", lastmod: today },
+    { loc: `${base}/this-week/`,            changefreq: "daily", priority: "0.8", lastmod: today },
+    { loc: `${base}/like-monument-valley/`, changefreq: "daily", priority: "0.6", lastmod: today },
   ]
   for (const a of archetypes) urls.push({ loc: `${base}/archetype/${a}/`, changefreq: "daily", priority: "0.6", lastmod: today })
   for (const g of indexable)  urls.push({ loc: `${base}/games/${g.id}/`,  changefreq: "weekly", priority: "0.5", lastmod: g.currentVersionDate || today })

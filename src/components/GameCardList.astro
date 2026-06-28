@@ -1,0 +1,31 @@
+---
+import { cap, priceLabel, gameIconSrc } from "../lib/enriched"
+const { games = [], emptyText = "Nothing matches today — check back tomorrow." } = Astro.props
+---
+{games.length === 0 ? (
+  <p class="caveat">{emptyText}</p>
+) : (
+  <ul class="game-grid">
+    {games.map((g, i) => (
+      <li>
+        <a class="game-card" href={`/games/${g.id}/`}>
+          {gameIconSrc(g) && (
+            <img class="icon" src={gameIconSrc(g)} alt={`${g.name} app icon`} width="64" height="64" loading={i < 6 ? "eager" : "lazy"} decoding="async" />
+          )}
+          <div class="meta">
+            <div class="name">{g.name}</div>
+            <div class="dev">{g.seller}</div>
+            {(g.uniqueHook || g.coreLoop) && <p class="hook">{g.uniqueHook || g.coreLoop}</p>}
+            <div class="tags">
+              {g.archetype && <span class="tag">{cap(g.archetype)}</span>}
+              <span class={`tag ${priceLabel(g)==='Free' ? 'price-free' : ''}`}>{priceLabel(g)}</span>
+              {typeof g.heatScore === "number" && g.heatScore > 0 && (
+                <span class="tag">Heat {g.heatScore}</span>
+              )}
+            </div>
+          </div>
+        </a>
+      </li>
+    ))}
+  </ul>
+)}

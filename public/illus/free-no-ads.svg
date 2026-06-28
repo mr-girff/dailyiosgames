@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="640" height="420" viewBox="0 0 640 420" role="img" aria-label="A friendly tag reading FREE next to a clean game screen, with no popup ads">
+  <title>Free iOS games with no ads — illustration</title>
+  <desc>A bright "FREE" price tag and a phone playing a clean game while three faded ad popups bounce away, illustrating free iOS games that don't bother you with ads.</desc>
+  <defs>
+    <linearGradient id="fnBg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#fff5ee"/>
+      <stop offset="1" stop-color="#f9dec7"/>
+    </linearGradient>
+    <linearGradient id="fnTag" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#f0a07b"/>
+      <stop offset="1" stop-color="#a8401f"/>
+    </linearGradient>
+    <linearGradient id="fnPhone" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2b1a12"/>
+      <stop offset="1" stop-color="#3a261b"/>
+    </linearGradient>
+    <linearGradient id="fnScreen" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fde0d0"/>
+      <stop offset="1" stop-color="#f5b893"/>
+    </linearGradient>
+    <filter id="fnShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="8" stdDeviation="10" flood-color="#000" flood-opacity=".18"/>
+    </filter>
+  </defs>
+  <rect width="640" height="420" fill="url(#fnBg)"/>
+
+  <!-- floating away ads (faded) -->
+  <g opacity=".5">
+    <g transform="translate(80,60) rotate(-12)">
+      <rect width="120" height="40" rx="8" fill="#fff" stroke="#d97a4f" stroke-width="1.5" stroke-dasharray="4 3"/>
+      <text x="12" y="25" font-family="-apple-system, Segoe UI, sans-serif" font-size="11" font-weight="700" fill="#a8401f">SPECIAL OFFER ×</text>
+    </g>
+    <g transform="translate(60,170) rotate(8)">
+      <rect width="110" height="36" rx="8" fill="#fff" stroke="#d97a4f" stroke-width="1.5" stroke-dasharray="4 3"/>
+      <text x="12" y="23" font-family="-apple-system, Segoe UI, sans-serif" font-size="10" font-weight="700" fill="#a8401f">INSTALL NOW ×</text>
+    </g>
+    <g transform="translate(540,290) rotate(-6)">
+      <rect width="80" height="28" rx="8" fill="#fff" stroke="#d97a4f" stroke-width="1.5" stroke-dasharray="4 3"/>
+      <text x="10" y="19" font-family="-apple-system, Segoe UI, sans-serif" font-size="9" font-weight="700" fill="#a8401f">AD ×</text>
+    </g>
+  </g>
+
+  <!-- FREE price tag -->
+  <g filter="url(#fnShadow)" transform="translate(60,250) rotate(-8)">
+    <path d="M0 30 L 30 0 L 180 0 L 180 60 L 30 60 Z" fill="url(#fnTag)"/>
+    <circle cx="30" cy="30" r="9" fill="#fff5ee"/>
+    <circle cx="30" cy="30" r="3" fill="#a8401f"/>
+    <text x="68" y="40" font-family="-apple-system, Segoe UI, sans-serif" font-size="28" font-weight="800" fill="#fff" letter-spacing="2">FREE</text>
+  </g>
+
+  <!-- phone -->
+  <g filter="url(#fnShadow)" transform="translate(340,40)">
+    <rect width="200" height="340" rx="34" fill="url(#fnPhone)"/>
+    <rect x="10" y="12" width="180" height="316" rx="26" fill="url(#fnScreen)"/>
+    <rect x="78" y="20" width="44" height="14" rx="7" fill="#2b1a12"/>
+    <!-- clean game board -->
+    <g transform="translate(38,80)">
+      <rect width="124" height="124" rx="14" fill="#fff5ee"/>
+      <!-- 4x4 grid of dots -->
+      <g fill="#d97a4f">
+        <circle cx="22" cy="22" r="9"/>
+        <circle cx="62" cy="22" r="9"/>
+        <circle cx="102" cy="22" r="9"/>
+        <circle cx="22" cy="62" r="9"/>
+        <circle cx="62" cy="62" r="9"/>
+        <circle cx="102" cy="62" r="9"/>
+        <circle cx="22" cy="102" r="9"/>
+        <circle cx="62" cy="102" r="9"/>
+        <circle cx="102" cy="102" r="9"/>
+      </g>
+      <!-- connecting line -->
+      <path d="M22 22 L 62 22 L 62 62 L 102 62 L 102 102" stroke="#a8401f" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    </g>
+    <!-- progress bar -->
+    <g transform="translate(38,230)">
+      <rect width="124" height="8" rx="4" fill="#fffdf8"/>
+      <rect width="84"  height="8" rx="4" fill="#c15f3c"/>
+    </g>
+    <text x="100" y="280" text-anchor="middle" font-family="-apple-system, Segoe UI, sans-serif" font-size="11" font-weight="600" fill="#5a3a2a">Level 12</text>
+  </g>
+
+  <!-- caption -->
+  <g transform="translate(60,340)">
+    <rect width="240" height="48" rx="24" fill="#c15f3c"/>
+    <text x="22" y="31" font-family="-apple-system, Segoe UI, sans-serif" font-size="18" font-weight="700" fill="#fff">Free, but actually nice.</text>
+  </g>
+</svg>

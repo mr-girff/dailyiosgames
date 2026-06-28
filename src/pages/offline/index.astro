@@ -1,0 +1,97 @@
+---
+import Base from "../../layouts/Base.astro"
+import LongTailHero from "../../components/LongTailHero.astro"
+import GameCardList from "../../components/GameCardList.astro"
+import KeepBrowsing from "../../components/KeepBrowsing.astro"
+import { loadAll, rankByHeat, isIndexable } from "../../lib/enriched"
+
+const all = loadAll()
+const matching = rankByHeat(
+  all.filter(g => isIndexable(g) && (g.tags || []).includes("offline"))
+).slice(0, 60)
+
+const SITE = "https://ios.querygame.com"
+const path = "/offline/"
+const canonical = `${SITE}${path}`
+const title = "Best Offline iOS Games — Play Without Wi-Fi (2026)"
+const description = `${matching.length} iPhone & iPad games that work fully offline — no internet, no login required. Curated from our daily US App Store crawl. Updated ${new Date().toISOString().slice(0,10)}.`
+---
+<Base title={title} description={description} canonical={canonical} image={`${SITE}/illus/offline.svg`}>
+  <LongTailHero
+    eyebrow="Offline · airplane mode · daily"
+    title="Best offline iOS games"
+    lead="iPhone and iPad games you can play with no Wi-Fi, no cellular, and no account login. Perfect for flights, subways, hotels with bad Wi-Fi, and the rare moment your data plan throws in the towel. All tagged offline by our daily enrichment pass."
+    illustration="/illus/offline.svg"
+    illustrationAlt="A phone in airplane mode playing a puzzle game with mountains and a sun in the background"
+    stats={[
+      { num: matching.length, lbl: "Offline games on this list" },
+      { num: matching.filter(g => g.monetization === "premium").length, lbl: "Premium (no IAP) offline picks" },
+      { num: "24h", lbl: "Refresh cadence" },
+    ]}
+  />
+
+  <section>
+    <h2>What counts as &quot;offline&quot;</h2>
+    <p>An offline iOS game, as we tag it, is one that runs <strong>without an active internet connection</strong> after install — no required login, no constant server check-ins, no &quot;you need Wi-Fi to play&quot; modals. Some still phone home for analytics or optional cloud saves, but the core loop works in airplane mode.</p>
+    <p>If you've ever opened a game on a plane just to find a login wall, you know how much this matters. We re-check tags daily — if a game adds an always-online requirement in an update, it falls off this list.</p>
+  </section>
+
+  <section>
+    <h2>The list ({matching.length})</h2>
+    <GameCardList games={matching} emptyText="No offline games match today — check back tomorrow." />
+  </section>
+
+  <section>
+    <h2>FAQ</h2>
+    <details><summary>Will these work in airplane mode?</summary><p>Yes — that's exactly the bar we set for the offline tag. The first launch may briefly check for the App Store receipt; after that you can flip on airplane mode and play.</p></details>
+    <details><summary>Do offline games still get updates?</summary><p>Yes, via the App Store like any other app. The game itself just doesn't <em>require</em> a connection to run.</p></details>
+    <details><summary>Are these good for kids on long trips?</summary><p>Many are. Each card shows the archetype (puzzle, casual-arcade, RPG…) so you can pick what fits.</p></details>
+    <details><summary>How is this list ranked?</summary><p>By our heat score (rating-count velocity on the US App Store) so games currently picking up traction surface first.</p></details>
+  </section>
+
+  <KeepBrowsing
+    title="Keep exploring"
+    eyebrow="Related lists"
+    items={[
+      { href: "/no-ads-no-iap/",          title: "No ads & no in-app purchases",      sub: "Pay once, own it",        icon: "tag" },
+      { href: "/free-no-ads/",            title: "Free iOS games with no ads",        sub: "Free, but actually nice", icon: "fire" },
+      { href: "/this-week/",              title: "New iOS games this week",           sub: "Fresh releases",          icon: "calendar" },
+      { href: "/like-monument-valley/",   title: "Games like Monument Valley",        sub: "Quiet art puzzles",       icon: "star" },
+      { href: "/movers/",                 title: "Rising games right now",            sub: "Today's hot movers",      icon: "trend" },
+      { href: "/archetype/",              title: "Browse by category",                sub: "All archetypes",          icon: "grid" },
+    ]}
+  />
+
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": title,
+    "description": description,
+    "url": canonical,
+    "image": `${SITE}/illus/offline.svg`,
+    "mainEntity": {
+      "@type": "ItemList",
+      "numberOfItems": matching.length,
+      "itemListElement": matching.slice(0, 20).map((g, i) => ({
+        "@type": "ListItem", "position": i + 1, "name": g.name, "url": `${SITE}/games/${g.id}/`,
+      })),
+    },
+  })} />
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      { "@type": "Question", "name": "Will these work in airplane mode?", "acceptedAnswer": { "@type": "Answer", "text": "Yes. First launch may verify the App Store receipt; after that the game runs offline." } },
+      { "@type": "Question", "name": "Do offline games still get updates?", "acceptedAnswer": { "@type": "Answer", "text": "Yes, via the App Store. The game just doesn't require a connection to run." } },
+      { "@type": "Question", "name": "How is this list ranked?", "acceptedAnswer": { "@type": "Answer", "text": "By heat score — rating-count velocity on the US App Store, refreshed daily." } },
+    ],
+  })} />
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": SITE + "/" },
+      { "@type": "ListItem", "position": 2, "name": "Offline", "item": canonical },
+    ],
+  })} />
+</Base>

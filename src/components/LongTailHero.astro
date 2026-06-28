@@ -1,0 +1,44 @@
+---
+// LongTailHero — page-hero block tuned for long-tail landing pages.
+// Renders an illustration + headline + subtitle + 3-stat strip.
+const { eyebrow, title, lead, illustration, illustrationAlt, stats = [] } = Astro.props
+---
+<section class="lt-hero">
+  <div class="lt-hero__copy">
+    <div class="eyebrow">{eyebrow}</div>
+    <h1>{title}</h1>
+    <p class="lead">{lead}</p>
+    {stats.length > 0 && (
+      <div class="stat-row">
+        {stats.map((s) => (
+          <div class="stat"><span class="num">{s.num}</span><span class="lbl">{s.lbl}</span></div>
+        ))}
+      </div>
+    )}
+  </div>
+  <div class="lt-hero__art">
+    <img src={illustration} alt={illustrationAlt} width="640" height="420" loading="eager" decoding="async" />
+  </div>
+</section>
+
+<style>
+  .lt-hero {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 2rem;
+    align-items: center;
+    padding: 1.5rem 0 2.5rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 2rem;
+  }
+  .lt-hero__art img {
+    width: 100%; height: auto;
+    border-radius: 18px;
+    background: #fff5ee;
+    box-shadow: 0 6px 28px rgba(168,64,31,.10);
+  }
+  @media (max-width: 760px) {
+    .lt-hero { grid-template-columns: 1fr; gap: 1.25rem; }
+    .lt-hero__art { order: -1; }
+  }
+</style>

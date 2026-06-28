@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-label="Hidden gem iOS games" width="1200" height="630">
+  <defs>
+    <linearGradient id="bg2" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1a1326"/>
+      <stop offset="1" stop-color="#3a1f3d"/>
+    </linearGradient>
+    <linearGradient id="gem" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#ffd27a"/>
+      <stop offset=".5" stop-color="#f0a07b"/>
+      <stop offset="1" stop-color="#c15f3c"/>
+    </linearGradient>
+    <radialGradient id="glow" cx=".5" cy=".5" r=".5">
+      <stop offset="0" stop-color="#ffd27a" stop-opacity=".7"/>
+      <stop offset="1" stop-color="#ffd27a" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg2)"/>
+  <circle cx="900" cy="280" r="260" fill="url(#glow)"/>
+  <g transform="translate(820,180)">
+    <polygon points="80,0 160,60 130,200 30,200 0,60" fill="url(#gem)" stroke="#fff" stroke-width="3" stroke-opacity=".4"/>
+    <polygon points="80,0 80,200 30,60" fill="#fff" fill-opacity=".15"/>
+    <polygon points="80,0 80,200 130,60" fill="#000" fill-opacity=".12"/>
+  </g>
+  <g fill="#ffd27a" opacity=".7">
+    <circle cx="180" cy="120" r="3"/>
+    <circle cx="320" cy="80" r="2"/>
+    <circle cx="540" cy="160" r="3"/>
+    <circle cx="700" cy="100" r="2"/>
+    <circle cx="240" cy="500" r="3"/>
+    <circle cx="500" cy="540" r="2"/>
+    <circle cx="780" cy="520" r="3"/>
+  </g>
+  <text x="80" y="320" font-family="Inter, system-ui, sans-serif" font-weight="800" font-size="64" fill="#fff">Hidden Gem iOS Games</text>
+  <text x="80" y="380" font-family="Inter, system-ui, sans-serif" font-size="22" fill="#ffd9b8">High-signal indie picks the charts haven't found yet.</text>
+  <g transform="translate(80,430)">
+    <rect x="0" y="0" width="220" height="40" rx="20" fill="#ffd27a"/>
+    <text x="110" y="26" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-weight="700" font-size="16" fill="#1a1326">SIGNAL ≥ 15</text>
+  </g>
+</svg>

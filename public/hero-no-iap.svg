@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-label="iOS games with no in-app purchases" width="1200" height="630">
+  <defs>
+    <linearGradient id="bg3" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#e9f7ef"/>
+      <stop offset="1" stop-color="#c7eed6"/>
+    </linearGradient>
+    <linearGradient id="coin" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffd27a"/>
+      <stop offset="1" stop-color="#c98e2a"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg3)"/>
+  <g transform="translate(800,180) rotate(-12)">
+    <circle cx="120" cy="120" r="120" fill="url(#coin)" stroke="#7a5311" stroke-width="6"/>
+    <text x="120" y="140" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-weight="900" font-size="80" fill="#7a5311">$</text>
+    <line x1="20" y1="220" x2="220" y2="20" stroke="#c0392b" stroke-width="18" stroke-linecap="round"/>
+  </g>
+  <g transform="translate(80,150)">
+    <rect x="0" y="0" width="200" height="42" rx="21" fill="#2f9e5a"/>
+    <text x="100" y="28" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-weight="700" font-size="16" fill="#fff">ONE-TIME PRICE</text>
+  </g>
+  <text x="80" y="260" font-family="Inter, system-ui, sans-serif" font-weight="800" font-size="58" fill="#1f5a3a">iOS Games</text>
+  <text x="80" y="330" font-family="Inter, system-ui, sans-serif" font-weight="800" font-size="58" fill="#1f5a3a">with No In-App Purchases</text>
+  <text x="80" y="380" font-family="Inter, system-ui, sans-serif" font-size="22" fill="#3a6b4c">Premium &amp; ad-free. Pay once, own forever. Hand-filtered daily.</text>
+</svg>

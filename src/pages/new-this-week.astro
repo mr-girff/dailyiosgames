@@ -1,0 +1,139 @@
+---
+import Base from "../layouts/Base.astro"
+import GameGrid from "../components/GameGrid.astro"
+import KeepBrowsing from "../components/KeepBrowsing.astro"
+import Subscribe from "../components/Subscribe.astro"
+import fs from "node:fs"
+import path from "node:path"
+
+const p = path.join(process.cwd(), "data/enriched.json")
+const data = fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, "utf8")) : { all: [], date: "n/a" }
+const all = data.all || []
+
+// Past 7 days
+const week = all
+  .filter(g => (g.daysSinceRelease ?? 9999) <= 7)
+  .sort((a, b) => (b.signal || 0) - (a.signal || 0))
+
+// Split: top picks (signal >= 10) and rest
+const topPicks = week.filter(g => (g.signal || 0) >= 10)
+const others = week.filter(g => (g.signal || 0) < 10)
+
+// Group by day for the "What launched each day" list
+const groups: Record<string, any[]> = {}
+for (const g of week) {
+  const d = g.releaseDate || "unknown"
+  if (!groups[d]) groups[d] = []
+  groups[d].push(g)
+}
+const days = Object.keys(groups).sort().reverse()
+
+const dateFmt = data.date
+  ? new Date(data.date + "T00:00:00Z").toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" })
+  : ""
+
+function dayLabel(d: string): string {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) return d
+  return new Date(d + "T00:00:00Z").toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric", timeZone: "UTC" })
+}
+
+const SITE_NAME = import.meta.env.PUBLIC_SITE_NAME || "Daily iOS Games"
+const canonical = `${(Astro.site || "").toString().replace(/\/$/, "")}/new-this-week/`
+const ogImg = `${(Astro.site || "").toString().replace(/\/$/, "")}/hero-this-week.svg`
+
+const title = `New iOS Games This Week — ${dateFmt}`
+const description = `${week.length} new iOS games launched on the US App Store in the past 7 days. ${topPicks.length} with strong day-one signal. Updated daily by ${SITE_NAME}.`
+---
+<Base title={title} description={description} canonical={canonical} image={ogImg}>
+  <section class="hero-band hero-band--decorated">
+    <img class="hero-decor hero-decor--blob" src="/hero-this-week.svg" alt="" width="600" height="600" aria-hidden="true" />
+    <div class="hero-band__inner">
+      <div class="eyebrow">7-day window · updated {dateFmt}</div>
+      <h1>New iOS Games This Week</h1>
+      <p class="lead">Every US App Store game launch from the past 7 days, ranked by early signal. Use this as your weekly "what just dropped" digest.</p>
+      <div class="stat-row">
+        <div class="stat"><span class="num">{week.length}</span><span class="lbl">Launches</span></div>
+        <div class="stat"><span class="num">{topPicks.length}</span><span class="lbl">High signal</span></div>
+        <div class="stat"><span class="num">{days.length}</span><span class="lbl">Days covered</span></div>
+      </div>
+    </div>
+  </section>
+
+  <Subscribe variant="hero" source="new-this-week-hero" />
+
+  {topPicks.length > 0 && (
+    <section>
+      <div class="section-head">
+        <h2>This week's high-signal launches</h2>
+        <span class="more">{topPicks.length} picks</span>
+      </div>
+      <GameGrid games={topPicks} featuredFirst={true} eagerCount={2} />
+    </section>
+  )}
+
+  <section>
+    <div class="section-head"><h2>Day by day</h2></div>
+    {days.map(d => (
+      <div class="day-block">
+        <h3 class="day-head">{dayLabel(d)} <span class="day-count">· {groups[d].length} launch{groups[d].length === 1 ? "" : "es"}</span></h3>
+        <GameGrid games={groups[d]} eagerCount={0} />
+      </div>
+    ))}
+  </section>
+
+  <section class="prose">
+    <h2>Why a 7-day window?</h2>
+    <p>One day is too noisy — a launch can drop on a Friday afternoon and look quiet by Monday. One month buries the actually-fresh stuff under three weeks of charts. Seven days is the sweet spot for "what just happened on the App Store" without losing real signal.</p>
+    <p>Each title is scored on day-one rating-count velocity, chart movement and the strength of its unique-hook description. The ranking re-shuffles every morning as new data arrives.</p>
+    <h3>Related pages</h3>
+    <ul>
+      <li><a href="/new-today/">New iOS games released today</a> — 24-hour window</li>
+      <li><a href="/movers/">Rising iOS games</a> — momentum leaderboard across all tracked titles</li>
+      <li><a href="/posts/">Daily archive</a> — every morning's report, fully preserved</li>
+    </ul>
+  </section>
+
+  {(() => {
+    const items = [
+      { href: "/new-today/", title: "New today", sub: "24-hour window", icon: "calendar" },
+      { href: "/movers/", title: "Rising games", sub: "Hot momentum", icon: "fire" },
+      { href: "/hidden-gems/", title: "Hidden gems", sub: "High signal indies", icon: "star" },
+      { href: "/games/", title: "All tracked games", sub: `${all.length} titles`, icon: "list" },
+      { href: "/archetype/", title: "By category", sub: "Match-3, RPG, idle…", icon: "tag" },
+      { href: "/no-iap/", title: "No in-app purchases", sub: "Premium picks", icon: "star" },
+    ]
+    return <KeepBrowsing title="Keep exploring" eyebrow="More" items={items} />
+  })()}
+
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": title,
+    "description": description,
+    "url": canonical,
+    "datePublished": data.date,
+    "dateModified": data.date,
+    "mainEntity": {
+      "@type": "ItemList",
+      "name": "New iOS Games This Week",
+      "numberOfItems": week.length,
+      "itemListOrder": "https://schema.org/ItemListOrderDescending",
+      "itemListElement": week.slice(0, 25).map((g, i) => ({
+        "@type": "ListItem",
+        "position": i + 1,
+        "name": g.name,
+        "url": `${(Astro.site || "").toString().replace(/\/$/, "")}/games/${g.id}/`
+      }))
+    }
+  })} />
+</Base>
+
+<style>
+  .prose { margin-top: 2.5rem; max-width: 72ch; }
+  .prose h2 { margin-top: 1.75rem; }
+  .prose h3 { margin-top: 1.25rem; font-size: 1.1rem; }
+  .prose ul { padding-left: 1.25rem; }
+  .day-block { margin: 1.75rem 0 2rem; }
+  .day-head { margin: 0 0 .75rem; font-size: 1.05rem; color: var(--fg); font-weight: 700; }
+  .day-count { color: var(--fg-muted); font-weight: 500; font-size: .9rem; }
+</style>

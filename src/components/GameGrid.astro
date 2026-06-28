@@ -1,0 +1,40 @@
+---
+// Compact game grid used across landing pages.
+// Props: games (array of enriched game objects), featuredFirst (bool), eagerCount (number)
+import { cap, priceLabel } from "../lib/format"
+const { games = [], featuredFirst = false, eagerCount = 2, emptyMessage = "Nothing matched today — check back tomorrow." } = Astro.props
+---
+{games.length === 0 ? (
+  <p class="empty-state">{emptyMessage}</p>
+) : (
+  <ul class="game-grid">
+    {games.map((g, i) => {
+      const featured = featuredFirst && i === 0
+      const size = featured ? 96 : 64
+      return (
+        <li>
+          <a class={`game-card ${featured ? "featured" : ""}`} href={`/games/${g.id}/`}>
+            {g.icon && <img class="icon" src={g.images?.icon?.src || g.icon} alt={`${g.name} app icon`} width={size} height={size} loading={i < eagerCount ? "eager" : "lazy"} />}
+            <div class="meta">
+              <div class="name">{g.name}</div>
+              <div class="dev">{g.seller}</div>
+              {featured && (g.uniqueHook || g.coreLoop) && <p class="hook">{g.uniqueHook || g.coreLoop}</p>}
+              <div class="tags">
+                {g.archetype && <span class="tag">{cap(g.archetype)}</span>}
+                <span class={`tag ${priceLabel(g)==='Free' ? 'price-free' : ''}`}>{priceLabel(g)}</span>
+                {g.verdict === "build" && <span class="tag signal">High signal</span>}
+              </div>
+            </div>
+          </a>
+        </li>
+      )
+    })}
+  </ul>
+)}
+
+<style>
+  .empty-state {
+    padding: 2rem 1rem; text-align: center; color: var(--fg-muted);
+    background: var(--muted); border-radius: 14px;
+  }
+</style>

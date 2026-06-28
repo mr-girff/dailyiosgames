@@ -1,0 +1,151 @@
+---
+import Base from "../layouts/Base.astro"
+import GameGrid from "../components/GameGrid.astro"
+import KeepBrowsing from "../components/KeepBrowsing.astro"
+import Subscribe from "../components/Subscribe.astro"
+import { trustScore } from "../lib/format"
+import fs from "node:fs"
+import path from "node:path"
+
+const p = path.join(process.cwd(), "data/enriched.json")
+const data = fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, "utf8")) : { all: [], date: "n/a" }
+const all = data.all || []
+
+// "Hidden gem" = positive signal but small audience (low rating count).
+// Recipe:
+//   - verdict in {build, watch} OR signal >= 12
+//   - rating either unknown OR >= 4.0
+//   - ratingCount < 5,000 (avoids chart-toppers; this is the "hidden" filter)
+//   - no big red flags (gacha / energy gating)
+const flagBad = (g: any) => (g.redFlags || []).some((f: string) =>
+  /gacha|energy|subscription gate|requires internet/i.test(f)
+)
+
+const candidates = all.filter(g => {
+  if (flagBad(g)) return false
+  const r = Number(g.rating || 0)
+  const rc = Number(g.ratingCount || 0)
+  if (r > 0 && r < 4) return false
+  if (rc >= 5000) return false
+  return g.verdict === "build" || g.verdict === "watch" || (g.signal || 0) >= 12
+})
+
+const ranked = candidates
+  .map(g => ({ ...g, _trust: trustScore(g) }))
+  .sort((a, b) => b._trust - a._trust)
+
+const free = ranked.filter(g => !g.price || g.price === "Free" || g.price === "0")
+const paid = ranked.filter(g => !(!g.price || g.price === "Free" || g.price === "0"))
+
+const dateFmt = data.date
+  ? new Date(data.date + "T00:00:00Z").toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" })
+  : ""
+
+const SITE_NAME = import.meta.env.PUBLIC_SITE_NAME || "Daily iOS Games"
+const canonical = `${(Astro.site || "").toString().replace(/\/$/, "")}/hidden-gems/`
+const ogImg = `${(Astro.site || "").toString().replace(/\/$/, "")}/hero-hidden-gems.svg`
+
+const title = `Hidden Gem iOS Games — High-Signal Indies (${dateFmt})`
+const description = `${ranked.length} under-the-radar iOS games with strong signal and small audiences — the App Store's hidden gems, surfaced from daily data by ${SITE_NAME}.`
+---
+<Base title={title} description={description} canonical={canonical} image={ogImg}>
+  <section class="hero-band hero-band--decorated dark">
+    <img class="hero-decor hero-decor--blob" src="/hero-hidden-gems.svg" alt="" width="600" height="600" aria-hidden="true" />
+    <div class="hero-band__inner">
+      <div class="eyebrow">Updated {dateFmt}</div>
+      <h1>Hidden Gem iOS Games</h1>
+      <p class="lead">Indie games with serious signal but fewer than 5,000 ratings — the ones the charts haven't found yet. Filtered out: gacha gates, energy/lives systems, and pay-to-win subscriptions.</p>
+      <div class="stat-row">
+        <div class="stat"><span class="num">{ranked.length}</span><span class="lbl">Gems found</span></div>
+        <div class="stat"><span class="num">{free.length}</span><span class="lbl">Free</span></div>
+        <div class="stat"><span class="num">{paid.length}</span><span class="lbl">Premium</span></div>
+      </div>
+    </div>
+  </section>
+
+  <Subscribe variant="inline" source="hidden-gems-hero" />
+
+  <section>
+    <div class="section-head">
+      <h2>Top hidden gems right now</h2>
+      <span class="more">Ranked by trust score</span>
+    </div>
+    <GameGrid games={ranked.slice(0, 24)} featuredFirst={true} eagerCount={2} emptyMessage="No qualifying hidden gems in the current cohort. Check back tomorrow." />
+  </section>
+
+  {paid.length > 0 && (
+    <section>
+      <div class="section-head"><h2>Premium hidden gems (pay-once)</h2></div>
+      <GameGrid games={paid.slice(0, 12)} />
+    </section>
+  )}
+
+  {free.length > 0 && (
+    <section>
+      <div class="section-head"><h2>Free hidden gems</h2></div>
+      <GameGrid games={free.slice(0, 24)} />
+    </section>
+  )}
+
+  <section class="prose">
+    <h2>How "hidden gem" is decided</h2>
+    <p>Every tracked game gets a <em>trust score</em> built from four inputs:</p>
+    <ul>
+      <li><strong>Signal</strong> — our internal score for hook strength, chart velocity and freshness.</li>
+      <li><strong>Editorial verdict</strong> — pages flagged <code>build</code> or <code>watch</code> after structural review.</li>
+      <li><strong>Quality floor</strong> — App Store rating ≥ 4.0 (or unknown), to filter blatant clones.</li>
+      <li><strong>Audience cap</strong> — fewer than 5,000 ratings, so chart-toppers are excluded.</li>
+    </ul>
+    <p>Red flags subtract: any game tagged with gacha mechanics, energy/lives gating, mandatory subscriptions or "requires internet" for a single-player loop is removed before ranking.</p>
+    <h3>Why this works</h3>
+    <p>The big iOS "best of" lists are recycled monthly. They surface games that are already winning. This page does the opposite — it watches the long tail of fresh releases and flags the ones with structural signal before the charts pick them up. If you're a scout, this is the one to bookmark.</p>
+    <h3>Related pages</h3>
+    <ul>
+      <li><a href="/movers/">Rising iOS games</a> — momentum leaderboard (includes chart-toppers)</li>
+      <li><a href="/new-today/">New iOS games released today</a> — 24-hour launches</li>
+      <li><a href="/no-iap/">iOS games with no in-app purchases</a> — premium-only filter</li>
+    </ul>
+  </section>
+
+  {(() => {
+    const items = [
+      { href: "/movers/", title: "Rising games", sub: "Hot momentum", icon: "fire" },
+      { href: "/new-today/", title: "New today", sub: "Fresh launches", icon: "calendar" },
+      { href: "/no-iap/", title: "No in-app purchases", sub: "Pay-once games", icon: "star" },
+      { href: "/offline/", title: "Offline games", sub: "No internet needed", icon: "tag" },
+      { href: "/controller-support/", title: "Controller support", sub: "MFi / Backbone", icon: "trend" },
+      { href: "/games/", title: "All tracked games", sub: `${all.length} titles`, icon: "list" },
+    ]
+    return <KeepBrowsing title="Keep exploring" eyebrow="More" items={items} />
+  })()}
+
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": title,
+    "description": description,
+    "url": canonical,
+    "datePublished": data.date,
+    "dateModified": data.date,
+    "mainEntity": {
+      "@type": "ItemList",
+      "name": "Hidden Gem iOS Games",
+      "numberOfItems": ranked.length,
+      "itemListOrder": "https://schema.org/ItemListOrderDescending",
+      "itemListElement": ranked.slice(0, 20).map((g, i) => ({
+        "@type": "ListItem",
+        "position": i + 1,
+        "name": g.name,
+        "url": `${(Astro.site || "").toString().replace(/\/$/, "")}/games/${g.id}/`
+      }))
+    }
+  })} />
+</Base>
+
+<style>
+  .prose { margin-top: 2.5rem; max-width: 72ch; }
+  .prose h2 { margin-top: 1.75rem; }
+  .prose h3 { margin-top: 1.25rem; font-size: 1.1rem; }
+  .prose ul { padding-left: 1.25rem; }
+  .prose li { margin: .25rem 0; }
+</style>

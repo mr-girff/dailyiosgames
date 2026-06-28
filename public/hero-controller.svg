@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-label="iOS games with controller support" width="1200" height="630">
+  <defs>
+    <linearGradient id="bg4" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0f1d2f"/>
+      <stop offset="1" stop-color="#1f3a5c"/>
+    </linearGradient>
+    <linearGradient id="pad" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2c4a72"/>
+      <stop offset="1" stop-color="#152944"/>
+    </linearGradient>
+    <radialGradient id="btn" cx=".4" cy=".35" r=".7">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#9aa6b3"/>
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="630" fill="url(#bg4)"/>
+  <g transform="translate(720,180)">
+    <path d="M40,80 Q40,30 90,30 L290,30 Q340,30 340,80 L380,200 Q380,250 330,250 Q300,250 280,220 L100,220 Q80,250 50,250 Q0,250 0,200 Z" fill="url(#pad)" stroke="#3a6db2" stroke-width="3"/>
+    <g transform="translate(75,110)" fill="#9bb5d6">
+      <rect x="-22" y="-6" width="44" height="12" rx="4"/>
+      <rect x="-6" y="-22" width="12" height="44" rx="4"/>
+    </g>
+    <g transform="translate(305,110)">
+      <circle r="14" fill="url(#btn)"/>
+      <circle cx="-26" cy="0" r="10" fill="#3fae63"/>
+      <circle cx="26" cy="0" r="10" fill="#d97a4f"/>
+      <circle cx="0" cy="-26" r="10" fill="#f4c948"/>
+      <circle cx="0" cy="26" r="10" fill="#5da9e3"/>
+    </g>
+    <rect x="150" y="120" width="80" height="40" rx="20" fill="#3fae63" opacity=".7"/>
+    <text x="190" y="148" text-anchor="middle" font-family="Inter, system-ui, sans-serif" font-weight="700" font-size="18" fill="#fff">iOS</text>
+  </g>
+  <text x="80" y="280" font-family="Inter, system-ui, sans-serif" font-weight="800" font-size="58" fill="#fff">iOS Games with</text>
+  <text x="80" y="350" font-family="Inter, system-ui, sans-serif" font-weight="800" font-size="58" fill="#5da9e3">Controller Support</text>
+  <text x="80" y="400" font-family="Inter, system-ui, sans-serif" font-size="22" fill="#b8c8de">Verified MFi / Bluetooth pad &amp; Backbone compatibility. Updated daily.</text>
+</svg>

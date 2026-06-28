@@ -16,19 +16,35 @@ export async function GET() {
   const archetypes = [...new Set(indexable.map(g => g.archetype))]
 
   const urls = [
-    { loc: `${base}/`,             changefreq: "daily",   priority: "1.0", lastmod: today },
-    { loc: `${base}/posts/`,       changefreq: "daily",   priority: "0.8", lastmod: today },
-    { loc: `${base}/games/`,       changefreq: "daily",   priority: "0.7", lastmod: today },
-    { loc: `${base}/archetype/`,   changefreq: "weekly",  priority: "0.6", lastmod: today },
-    { loc: `${base}/about/`,       changefreq: "monthly", priority: "0.3", lastmod: today },
-    { loc: `${base}/methodology/`, changefreq: "monthly", priority: "0.3", lastmod: today },
-    // Long-tail landing pages
-    { loc: `${base}/no-ads-no-iap/`,        changefreq: "daily", priority: "0.7", lastmod: today },
-    { loc: `${base}/free-no-ads/`,          changefreq: "daily", priority: "0.7", lastmod: today },
-    { loc: `${base}/offline/`,              changefreq: "daily", priority: "0.7", lastmod: today },
-    { loc: `${base}/this-week/`,            changefreq: "daily", priority: "0.8", lastmod: today },
-    { loc: `${base}/like-monument-valley/`, changefreq: "daily", priority: "0.6", lastmod: today },
+    { loc: `${base}/`,                       changefreq: "daily",   priority: "1.0", lastmod: today },
+    { loc: `${base}/posts/`,                 changefreq: "daily",   priority: "0.8", lastmod: today },
+    { loc: `${base}/games/`,                 changefreq: "daily",   priority: "0.7", lastmod: today },
+    { loc: `${base}/archetype/`,             changefreq: "weekly",  priority: "0.6", lastmod: today },
+    { loc: `${base}/movers/`,                changefreq: "daily",   priority: "0.8", lastmod: today },
+    // Long-tail SEO landing pages
+    { loc: `${base}/new-today/`,             changefreq: "daily",   priority: "0.9", lastmod: today },
+    { loc: `${base}/new-this-week/`,         changefreq: "daily",   priority: "0.8", lastmod: today },
+    { loc: `${base}/this-week/`,             changefreq: "daily",   priority: "0.8", lastmod: today },
+    { loc: `${base}/hidden-gems/`,           changefreq: "daily",   priority: "0.8", lastmod: today },
+    { loc: `${base}/no-iap/`,                changefreq: "daily",   priority: "0.7", lastmod: today },
+    { loc: `${base}/no-ads-no-iap/`,         changefreq: "daily",   priority: "0.7", lastmod: today },
+    { loc: `${base}/free-no-ads/`,           changefreq: "daily",   priority: "0.7", lastmod: today },
+    { loc: `${base}/controller-support/`,    changefreq: "daily",   priority: "0.7", lastmod: today },
+    { loc: `${base}/offline/`,               changefreq: "daily",   priority: "0.7", lastmod: today },
+    { loc: `${base}/like/`,                  changefreq: "weekly",  priority: "0.6", lastmod: today },
+    { loc: `${base}/like-monument-valley/`,  changefreq: "daily",   priority: "0.6", lastmod: today },
+    { loc: `${base}/about/`,                 changefreq: "monthly", priority: "0.3", lastmod: today },
+    { loc: `${base}/methodology/`,           changefreq: "monthly", priority: "0.3", lastmod: today },
   ]
+
+  // "Games like" seed pages
+  try {
+    const seedsMod = await import("../lib/likeSeeds")
+    for (const s of (seedsMod.SEEDS || [])) {
+      urls.push({ loc: `${base}/like/${s.slug}/`, changefreq: "daily", priority: "0.7", lastmod: today })
+    }
+  } catch {}
+
   for (const a of archetypes) urls.push({ loc: `${base}/archetype/${a}/`, changefreq: "daily", priority: "0.6", lastmod: today })
   for (const g of indexable)  urls.push({ loc: `${base}/games/${g.id}/`,  changefreq: "weekly", priority: "0.5", lastmod: g.currentVersionDate || today })
   // Daily posts

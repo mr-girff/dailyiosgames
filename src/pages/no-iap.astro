@@ -1,0 +1,133 @@
+---
+import Base from "../layouts/Base.astro"
+import GameGrid from "../components/GameGrid.astro"
+import KeepBrowsing from "../components/KeepBrowsing.astro"
+import { isFree, hasTag } from "../lib/format"
+import fs from "node:fs"
+import path from "node:path"
+
+const p = path.join(process.cwd(), "data/enriched.json")
+const data = fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, "utf8")) : { all: [], date: "n/a" }
+const all = data.all || []
+
+// "No in-app purchases":
+//   - monetization === "premium"  OR
+//   - paid app + tagged no-ads
+const premium = all.filter(g => g.monetization === "premium")
+const adFreeFree = all.filter(g => isFree(g) && hasTag(g, "no-ads") && g.monetization !== "iapAds")
+
+const all2 = [...premium, ...adFreeFree]
+const uniq = new Map()
+for (const g of all2) uniq.set(g.id, g)
+const list = [...uniq.values()].sort((a, b) => (b.signal || 0) - (a.signal || 0))
+
+const dateFmt = data.date
+  ? new Date(data.date + "T00:00:00Z").toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" })
+  : ""
+
+const SITE_NAME = import.meta.env.PUBLIC_SITE_NAME || "Daily iOS Games"
+const canonical = `${(Astro.site || "").toString().replace(/\/$/, "")}/no-iap/`
+const ogImg = `${(Astro.site || "").toString().replace(/\/$/, "")}/hero-no-iap.svg`
+
+const title = `iOS Games With No In-App Purchases — Updated ${dateFmt}`
+const description = `${list.length} iOS games with no in-app purchases or pay-to-win: premium pay-once titles and verified ad-free free games. Refreshed daily from US App Store data by ${SITE_NAME}.`
+---
+<Base title={title} description={description} canonical={canonical} image={ogImg}>
+  <section class="hero-band hero-band--decorated">
+    <img class="hero-decor hero-decor--blob" src="/hero-no-iap.svg" alt="" width="600" height="600" aria-hidden="true" />
+    <div class="hero-band__inner">
+      <div class="eyebrow">Updated {dateFmt} · pay-once &amp; verified ad-free</div>
+      <h1>iOS Games With No In-App Purchases</h1>
+      <p class="lead">Games that respect your wallet: premium pay-once titles, plus free games that ship without ads <em>or</em> microtransactions. The kind of iOS games that used to fill the App Store before freemium took over.</p>
+      <div class="stat-row">
+        <div class="stat"><span class="num">{premium.length}</span><span class="lbl">Premium</span></div>
+        <div class="stat"><span class="num">{adFreeFree.length}</span><span class="lbl">Free &amp; ad-free</span></div>
+        <div class="stat"><span class="num">{list.length}</span><span class="lbl">Total</span></div>
+      </div>
+    </div>
+  </section>
+
+  {premium.length > 0 && (
+    <section>
+      <div class="section-head">
+        <h2>Premium iOS games (pay once)</h2>
+        <span class="more">{premium.length} titles</span>
+      </div>
+      <GameGrid games={premium} featuredFirst={true} eagerCount={2} emptyMessage="No premium games currently tracked." />
+    </section>
+  )}
+
+  {adFreeFree.length > 0 && (
+    <section>
+      <div class="section-head">
+        <h2>Free games with no ads &amp; no IAP</h2>
+        <span class="more">{adFreeFree.length} titles</span>
+      </div>
+      <GameGrid games={adFreeFree} />
+    </section>
+  )}
+
+  <section class="prose">
+    <h2>What "no in-app purchases" means here</h2>
+    <p>The label gets abused on the App Store. A "free, no IAP" puzzle game might still pump an ad after every level. A "pay once" RPG might lock half its content behind expansions. This page filters both:</p>
+    <ul>
+      <li><strong>Premium</strong> = paid up front, no IAP listed on the App Store metadata, no subscription. You buy it, you own it.</li>
+      <li><strong>Free &amp; ad-free</strong> = $0 price <em>and</em> our metadata pipeline confirms no ad SDKs / no IAP gating in the description. (Free-to-start-then-paywall games are excluded.)</li>
+    </ul>
+    <p>The list is rebuilt every morning. If a publisher slips a subscription banner into a future update, the game drops off this page the next day.</p>
+    <h3>Who this is for</h3>
+    <ul>
+      <li>Parents shopping for kid-safe games without ad-driven dark patterns.</li>
+      <li>Adults who'd rather pay $5 once than be nickel-and-dimed for $50 over six months.</li>
+      <li>iPad users with a Backbone / controller who want console-style experiences without the freemium grind.</li>
+    </ul>
+    <h3>Related pages</h3>
+    <ul>
+      <li><a href="/offline/">Offline iOS games</a> — no Wi-Fi needed</li>
+      <li><a href="/controller-support/">iOS games with controller support</a></li>
+      <li><a href="/hidden-gems/">Hidden gem iOS games</a></li>
+    </ul>
+  </section>
+
+  {(() => {
+    const items = [
+      { href: "/offline/", title: "Offline games", sub: "No internet needed", icon: "tag" },
+      { href: "/controller-support/", title: "Controller support", sub: "MFi / Backbone", icon: "trend" },
+      { href: "/hidden-gems/", title: "Hidden gems", sub: "Under-the-radar picks", icon: "star" },
+      { href: "/new-today/", title: "New today", sub: "Fresh launches", icon: "calendar" },
+      { href: "/movers/", title: "Rising games", sub: "Hot momentum", icon: "fire" },
+      { href: "/games/", title: "All tracked games", sub: `${all.length} titles`, icon: "list" },
+    ]
+    return <KeepBrowsing title="Keep exploring" eyebrow="More" items={items} />
+  })()}
+
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": title,
+    "description": description,
+    "url": canonical,
+    "datePublished": data.date,
+    "dateModified": data.date,
+    "mainEntity": {
+      "@type": "ItemList",
+      "name": "iOS Games With No In-App Purchases",
+      "numberOfItems": list.length,
+      "itemListOrder": "https://schema.org/ItemListOrderDescending",
+      "itemListElement": list.slice(0, 25).map((g, i) => ({
+        "@type": "ListItem",
+        "position": i + 1,
+        "name": g.name,
+        "url": `${(Astro.site || "").toString().replace(/\/$/, "")}/games/${g.id}/`
+      }))
+    }
+  })} />
+</Base>
+
+<style>
+  .prose { margin-top: 2.5rem; max-width: 72ch; }
+  .prose h2 { margin-top: 1.75rem; }
+  .prose h3 { margin-top: 1.25rem; font-size: 1.1rem; }
+  .prose ul { padding-left: 1.25rem; }
+  .prose li { margin: .25rem 0; }
+</style>

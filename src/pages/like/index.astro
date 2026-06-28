@@ -1,0 +1,109 @@
+---
+import Base from "../../layouts/Base.astro"
+import KeepBrowsing from "../../components/KeepBrowsing.astro"
+import { SEEDS } from "../../lib/likeSeeds"
+import fs from "node:fs"
+import path from "node:path"
+
+const p = path.join(process.cwd(), "data/enriched.json")
+const data = fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, "utf8")) : { all: [], date: "n/a" }
+const allCount = (data.all || []).length
+
+const dateFmt = data.date
+  ? new Date(data.date + "T00:00:00Z").toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" })
+  : ""
+
+const canonical = `${(Astro.site || "").toString().replace(/\/$/, "")}/like/`
+const ogImg = `${(Astro.site || "").toString().replace(/\/$/, "")}/hero-like.svg`
+
+const title = `iOS Games Like… — Data-Driven Alternatives Finder`
+const description = `Find iOS games like your favorites. ${SEEDS.length} starting points: Balatro, Stardew Valley, Vampire Survivors, Slay the Spire, Pokémon and more. Daily-refreshed.`
+---
+<Base title={title} description={description} canonical={canonical} image={ogImg}>
+  <section class="hero-band hero-band--decorated">
+    <img class="hero-decor hero-decor--blob" src="/hero-like.svg" alt="" width="600" height="600" aria-hidden="true" />
+    <div class="hero-band__inner">
+      <div class="eyebrow">Updated {dateFmt}</div>
+      <h1>iOS Games Like…</h1>
+      <p class="lead">Tell us what you love. We'll find you something close from {allCount} tracked iOS games. Every list is rebuilt from live US App Store data every morning.</p>
+    </div>
+  </section>
+
+  <section>
+    <div class="section-head"><h2>Pick a starting point</h2></div>
+    <ul class="seed-grid">
+      {SEEDS.map(s => (
+        <li>
+          <a class="seed-card" href={`/like/${s.slug}/`}>
+            <span class="seed-name">{s.name}</span>
+            <span class="seed-sub">{s.archetypes.slice(0, 2).join(" / ")}</span>
+            <span class="seed-go">Browse alternatives →</span>
+          </a>
+        </li>
+      ))}
+    </ul>
+  </section>
+
+  <section class="prose">
+    <h2>How "games like" picks are built</h2>
+    <p>For each seed game we run every tracked iOS title through a 4-signal scoring function:</p>
+    <ul>
+      <li><strong>Archetype overlap</strong> — does the candidate live in the same broad genre family as the seed?</li>
+      <li><strong>Tag overlap</strong> — same lifestyle markers (offline, multiplayer, family-safe)?</li>
+      <li><strong>Description keyword hits</strong> — does the App Store text name the core mechanics?</li>
+      <li><strong>Quality floor</strong> — minimum App Store rating, plus a boost for editorial picks.</li>
+    </ul>
+    <p>No paid placements. No affiliate-driven ranking. The whole pipeline runs against the live iTunes Lookup API every night.</p>
+    <h3>Want a seed we don't have yet?</h3>
+    <p>The list grows as we add seeds. If you'd like a "games like X" page for a specific iOS title, mention it in a reply to <a href="/subscribe/">the newsletter</a> and we'll add it to the queue.</p>
+  </section>
+
+  {(() => {
+    const items = [
+      { href: "/hidden-gems/", title: "Hidden gems", sub: "Indies the charts missed", icon: "star" },
+      { href: "/movers/", title: "Rising games", sub: "Hot momentum", icon: "fire" },
+      { href: "/new-today/", title: "New today", sub: "Fresh launches", icon: "calendar" },
+      { href: "/no-iap/", title: "No in-app purchases", sub: "Pay-once games", icon: "star" },
+      { href: "/offline/", title: "Offline games", sub: "Airplane-mode ready", icon: "tag" },
+      { href: "/controller-support/", title: "Controller support", sub: "MFi / Backbone", icon: "trend" },
+    ]
+    return <KeepBrowsing title="Keep exploring" eyebrow="More" items={items} />
+  })()}
+
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": title,
+    "description": description,
+    "url": canonical,
+    "mainEntity": {
+      "@type": "ItemList",
+      "name": "iOS Games Like… Pages",
+      "numberOfItems": SEEDS.length,
+      "itemListElement": SEEDS.map((s, i) => ({
+        "@type": "ListItem",
+        "position": i + 1,
+        "name": `iOS Games Like ${s.name}`,
+        "url": `${(Astro.site || "").toString().replace(/\/$/, "")}/like/${s.slug}/`
+      }))
+    }
+  })} />
+</Base>
+
+<style>
+  .seed-grid { list-style: none; padding: 0; margin: 1rem 0; display: grid; gap: .75rem; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); }
+  .seed-card {
+    display: flex; flex-direction: column; gap: .25rem;
+    padding: 1rem; border-radius: 14px;
+    background: var(--muted); text-decoration: none; color: inherit;
+    transition: background .15s, transform .15s;
+  }
+  .seed-card:hover { background: var(--card-hover, rgba(127,127,127,.12)); transform: translateY(-2px); }
+  .seed-name { font-weight: 700; font-size: 1.05rem; }
+  .seed-sub { font-size: .82rem; color: var(--fg-muted); }
+  .seed-go { font-size: .82rem; color: var(--accent); margin-top: .25rem; }
+  .prose { margin-top: 2.5rem; max-width: 72ch; }
+  .prose h2 { margin-top: 1.75rem; }
+  .prose h3 { margin-top: 1.25rem; font-size: 1.1rem; }
+  .prose ul { padding-left: 1.25rem; }
+</style>

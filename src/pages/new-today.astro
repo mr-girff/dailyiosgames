@@ -1,0 +1,137 @@
+---
+import Base from "../layouts/Base.astro"
+import GameGrid from "../components/GameGrid.astro"
+import KeepBrowsing from "../components/KeepBrowsing.astro"
+import Subscribe from "../components/Subscribe.astro"
+import { cap } from "../lib/format"
+import fs from "node:fs"
+import path from "node:path"
+
+const p = path.join(process.cwd(), "data/enriched.json")
+const data = fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, "utf8")) : { all: [], date: "n/a" }
+const all = data.all || []
+
+// "Today" = released in the last 1 day according to our last refresh.
+const today = all
+  .filter(g => (g.daysSinceRelease ?? 9999) <= 1)
+  .sort((a, b) => (b.signal || 0) - (a.signal || 0))
+
+const yesterday = all
+  .filter(g => (g.daysSinceRelease ?? 9999) === 2)
+  .sort((a, b) => (b.signal || 0) - (a.signal || 0))
+  .slice(0, 12)
+
+const past48 = today.length + yesterday.length
+
+const dateFmt = data.date
+  ? new Date(data.date + "T00:00:00Z").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric", timeZone: "UTC" })
+  : ""
+
+const SITE_NAME = import.meta.env.PUBLIC_SITE_NAME || "Daily iOS Games"
+const canonical = `${(Astro.site || "").toString().replace(/\/$/, "")}/new-today/`
+const ogImg = `${(Astro.site || "").toString().replace(/\/$/, "")}/hero-new-today.svg`
+
+const title = `New iOS Games Released Today — ${dateFmt}`
+const description = `${today.length} new iOS games launched on the US App Store today (${dateFmt}). Hand-curated, ranked by signal, refreshed every morning by ${SITE_NAME}.`
+---
+<Base title={title} description={description} canonical={canonical} image={ogImg}>
+  <section class="hero-band hero-band--decorated">
+    <img class="hero-decor hero-decor--blob" src="/hero-new-today.svg" alt="" width="600" height="600" aria-hidden="true" />
+    <div class="hero-band__inner">
+      <div class="eyebrow">{dateFmt}</div>
+      <h1>New iOS Games Released Today</h1>
+      <p class="lead">{today.length} fresh game{today.length === 1 ? "" : "s"} on the US App Store today, ranked by early-signal heat. Every page below is rebuilt from the live iTunes feed every morning at 06:00 UTC.</p>
+      <div class="stat-row">
+        <div class="stat"><span class="num">{today.length}</span><span class="lbl">New today</span></div>
+        <div class="stat"><span class="num">{past48}</span><span class="lbl">Past 48 hours</span></div>
+        <div class="stat"><span class="num">{all.length}</span><span class="lbl">Tracked total</span></div>
+      </div>
+    </div>
+  </section>
+
+  <Subscribe variant="hero" source="new-today-hero" />
+
+  <section>
+    <div class="section-head">
+      <h2>Today's releases — {dateFmt}</h2>
+      <a class="more" href="/posts/">Daily archive →</a>
+    </div>
+    <GameGrid games={today} featuredFirst={true} eagerCount={2} emptyMessage="No new launches detected since the last refresh. Check back tomorrow morning." />
+  </section>
+
+  {yesterday.length > 0 && (
+    <section>
+      <div class="section-head">
+        <h2>Released yesterday</h2>
+      </div>
+      <GameGrid games={yesterday} />
+    </section>
+  )}
+
+  <section class="prose">
+    <h2>How "released today" is decided</h2>
+    <p>Apple's iTunes RSS feed and Lookup API are polled every morning. A game is on this list if its <code>releaseDate</code> from the App Store metadata is within the past 24 hours of our last snapshot. We do not pre-announce soft launches — only live, downloadable games show up here.</p>
+    <p>Order: each title gets a <em>signal</em> score derived from rating count, daily-rank velocity and unique-hook detection. New launches with strong day-one traction surface first; brand-new titles with zero ratings slot below. The full methodology is on the <a href="/methodology/">methodology page</a>.</p>
+    <h3>What this page is good for</h3>
+    <ul>
+      <li><strong>App Store scouts</strong> hunting day-zero launches before the big aggregators index them.</li>
+      <li><strong>Reviewers and creators</strong> looking for fresh angles on launch day.</li>
+      <li><strong>Players</strong> who want the actual <em>new</em> list, not last week's leftovers.</li>
+    </ul>
+    <h3>Related pages</h3>
+    <ul>
+      <li><a href="/new-this-week/">New iOS games this week</a> — 7-day rolling window</li>
+      <li><a href="/hidden-gems/">Hidden gem iOS games</a> — high-signal indies</li>
+      <li><a href="/movers/">Rising iOS games</a> — momentum leaderboard</li>
+    </ul>
+  </section>
+
+  {(() => {
+    const items = [
+      { href: "/new-this-week/", title: "New this week", sub: "7-day rolling window", icon: "calendar" },
+      { href: "/movers/", title: "Rising games", sub: "Hot momentum, ranked", icon: "fire" },
+      { href: "/hidden-gems/", title: "Hidden gems", sub: "High-signal picks", icon: "star" },
+      { href: "/posts/", title: "Daily archive", sub: "Every morning report", icon: "list" },
+      { href: "/archetype/", title: "By category", sub: "Match-3, RPG, idle…", icon: "tag" },
+      { href: "/no-iap/", title: "No in-app purchases", sub: "Pay-once games", icon: "star" },
+    ]
+    return <KeepBrowsing title="Keep exploring" eyebrow="More on the site" items={items} />
+  })()}
+
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": title,
+    "description": description,
+    "url": canonical,
+    "datePublished": data.date,
+    "dateModified": data.date,
+    "mainEntity": {
+      "@type": "ItemList",
+      "name": "New iOS Games Released Today",
+      "numberOfItems": today.length,
+      "itemListOrder": "https://schema.org/ItemListOrderDescending",
+      "itemListElement": today.slice(0, 20).map((g, i) => ({
+        "@type": "ListItem",
+        "position": i + 1,
+        "name": g.name,
+        "url": `${(Astro.site || "").toString().replace(/\/$/, "")}/games/${g.id}/`
+      }))
+    },
+    "breadcrumb": {
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "Home", "item": (Astro.site || "").toString() },
+        { "@type": "ListItem", "position": 2, "name": "New today", "item": canonical }
+      ]
+    }
+  })} />
+</Base>
+
+<style>
+  .prose { margin-top: 2.5rem; max-width: 72ch; }
+  .prose h2 { margin-top: 1.75rem; }
+  .prose h3 { margin-top: 1.25rem; font-size: 1.1rem; }
+  .prose ul { padding-left: 1.25rem; }
+  .prose li { margin: .25rem 0; }
+</style>

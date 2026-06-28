@@ -36,7 +36,7 @@ const computedCanonical = canonical || `${site}${Astro.url.pathname}`
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="preconnect" href="https://pagead2.googlesyndication.com" crossorigin />
     <link rel="preconnect" href="https://www.googletagmanager.com" crossorigin />
-    <link rel="stylesheet" href="/styles.css?v=20260628b" />
+    <link rel="stylesheet" href="/styles.css?v=20260628c" />
 
     {/* Google Analytics 4 */}
     {GA_ID && (
@@ -100,13 +100,46 @@ const computedCanonical = canonical || `${site}${Astro.url.pathname}`
           </svg>
         </button>
         <ul id="primary-menu">
-          <li><a href="/new-today/">New today</a></li>
-          <li><a href="/movers/">Rising</a></li>
-          <li><a href="/hidden-gems/">Hidden gems</a></li>
-          <li><a href="/like/">Games like…</a></li>
-          <li><a href="/games/">All games</a></li>
-          <li><a href="/archetype/">Categories</a></li>
-          <li><a href="/subscribe/" class="nav-cta">Subscribe</a></li>
+          <li><a href="/new-today/">
+            <svg class="nav-i" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 3v3M18 3v3M4 8h16M5 6h14a1 1 0 011 1v12a1 1 0 01-1 1H5a1 1 0 01-1-1V7a1 1 0 011-1z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/></svg>
+            <span>New today</span>
+          </a></li>
+          <li><a href="/movers/">
+            <svg class="nav-i" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 17l5-5 4 3 7-8M20 7h-4M20 7v4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+            <span>Rising</span>
+          </a></li>
+          <li><a href="/hidden-gems/">
+            <svg class="nav-i" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 2l2.4 5.6L20 8.5l-4 4.1.9 5.9L12 15.8 7.1 18.5l.9-5.9-4-4.1 5.6-.9L12 2z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" fill="none"/></svg>
+            <span>Hidden gems</span>
+          </a></li>
+          <li class="nav-more"><a href="/like/" class="nav-more__link" aria-haspopup="true" aria-expanded="false">
+            <svg class="nav-i" width="16" height="16" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M9 10c.3-1.5 1.5-2.5 3-2.5s2.7 1 2.7 2.3c0 2.2-2.7 2.4-2.7 4.7M12 17v.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/></svg>
+            <span>Discover</span>
+            <svg class="nav-caret" width="12" height="12" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+          </a>
+            <div class="nav-submenu" role="menu">
+              <a href="/like/" role="menuitem">
+                <svg class="nav-i" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-4.5-7-10a4 4 0 017-2.6A4 4 0 0119 11c0 5.5-7 10-7 10z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" fill="none"/></svg>
+                <span>Games like…</span>
+              </a>
+              <a href="/games/" role="menuitem">
+                <svg class="nav-i" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" fill="none"/></svg>
+                <span>All games</span>
+              </a>
+              <a href="/archetype/" role="menuitem">
+                <svg class="nav-i" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7l3-3h5l3 3h7v12H3V7z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" fill="none"/></svg>
+                <span>Categories</span>
+              </a>
+              <a href="/posts/" role="menuitem">
+                <svg class="nav-i" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h11l3 3v13H5V4z M16 4v3h3" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" fill="none"/><path d="M8 12h8M8 16h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                <span>Daily reports</span>
+              </a>
+            </div>
+          </li>
+          <li><a href="/subscribe/" class="nav-cta">
+            <svg class="nav-i" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 6l9 7 9-7M3 6v12h18V6" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" fill="none"/></svg>
+            <span>Subscribe</span>
+          </a></li>
         </ul>
       </nav>
     </header>
@@ -199,23 +232,54 @@ const computedCanonical = canonical || `${site}${Astro.url.pathname}`
         var btn = document.querySelector(".nav-toggle");
         var menu = document.getElementById("primary-menu");
         var body = document.body;
-        function close() {
+        var moreItem = document.querySelector(".nav-more");
+        var moreLink = moreItem && moreItem.querySelector(".nav-more__link");
+        function closeDrawer() {
           btn && btn.setAttribute("aria-expanded", "false");
           body.classList.remove("nav-open");
+          if (moreLink) moreLink.setAttribute("aria-expanded", "false");
+          if (moreItem) moreItem.classList.remove("nav-more--open");
         }
         if (btn && menu) {
           btn.addEventListener("click", function () {
             var open = btn.getAttribute("aria-expanded") === "true";
             btn.setAttribute("aria-expanded", String(!open));
             body.classList.toggle("nav-open", !open);
+            if (open && moreLink) {
+              moreLink.setAttribute("aria-expanded", "false");
+              moreItem.classList.remove("nav-more--open");
+            }
           });
-          // Close on link click
+          // Close on link click (but NOT on the More toggle)
           menu.addEventListener("click", function (e) {
-            if (e.target.tagName === "A") close();
+            var a = e.target.closest("a");
+            if (!a) return;
+            if (a.classList.contains("nav-more__link")) return; // handled below
+            closeDrawer();
           });
           // Close on Escape
           document.addEventListener("keydown", function (e) {
-            if (e.key === "Escape") close();
+            if (e.key === "Escape") closeDrawer();
+          });
+        }
+
+        // Discover dropdown — click on mobile, hover on desktop (CSS-only)
+        if (moreLink && moreItem) {
+          moreLink.addEventListener("click", function (e) {
+            // On phones, the parent label is a click-to-expand toggle
+            if (window.matchMedia("(max-width: 760px)").matches) {
+              e.preventDefault();
+              var open = moreLink.getAttribute("aria-expanded") === "true";
+              moreLink.setAttribute("aria-expanded", String(!open));
+              moreItem.classList.toggle("nav-more--open", !open);
+            }
+            // On desktop, allow navigation to /like/ as normal
+          });
+          // Close dropdown when clicking outside (desktop)
+          document.addEventListener("click", function (e) {
+            if (!moreItem.contains(e.target)) {
+              moreItem.classList.remove("nav-more--hover");
+            }
           });
         }
 

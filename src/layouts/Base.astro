@@ -69,6 +69,17 @@ const computedCanonical = canonical || `${site}${Astro.url.pathname}`
       "url": site,
       "logo": `${site}/favicon.svg`,
     })}></script>
+
+    {/* VibeLoft Web Telemetry — loaded once, globally, on every page.
+        is:inline keeps Astro from bundling/relocating this third-party tag so
+        the defer + data-* attributes are emitted verbatim in the <head>. */}
+    <script
+      is:inline
+      defer
+      src="https://vibeloft.ai/telemetry/v1.js"
+      data-vl-product-id="628441e5-010f-4258-a55e-93194acfd408"
+      data-vl-auth-key="vl_web.rIJvei6PWInXvpZkI9q0Pi5ox4lMHKk7yu7PKSpueis"
+    ></script>
   </head>
   <body class={`themed ${bodyClass}`}>
     <a href="#main" class="skip">Skip to content</a>

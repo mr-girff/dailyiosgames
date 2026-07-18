@@ -52,14 +52,14 @@ This lets the daily cron commit new data + images + videos back to the repo (whi
    - Root directory: `/`
 4. Add environment variables (Add variable):
    ```
-   SITE_URL              https://dailyiosgames.pages.dev
+   SITE_URL              https://ios.querygame.com
    PUBLIC_SITE_NAME      Daily iOS Games
    COUNTRY               us
    NODE_VERSION          20
    ```
 5. **Save and Deploy**
 
-First build: 3–5 min (fetches App Store data, enriches, pulls Google Trends, downloads + converts images). When it finishes, open `https://dailyiosgames.pages.dev` and you'll see real data.
+First build: 3–5 min (fetches App Store data, enriches, pulls Google Trends, downloads + converts images). When it finishes, open `https://ios.querygame.com` and you'll see real data.
 
 > **If the first build fails**, click the build → View logs → screenshot the red error → I'll tell you which knob to turn. The most common first-time failure is a Cloudflare timeout on image conversion; the fix is in step 7 below.
 

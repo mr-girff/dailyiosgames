@@ -29,6 +29,28 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     return Response.redirect(new URL("/subscribe/?err=invalid", request.url).toString(), 303)
   }
 
+  // Basic abuse protection: rate limit per client IP (when KV is bound).
+  // Max RL_MAX submissions per IP within RL_WINDOW seconds.
+  const RL_WINDOW = 600 // 10 minutes
+  const RL_MAX = 5
+  const ip = request.headers.get("cf-connecting-ip") || ""
+  if (env.SUBSCRIBERS && ip) {
+    const rlKey = `rl:${ip}`
+    const count = Number((await env.SUBSCRIBERS.get(rlKey)) || "0")
+    if (count >= RL_MAX) {
+      const accept = request.headers.get("accept") || ""
+      if (accept.includes("text/html")) {
+        return Response.redirect(new URL("/subscribe/?err=ratelimited", request.url).toString(), 303)
+      }
+      return new Response(JSON.stringify({ ok: false, error: "rate_limited" }), {
+        status: 429,
+        headers: { "content-type": "application/json", "access-control-allow-origin": "*", "retry-after": String(RL_WINDOW) },
+      })
+    }
+    // Increment with a fixed TTL window (first hit sets the window).
+    await env.SUBSCRIBERS.put(rlKey, String(count + 1), { expirationTtl: RL_WINDOW })
+  }
+
   const record = {
     email,
     source,

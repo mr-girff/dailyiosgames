@@ -1,6 +1,10 @@
 // Generate a 15-second gameplay teaser per indexable game.
-// Uses local screenshots (already downloaded by images.mjs) + edge-tts voiceover + ffmpeg.
+// Downloads the game's official screenshots on demand + edge-tts voiceover + ffmpeg.
 // Output: /public/video/<id>/teaser.mp4  +  /public/video/<id>/poster.jpg
+//
+// Note: screenshots are fetched straight from the URLs in enriched.json rather
+// than read from public/img/. This keeps video generation working in CI, where
+// images.mjs runs in R2 mode and does NOT write local files (see images.mjs).
 //
 // Requires: ffmpeg in PATH and `npm i -D edge-tts node-edge-tts` OR system `edge-tts` python.
 // We shell out so the JS code stays dependency-light.
@@ -18,10 +22,15 @@ const sh = promisify(execFile)
 const ROOT = process.cwd()
 const SRC  = path.join(ROOT, "data/enriched.json")
 const OUT  = path.join(ROOT, "public/video")
-const IMG  = path.join(ROOT, "public/img")
 const FPS  = 30
 const SEC_PER_SHOT = 3.5  // 4 shots × 3.5s ≈ 14s, fits typical 15s budget
 const VOICE = process.env.TTS_VOICE || "en-US-AriaNeural"
+
+async function download(url) {
+  const r = await fetch(url, { headers: { "User-Agent": "DailyGameBot/1.0" } })
+  if (!r.ok) throw new Error(`${url} ${r.status}`)
+  return Buffer.from(await r.arrayBuffer())
+}
 
 function script(game) {
   // 3 short beats, ~30 words total → ~14s at normal pace
@@ -51,11 +60,18 @@ async function buildClip(game) {
   const poster = path.join(dir, "poster.jpg")
   if (await exists(out)) return { mp4: `/video/${id}/teaser.mp4`, poster: `/video/${id}/poster.jpg`, cached: true }
 
-  // Pick up to 4 screenshots at 1200w (we downloaded these earlier as webp)
+  // Download up to 4 official screenshots into the working dir. Fetched directly
+  // from Apple URLs so this works even when images.mjs uploaded to R2 (no local files).
   const shots = []
-  for (let i = 0; i < 4; i++) {
-    const webp = path.join(IMG, id, `s${i}-1200.webp`)
-    if (await exists(webp)) shots.push(webp)
+  const srcShots = (game.screenshots || []).slice(0, 4)
+  for (let i = 0; i < srcShots.length; i++) {
+    const local = path.join(dir, `src-${i}.jpg`)
+    try {
+      if (!(await exists(local))) await fs.writeFile(local, await download(srcShots[i]))
+      shots.push(local)
+    } catch (e) {
+      console.warn(`screenshot download failed for ${game.name} [${i}]: ${e.message}`)
+    }
   }
   if (shots.length < 2) return null // not enough media
 
@@ -103,6 +119,9 @@ async function buildClip(game) {
   try {
     await sh("ffmpeg", ["-y", "-ss", "1.5", "-i", out, "-frames:v", "1", "-q:v", "3", poster])
   } catch {}
+
+  // Clean up the raw downloaded screenshots so only teaser.mp4 + poster.jpg ship.
+  for (const s of shots) { try { await fs.unlink(s) } catch {} }
 
   return { mp4: `/video/${id}/teaser.mp4`, poster: `/video/${id}/poster.jpg`, durationSec: Math.round(total) }
 }

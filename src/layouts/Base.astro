@@ -1,7 +1,10 @@
 ---
 const { title, description, canonical, robots = "index,follow", styleVars = "", bodyClass = "", image, ogType = "website" } = Astro.props
-const ADSENSE = import.meta.env.PUBLIC_ADSENSE_CLIENT || "ca-pub-5723318931986381"
-const GA_ID = import.meta.env.PUBLIC_GA_ID || "G-VCRWJW6CKF"
+// Read from environment only. Never hardcode account IDs so forks don't send
+// traffic/ad revenue to the original owner. Set PUBLIC_ADSENSE_CLIENT / PUBLIC_GA_ID
+// in Cloudflare Pages env (or .env) to enable AdSense / Analytics.
+const ADSENSE = import.meta.env.PUBLIC_ADSENSE_CLIENT || ""
+const GA_ID = import.meta.env.PUBLIC_GA_ID || ""
 const site = Astro.site?.toString().replace(/\/$/, "") || "https://ios.querygame.com"
 const SITE_NAME = import.meta.env.PUBLIC_SITE_NAME || "Daily iOS Games"
 const ogImage = image || `${site}/og-default.svg`
@@ -16,7 +19,7 @@ const computedCanonical = canonical || `${site}${Astro.url.pathname}`
     <meta name="description" content={description} />
     <meta name="robots" content={robots} />
     <meta name="theme-color" content="#c15f3c" />
-    <meta name="google-adsense-account" content={ADSENSE} />
+    {ADSENSE && <meta name="google-adsense-account" content={ADSENSE} />}
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/favicon.svg" />
     <link rel="canonical" href={computedCanonical} />

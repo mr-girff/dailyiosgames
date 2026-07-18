@@ -4,7 +4,7 @@
 >
 > 自动更新的美区 App Store 新游戏追踪站。Astro + Cloudflare Pages + GitHub Actions。
 
-**Live**: <https://dailyiosgames.pages.dev>
+**Live**: <https://ios.querygame.com>
 
 ---
 
@@ -127,9 +127,15 @@ at the bottom for what worked and what did not.
 ```bash
 npm install
 npm run dev                  # http://localhost:4321
-npm run build                # data:cloudflare && astro build
-npm run data:full            # full local pipeline (fetch → enrich → images → video)
+npm run build                # astro build (uses data/ already committed to the repo)
+npm run data                 # full local pipeline (fetch → enrich → velocity → trends → images → video → reviews)
 ```
+
+> **Note**: `npm run build` only runs `astro build` — it does **not** refresh
+> data. The site renders from the JSON files already committed under `data/`.
+> Data is refreshed exclusively by the GitHub Actions cron (see below), which
+> commits new `data/` before Cloudflare Pages rebuilds. Run `npm run data`
+> locally if you want to regenerate the data set yourself.
 
 ### Deploying changes
 
@@ -142,7 +148,7 @@ git push origin main         # Cloudflare Pages auto-deploys on push
 1. **Pages project** — connect this repo, build command `npm run build`,
    output `dist/`
 2. **Environment variables**:
-   - `SITE_URL=https://dailyiosgames.pages.dev`
+   - `SITE_URL=https://ios.querygame.com`
    - `PUBLIC_SITE_NAME=Daily iOS Games`
    - `COUNTRY=us`
    - `NODE_VERSION=20`
@@ -184,7 +190,7 @@ What I'd do differently:
 ### License
 
 Code: MIT. Data feed (`/api/data.json`): CC-BY 4.0 — use freely with
-attribution to `https://dailyiosgames.pages.dev`.
+attribution to `https://ios.querygame.com`.
 
 Apple product names, App Store metadata, and game artwork remain
 property of their respective owners. Not affiliated with Apple Inc.
@@ -272,9 +278,13 @@ property of their respective owners. Not affiliated with Apple Inc.
 ```bash
 npm install
 npm run dev                  # http://localhost:4321
-npm run build                # data:cloudflare && astro build
-npm run data:full            # 完整本地 pipeline
+npm run build                # astro build（使用已提交到 repo 的 data/）
+npm run data                 # 完整本地 pipeline（fetch → enrich → velocity → trends → images → video → reviews）
 ```
+
+> **注意**：`npm run build` 只跑 `astro build`，**不会**刷新数据。站点从已提交在
+> `data/` 下的 JSON 渲染。数据只由 GitHub Actions cron（见下）刷新——它先提交新的
+> `data/`，Cloudflare Pages 再重新构建。想本地重新生成数据集，运行 `npm run data`。
 
 ### 部署变更
 
@@ -286,7 +296,7 @@ git push origin main         # Cloudflare Pages 推送即部署
 
 1. **Pages 项目**：连接此仓库，build 命令 `npm run build`，输出 `dist/`
 2. **环境变量**：
-   - `SITE_URL=https://dailyiosgames.pages.dev`
+   - `SITE_URL=https://ios.querygame.com`
    - `PUBLIC_SITE_NAME=Daily iOS Games`
    - `COUNTRY=us`
    - `NODE_VERSION=20`
@@ -324,7 +334,7 @@ git push origin main         # Cloudflare Pages 推送即部署
 ### License
 
 代码：MIT。数据 feed（`/api/data.json`）：CC-BY 4.0 —— 注明来源
-`https://dailyiosgames.pages.dev` 即可自由使用。
+`https://ios.querygame.com` 即可自由使用。
 
 App Store 截图、Apple 产品名、游戏美术版权归各自所有者。本项目与 Apple Inc.
 无任何附属关系。

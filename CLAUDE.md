@@ -9,6 +9,24 @@ this repository.
 
 ---
 
+## 0. Two-layer, model-agnostic trace
+
+Trace works across **any model or tool** (Claude, GPT, Grok, a human, a script)
+via two complementary layers:
+
+1. **Agent layer (Claude Code only):** the `PostToolUse` hook in
+   [`.claude/settings.json`](.claude/settings.json) logs each Write/Edit/MultiEdit
+   in real time.
+2. **Git layer (universal fallback):** [`.githooks/pre-commit`](.githooks/pre-commit)
+   logs the staged diff at commit time — this fires **regardless of which model
+   or tool made the change**, so GPT/Grok/other agents are covered too.
+
+Enable the Git layer once after cloning: `bash .githooks/install.sh`
+(sets `core.hooksPath=.githooks`).
+
+Tag the model on each commit so the log records who did it:
+`TRACE_MODEL=gpt|grok|claude git commit …` (defaults to `unknown` / `AI`).
+
 ## 1. Work-trace is mandatory
 
 - Every file modification (`Write` / `Edit` / `MultiEdit`) triggers the
@@ -17,6 +35,9 @@ this repository.
 - **Never edit `docs/work-trace/trace-log.md` by hand.** It is append-only and
   machine-generated.
 - If you disable or bypass the hook, you have violated the trace contract.
+- Non-Claude tools (GPT, Grok, …) rely on the Git `pre-commit` layer above; the
+  `prepare-commit-msg` hook auto-adds the `AI-Assisted` / `Co-Authored-By`
+  trailer so their commits stay compliant.
 
 ## 2. Session start
 
@@ -44,6 +65,11 @@ Generate a compliant message with:
 ```bash
 git commit -F <(.claude/hooks/gen-commit-msg.sh)
 ```
+
+If you commit with a plain message instead, the `.githooks/prepare-commit-msg`
+hook auto-appends `AI-Assisted: true`, `AI-Model: <TRACE_MODEL>` and a matching
+`Co-Authored-By` trailer — so all three (feat/fix/…) subjects still need to be
+Conventional, but the trailer is handled for you.
 
 ## 4. Pull requests
 

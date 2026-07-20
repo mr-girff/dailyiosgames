@@ -2,18 +2,23 @@
 
 This directory holds the **automated work-trace** for the project.
 
-- [`trace-log.md`](./trace-log.md) — append-only log of every AI file
-  modification, grouped by UTC date. Written automatically by the
-  `PostToolUse` hook in [`.claude/settings.json`](../../.claude/settings.json)
-  → [`.claude/hooks/log-trace.sh`](../../.claude/hooks/log-trace.sh).
+- [`trace-log.md`](./trace-log.md) — append-only log of every file
+  modification, grouped by UTC date. Written automatically by **two layers**:
+  - the Claude Code `PostToolUse` hook
+    ([`.claude/hooks/log-trace.sh`](../../.claude/hooks/log-trace.sh)), and
+  - the **model-agnostic** Git `pre-commit` hook
+    ([`.githooks/pre-commit`](../../.githooks/pre-commit)), which covers GPT,
+    Grok, or any other tool that ends in `git commit`.
 
 ## How it works
 
-1. An AI agent (Claude Code or any agent that honors `.claude/settings.json`)
-   edits a file with `Write` / `Edit` / `MultiEdit`.
-2. The `PostToolUse` hook fires and runs `log-trace.sh`.
-3. The script reads the tool payload, computes a `git diff` summary and
-   appends a dated entry describing **what** changed, **how**, and any notes.
+1. **Claude Code:** an agent edits a file with `Write`/`Edit`/`MultiEdit`; the
+   `PostToolUse` hook fires and appends a dated entry in real time.
+2. **Any model/tool (GPT, Grok, …):** at `git commit`, the `pre-commit` hook
+   reads the staged diff and appends a dated entry, then re-stages the log so it
+   lands in the same commit.
+3. Both compute a `git diff` summary and record **what** changed, **how**, the
+   source model (`TRACE_MODEL`) and any notes.
 
 ## Rules
 

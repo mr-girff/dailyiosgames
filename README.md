@@ -89,6 +89,10 @@ at the bottom for what worked and what did not.
 │     ├─ log-trace.sh                PostToolUse → trace-log.md
 │     ├─ session-start.sh            SessionStart → inject git context
 │     └─ gen-commit-msg.sh           conventional-commit generator
+├─ .githooks/                        ← model-agnostic trace (any tool/model)
+│  ├─ pre-commit                     log staged diff on every commit
+│  ├─ prepare-commit-msg             auto AI-Assisted / Co-Authored-By trailer
+│  └─ install.sh                     core.hooksPath=.githooks
 ├─ docs/work-trace/trace-log.md      ← auto-generated work trace
 ├─ .github/workflows/daily.yml       ← cron pipeline
 ├─ .github/workflows/trace-summary.yml ← PR trace/changelog summary
@@ -149,33 +153,52 @@ npm run data                 # full local pipeline (fetch → enrich → velocit
 ### Work-trace mechanism (0% hand-written code)
 
 This project is built with **0% hand-written code + a full work trace**: every
-change is made by an AI agent and recorded automatically. It works with Claude
-Code and any agent that honors `.claude/settings.json` + `CLAUDE.md`.
+change is made by an AI agent and recorded automatically. Trace is **model- and
+tool-agnostic** — it works whether the change came from Claude, GPT, Grok, a
+human, or a script — via **two complementary layers**:
+
+- **Agent layer (Claude Code):** real-time logging on every Write/Edit/MultiEdit
+  through `.claude/settings.json`.
+- **Git layer (universal fallback):** a `pre-commit` hook logs the staged diff at
+  commit time, so **any** model/tool that ends in `git commit` is traced.
 
 **What's wired up**
 
-| File | Role |
-|---|---|
-| `.claude/settings.json` | Project-level hook config (committed, team-shared). |
-| `.claude/hooks/log-trace.sh` | `PostToolUse` (Write/Edit/MultiEdit) → appends a dated entry to `docs/work-trace/trace-log.md` with time, path, diff summary, what/how/notes. |
-| `.claude/hooks/session-start.sh` | `SessionStart` → injects current branch, git status and recent commits into the session. |
-| `.claude/hooks/gen-commit-msg.sh` | Helper → generates a Conventional Commit message + `AI-Assisted` / `Co-Authored-By` trailer. |
-| `docs/work-trace/trace-log.md` | Append-only, machine-generated trace log (grouped by UTC date). |
-| `.github/workflows/trace-summary.yml` | On PR → posts a trace/changelog summary and verifies AI-Assisted trailers. |
-| `CLAUDE.md` | The agent contract (mandatory rules). |
+| File | Layer | Role |
+|---|---|---|
+| `.claude/settings.json` | agent | Project-level hook config (committed, team-shared). |
+| `.claude/hooks/log-trace.sh` | agent | `PostToolUse` → dated entry in `docs/work-trace/trace-log.md` (time, path, diff, what/how/notes). |
+| `.claude/hooks/session-start.sh` | agent | `SessionStart` → injects branch/status/recent commits. |
+| `.claude/hooks/gen-commit-msg.sh` | agent | Helper → Conventional Commit + `AI-Assisted` trailer. |
+| `.githooks/pre-commit` | **git** | **Model-agnostic:** logs the staged diff on every commit (GPT/Grok/any tool). |
+| `.githooks/prepare-commit-msg` | **git** | **Model-agnostic:** auto-adds `AI-Assisted` / `AI-Model` / `Co-Authored-By` trailer. |
+| `.githooks/install.sh` | git | One-shot: `git config core.hooksPath .githooks`. |
+| `docs/work-trace/trace-log.md` | — | Append-only, machine-generated trace log (grouped by UTC date). |
+| `.github/workflows/trace-summary.yml` | ci | On PR → posts trace/changelog summary and verifies trailers. |
+| `CLAUDE.md` | — | The agent contract (mandatory rules). |
 
 **Setup / usage**
 
 ```bash
-# 1. The config is committed — just clone the repo. Hooks are per-project and
-#    take effect automatically the next time an agent runs in this directory.
+# 1. Enable the model-agnostic Git layer once after cloning:
+bash .githooks/install.sh          # sets core.hooksPath=.githooks
 
-# 2. Make hook scripts executable (once, after clone on a fresh machine):
-chmod +x .claude/hooks/*.sh
+# 2. (fresh machine) ensure scripts are executable:
+chmod +x .claude/hooks/*.sh .githooks/*
 
-# 3. Commit with a compliant, AI-Assisted message:
-git commit -F <(.claude/hooks/gen-commit-msg.sh)
+# 3. Commit as usual — trace + trailer are automatic. Tag the model so the log
+#    records who did the work (defaults to "unknown"):
+TRACE_MODEL=gpt   git commit -m "feat(x): ..."   # GPT session
+TRACE_MODEL=grok  git commit -m "fix(y): ..."    # Grok session
+TRACE_MODEL=claude git commit -m "docs: ..."     # Claude session
+
+# Skip tracing for an automated/non-authored commit:
+TRACE_SKIP=1 git commit -m "data: daily refresh"
 ```
+
+> **Which layer fires when?** Claude Code fires the agent layer live *and* the
+> Git layer at commit. GPT/Grok/other tools fire only the Git layer — which is
+> why the `pre-commit` fallback exists. Both write to the same `trace-log.md`.
 
 The trace log itself **is committed** (it's the audit trail). Only scratch
 files (`.claude/tmp/`, `*.trace.tmp`) are git-ignored. See `CLAUDE.md` and
@@ -333,33 +356,51 @@ npm run data                 # 完整本地 pipeline（fetch → enrich → velo
 ### 工作留痕机制（0% 手写代码）
 
 本项目采用 **0% 手写代码 + 工作留痕机制**：所有变更均由 AI agent 完成并自动
-记录。兼容 Claude Code 以及任何遵守 `.claude/settings.json` + `CLAUDE.md` 的
-agent。
+记录。留痕**与模型/工具无关**——无论改动来自 Claude、GPT、Grok、人工还是脚本
+都会被记录——靠**两层互补**实现：
+
+- **Agent 层（Claude Code）：** 通过 `.claude/settings.json`，每次
+  Write/Edit/MultiEdit 实时记录。
+- **Git 层（通用兜底）：** `pre-commit` hook 在提交时记录暂存区 diff，因此**任何**
+  最终会 `git commit` 的模型/工具都会被留痕。
 
 **组成**
 
-| 文件 | 作用 |
-|---|---|
-| `.claude/settings.json` | 项目级 Hook 配置（已提交，可团队共享）。 |
-| `.claude/hooks/log-trace.sh` | `PostToolUse`（Write/Edit/MultiEdit）→ 向 `docs/work-trace/trace-log.md` 追加带时间、路径、diff 摘要、what/how/注意事项的记录。 |
-| `.claude/hooks/session-start.sh` | `SessionStart` → 会话开始时注入当前分支、git 状态与最近提交。 |
-| `.claude/hooks/gen-commit-msg.sh` | 辅助脚本 → 生成 Conventional Commit 信息，附 `AI-Assisted` / `Co-Authored-By` 标记。 |
-| `docs/work-trace/trace-log.md` | 只追加、机器生成的留痕日志（按 UTC 日期分节）。 |
-| `.github/workflows/trace-summary.yml` | PR 时 → 生成留痕/变更总结并校验 AI-Assisted 标记。 |
-| `CLAUDE.md` | Agent 行为契约（强制规则）。 |
+| 文件 | 层 | 作用 |
+|---|---|---|
+| `.claude/settings.json` | agent | 项目级 Hook 配置（已提交，可团队共享）。 |
+| `.claude/hooks/log-trace.sh` | agent | `PostToolUse` → 向 `docs/work-trace/trace-log.md` 追加时间/路径/diff/what/how/注意事项。 |
+| `.claude/hooks/session-start.sh` | agent | `SessionStart` → 注入分支/状态/最近提交。 |
+| `.claude/hooks/gen-commit-msg.sh` | agent | 辅助 → 生成 Conventional Commit + `AI-Assisted` 标记。 |
+| `.githooks/pre-commit` | **git** | **模型无关：** 每次提交记录暂存 diff（GPT/Grok/任意工具）。 |
+| `.githooks/prepare-commit-msg` | **git** | **模型无关：** 自动补 `AI-Assisted` / `AI-Model` / `Co-Authored-By` 标记。 |
+| `.githooks/install.sh` | git | 一次性：`git config core.hooksPath .githooks`。 |
+| `docs/work-trace/trace-log.md` | — | 只追加、机器生成的留痕日志（按 UTC 日期分节）。 |
+| `.github/workflows/trace-summary.yml` | ci | PR 时 → 生成留痕/变更总结并校验标记。 |
+| `CLAUDE.md` | — | Agent 行为契约（强制规则）。 |
 
 **使用步骤**
 
 ```bash
-# 1. 配置已提交到仓库——克隆即可。Hook 是按项目生效的，下次在本目录运行
-#    任意 agent（如 Claude Code）时会自动生效。
+# 1. 克隆后一次性启用模型无关的 Git 层：
+bash .githooks/install.sh          # 设置 core.hooksPath=.githooks
 
-# 2. 新机器克隆后给脚本加执行权限（一次）：
-chmod +x .claude/hooks/*.sh
+# 2. 新机器给脚本加执行权限：
+chmod +x .claude/hooks/*.sh .githooks/*
 
-# 3. 用合规的、带 AI-Assisted 标记的信息提交：
-git commit -F <(.claude/hooks/gen-commit-msg.sh)
+# 3. 正常提交即可——留痕与 trailer 自动完成。用 TRACE_MODEL 标注是哪个模型
+#    改的（不设则记为 unknown）：
+TRACE_MODEL=gpt    git commit -m "feat(x): ..."   # GPT 会话
+TRACE_MODEL=grok   git commit -m "fix(y): ..."    # Grok 会话
+TRACE_MODEL=claude git commit -m "docs: ..."      # Claude 会话
+
+# 对自动/非人工提交跳过留痕：
+TRACE_SKIP=1 git commit -m "data: daily refresh"
 ```
+
+> **哪层何时触发？** Claude Code 会同时触发 agent 层（实时）和 Git 层（提交时）；
+> GPT/Grok/其他工具只触发 Git 层——这正是 `pre-commit` 兜底存在的意义。两层写入
+> 同一个 `trace-log.md`。
 
 留痕日志本身**会被提交**（它就是审计轨迹）；只有临时文件
 （`.claude/tmp/`、`*.trace.tmp`）被 git 忽略。完整契约见 `CLAUDE.md` 与

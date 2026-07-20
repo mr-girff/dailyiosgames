@@ -1,0 +1,57 @@
+#!/usr/bin/env bash
+# =============================================================================
+# .githooks/prepare-commit-msg — ensure AI-Assisted trailer on every commit
+# -----------------------------------------------------------------------------
+# Runs before the commit message editor opens. Appends the AI-assistance
+# trailer if it is not already present, so commits from ANY model/tool
+# (Claude, GPT, Grok, …) are consistently marked.
+#
+# Model attribution:
+#   * TRACE_MODEL=gpt|grok|claude|<name>  → recorded as "Co-Authored-By".
+#     If unset, defaults to "AI".
+#
+# Args (given by git): $1 = path to commit message file
+#                      $2 = commit source (message|template|merge|squash|commit)
+#
+# Safety: never blocks the commit; skips merge/squash/amend-from-commit sources
+# and honors TRACE_SKIP=1.
+# =============================================================================
+set -uo pipefail
+
+[ "${TRACE_SKIP:-0}" = "1" ] && exit 0
+
+MSG_FILE="${1:-}"
+SRC="${2:-}"
+[ -z "$MSG_FILE" ] && exit 0
+[ -f "$MSG_FILE" ] || exit 0
+
+# Don't touch merges, squashes, or messages reused from an existing commit.
+case "$SRC" in
+  merge|squash|commit) exit 0 ;;
+esac
+
+MODEL="${TRACE_MODEL:-AI}"
+
+# Map a friendly Co-Authored-By identity per known model.
+case "$MODEL" in
+  claude|Claude)  COAUTHOR="Claude <noreply@anthropic.com>" ;;
+  gpt|GPT|openai) COAUTHOR="GPT <noreply@openai.com>" ;;
+  grok|Grok)      COAUTHOR="Grok <noreply@x.ai>" ;;
+  AI)             COAUTHOR="AI Assistant <ai@localhost>" ;;
+  *)              COAUTHOR="$MODEL <ai@localhost>" ;;
+esac
+
+# Only append trailers that are not already present.
+if ! grep -qiE '^AI-Assisted:' "$MSG_FILE"; then
+  {
+    echo ""
+    echo "AI-Assisted: true"
+    echo "AI-Model: $MODEL"
+  } >> "$MSG_FILE"
+fi
+
+if ! grep -qiE '^Co-Authored-By:' "$MSG_FILE"; then
+  echo "Co-Authored-By: $COAUTHOR" >> "$MSG_FILE"
+fi
+
+exit 0

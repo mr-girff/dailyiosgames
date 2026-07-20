@@ -82,7 +82,16 @@ at the bottom for what worked and what did not.
 
 ```
 .
-├─ .github/workflows/daily.yml      ← cron pipeline
+├─ CLAUDE.md                         ← agent contract (work-trace rules)
+├─ .claude/                          ← agent hooks (committed, team-shared)
+│  ├─ settings.json                  hook config (PostToolUse + SessionStart)
+│  └─ hooks/
+│     ├─ log-trace.sh                PostToolUse → trace-log.md
+│     ├─ session-start.sh            SessionStart → inject git context
+│     └─ gen-commit-msg.sh           conventional-commit generator
+├─ docs/work-trace/trace-log.md      ← auto-generated work trace
+├─ .github/workflows/daily.yml       ← cron pipeline
+├─ .github/workflows/trace-summary.yml ← PR trace/changelog summary
 ├─ scripts/                         ← data pipeline (Node ESM)
 │  ├─ fetch_daily.mjs               apple RSS + lookup
 │  ├─ enrich.mjs                    AI classification
@@ -136,6 +145,41 @@ npm run data                 # full local pipeline (fetch → enrich → velocit
 > Data is refreshed exclusively by the GitHub Actions cron (see below), which
 > commits new `data/` before Cloudflare Pages rebuilds. Run `npm run data`
 > locally if you want to regenerate the data set yourself.
+
+### Work-trace mechanism (0% hand-written code)
+
+This project is built with **0% hand-written code + a full work trace**: every
+change is made by an AI agent and recorded automatically. It works with Claude
+Code and any agent that honors `.claude/settings.json` + `CLAUDE.md`.
+
+**What's wired up**
+
+| File | Role |
+|---|---|
+| `.claude/settings.json` | Project-level hook config (committed, team-shared). |
+| `.claude/hooks/log-trace.sh` | `PostToolUse` (Write/Edit/MultiEdit) → appends a dated entry to `docs/work-trace/trace-log.md` with time, path, diff summary, what/how/notes. |
+| `.claude/hooks/session-start.sh` | `SessionStart` → injects current branch, git status and recent commits into the session. |
+| `.claude/hooks/gen-commit-msg.sh` | Helper → generates a Conventional Commit message + `AI-Assisted` / `Co-Authored-By` trailer. |
+| `docs/work-trace/trace-log.md` | Append-only, machine-generated trace log (grouped by UTC date). |
+| `.github/workflows/trace-summary.yml` | On PR → posts a trace/changelog summary and verifies AI-Assisted trailers. |
+| `CLAUDE.md` | The agent contract (mandatory rules). |
+
+**Setup / usage**
+
+```bash
+# 1. The config is committed — just clone the repo. Hooks are per-project and
+#    take effect automatically the next time an agent runs in this directory.
+
+# 2. Make hook scripts executable (once, after clone on a fresh machine):
+chmod +x .claude/hooks/*.sh
+
+# 3. Commit with a compliant, AI-Assisted message:
+git commit -F <(.claude/hooks/gen-commit-msg.sh)
+```
+
+The trace log itself **is committed** (it's the audit trail). Only scratch
+files (`.claude/tmp/`, `*.trace.tmp`) are git-ignored. See `CLAUDE.md` and
+`docs/work-trace/README.md` for the full contract.
 
 ### Deploying changes
 
@@ -285,6 +329,41 @@ npm run data                 # 完整本地 pipeline（fetch → enrich → velo
 > **注意**：`npm run build` 只跑 `astro build`，**不会**刷新数据。站点从已提交在
 > `data/` 下的 JSON 渲染。数据只由 GitHub Actions cron（见下）刷新——它先提交新的
 > `data/`，Cloudflare Pages 再重新构建。想本地重新生成数据集，运行 `npm run data`。
+
+### 工作留痕机制（0% 手写代码）
+
+本项目采用 **0% 手写代码 + 工作留痕机制**：所有变更均由 AI agent 完成并自动
+记录。兼容 Claude Code 以及任何遵守 `.claude/settings.json` + `CLAUDE.md` 的
+agent。
+
+**组成**
+
+| 文件 | 作用 |
+|---|---|
+| `.claude/settings.json` | 项目级 Hook 配置（已提交，可团队共享）。 |
+| `.claude/hooks/log-trace.sh` | `PostToolUse`（Write/Edit/MultiEdit）→ 向 `docs/work-trace/trace-log.md` 追加带时间、路径、diff 摘要、what/how/注意事项的记录。 |
+| `.claude/hooks/session-start.sh` | `SessionStart` → 会话开始时注入当前分支、git 状态与最近提交。 |
+| `.claude/hooks/gen-commit-msg.sh` | 辅助脚本 → 生成 Conventional Commit 信息，附 `AI-Assisted` / `Co-Authored-By` 标记。 |
+| `docs/work-trace/trace-log.md` | 只追加、机器生成的留痕日志（按 UTC 日期分节）。 |
+| `.github/workflows/trace-summary.yml` | PR 时 → 生成留痕/变更总结并校验 AI-Assisted 标记。 |
+| `CLAUDE.md` | Agent 行为契约（强制规则）。 |
+
+**使用步骤**
+
+```bash
+# 1. 配置已提交到仓库——克隆即可。Hook 是按项目生效的，下次在本目录运行
+#    任意 agent（如 Claude Code）时会自动生效。
+
+# 2. 新机器克隆后给脚本加执行权限（一次）：
+chmod +x .claude/hooks/*.sh
+
+# 3. 用合规的、带 AI-Assisted 标记的信息提交：
+git commit -F <(.claude/hooks/gen-commit-msg.sh)
+```
+
+留痕日志本身**会被提交**（它就是审计轨迹）；只有临时文件
+（`.claude/tmp/`、`*.trace.tmp`）被 git 忽略。完整契约见 `CLAUDE.md` 与
+`docs/work-trace/README.md`。
 
 ### 部署变更
 

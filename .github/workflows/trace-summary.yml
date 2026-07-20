@@ -1,0 +1,90 @@
+name: Trace Summary
+
+# On every pull request, generate a work-trace / changelog summary and post it
+# as a sticky PR comment. Also verifies AI-Assisted trailers on the PR commits.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  summarize:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout (full history)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Build trace + changelog summary
+        id: summary
+        run: |
+          BASE="origin/${{ github.base_ref }}"
+          git fetch --quiet origin "${{ github.base_ref }}" || true
+
+          {
+            echo "## Work-Trace Summary"
+            echo
+            echo "**Commits in this PR**"
+            echo
+            echo '```'
+            git log --oneline "$BASE..HEAD" || echo "(none)"
+            echo '```'
+            echo
+
+            echo "**Files changed**"
+            echo
+            echo '```'
+            git diff --stat "$BASE...HEAD" || echo "(none)"
+            echo '```'
+            echo
+
+            echo "**Conventional-commit changelog (grouped)**"
+            echo
+            for t in feat fix refactor perf docs ci chore test style; do
+              LINES="$(git log --pretty='%s' "$BASE..HEAD" | grep -E "^$t(\(.+\))?:" || true)"
+              if [ -n "$LINES" ]; then
+                echo "### $t"
+                printf '%s\n' "$LINES" | sed 's/^/- /'
+                echo
+              fi
+            done
+
+            echo "**Trace-log delta (docs/work-trace/trace-log.md)**"
+            echo
+            if git diff "$BASE...HEAD" -- docs/work-trace/trace-log.md | grep -q '^+'; then
+              echo '```diff'
+              git diff "$BASE...HEAD" -- docs/work-trace/trace-log.md \
+                | grep -E '^\+' | grep -vE '^\+\+\+' | head -n 60
+              echo '```'
+            else
+              echo "_No trace-log changes in this PR._"
+            fi
+            echo
+
+            echo "**AI-Assisted trailer check**"
+            echo
+            TOTAL=$(git log --pretty='%H' "$BASE..HEAD" | wc -l | tr -d ' ')
+            TAGGED=$(git log --pretty='%B' "$BASE..HEAD" \
+              | grep -cE 'AI-Assisted:\s*true|Co-Authored-By:.*Claude' || true)
+            echo "- Commits: $TOTAL"
+            echo "- With AI-Assisted / Co-Authored-By trailer: $TAGGED"
+            if [ "$TOTAL" -gt 0 ] && [ "$TAGGED" -lt "$TOTAL" ]; then
+              echo "- ⚠️ Some commits are missing the AI-Assisted trailer."
+            else
+              echo "- ✅ All commits carry the trailer."
+            fi
+          } > summary.md
+
+          echo "Generated summary:"
+          cat summary.md
+
+      - name: Post sticky PR comment
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: work-trace-summary
+          path: summary.md

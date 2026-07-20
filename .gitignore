@@ -5,3 +5,8 @@ public/img/
 .env
 .env.local
 .DS_Store
+
+# work-trace hook scratch / temp files (the log itself IS committed)
+.claude/tmp/
+*.trace.tmp
+

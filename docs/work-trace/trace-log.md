@@ -5,3 +5,14 @@
 > **Do not edit by hand** — entries are append-only.
 
 <!-- The first real entry will be appended by the hook on the next AI edit. -->
+## 2026-07-20
+
+### `AGENTS.md` — created
+
+- **When:** 2026-07-20 07:15:16 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +0 / -0 lines
+- **What:** created `AGENTS.md`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+

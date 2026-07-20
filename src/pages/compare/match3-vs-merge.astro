@@ -1,0 +1,77 @@
+---
+import Base from "../../layouts/Base.astro"
+import CompareTwo from "../../components/CompareTwo.astro"
+import KeepBrowsing from "../../components/KeepBrowsing.astro"
+import { loadAll, rankByHeat, isIndexable } from "../../lib/enriched"
+
+const all = loadAll()
+const a = rankByHeat(all.filter(g => isIndexable(g) && g.archetype === "match3"))
+const b = rankByHeat(all.filter(g => isIndexable(g) && g.archetype === "merge"))
+
+const SITE = "https://ios.querygame.com"
+const canonical = `${SITE}/compare/match3-vs-merge/`
+const title = "Match-3 vs Merge Games on iOS: Which Puzzle Loop Wins? (2026)"
+const description = `${a.length} match-3 and ${b.length} merge games compared head-to-head — core loop, monetization, session length and which respects your time. Data from our daily US App Store crawl.`
+
+const rows = [
+  { label: "Core loop", a: "Swap tiles to clear a goal under a move budget", b: "Combine two items into one better item, endlessly" },
+  { label: "Failure state", a: "Run out of moves → buy more or wait", b: "Run out of board space → wait or expand" },
+  { label: "Paywall lives in", a: "Losing (out of moves)", b: "Waiting (energy / timers)" },
+  { label: "Typical session", a: "2–5 min bursts", b: "Flexible: 1 min or 30 min" },
+  { label: "Shelf size (tracked)", a: `${a.length} — the largest archetype`, b: `${b.length} — smaller, easier to pick from` },
+  { label: "Best for", a: "Quick fillers, hard-stop energy walls", b: "Steady low-stress progression" },
+]
+const verdict = [
+  { pick: "Pick match-3", when: "you want finishable-in-bursts play and treat the energy wall as \u201cthat\u2019s enough for today.\u201d" },
+  { pick: "Pick merge", when: "you play in unpredictable chunks and want to put the game down mid-board without penalty." },
+  { pick: "Skip both", when: "you refuse timers and IAP entirely \u2014 browse our no-ads-no-IAP list instead." },
+]
+---
+<Base title={title} description={description} canonical={canonical} image={`${SITE}/illus/compare-match3-merge.svg`}>
+  <CompareTwo
+    eyebrow="Head to head · updated daily"
+    aLabel="Match-3"
+    bLabel="Merge"
+    lead="Match-3 is the biggest shelf on the App Store; merge is the quiet challenger eating its lunch. Same monetization playbook, very different core loop. Here's how they actually compare — with live top picks from each side."
+    a={a}
+    b={b}
+    rows={rows}
+    verdict={verdict}
+  />
+
+  <section>
+    <h2>FAQ</h2>
+    <details><summary>Aren't match-3 and merge basically the same genre?</summary><p>They rhyme, but the loop is different. Match-3 rewards pattern recognition against a move budget; merge rewards spatial compounding with no move limit. Match-3 sells you out of a fail state; merge sells you out of a wait state.</p></details>
+    <details><summary>Which has fewer ads?</summary><p>It varies by title, not by genre — both skew heavily toward the free-with-ads-and-IAP model in our dataset. Check each card's tags; the ones marked no-ads are the exceptions.</p></details>
+    <details><summary>How is this list ranked?</summary><p>By our heat score — rating-count velocity plus relative growth on the US App Store — so the top entries are gaining real traction right now.</p></details>
+  </section>
+
+  <KeepBrowsing
+    title="Keep comparing"
+    eyebrow="Related"
+    items={[
+      { href: "/compare/free-vs-premium/", title: "Free vs premium games", sub: "Ads or pay-once", icon: "tag" },
+      { href: "/archetype/match3/", title: "All match-3 games", sub: "The full shelf", icon: "grid" },
+      { href: "/archetype/merge/", title: "All merge games", sub: "The full shelf", icon: "grid" },
+      { href: "/no-ads-no-iap/", title: "No ads, no IAP", sub: "Pay once, own it", icon: "star" },
+      { href: "/movers/", title: "Rising games", sub: "Today's movers", icon: "fire" },
+    ]}
+  />
+
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": title,
+    "description": description,
+    "url": canonical,
+  })} />
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": SITE + "/" },
+      { "@type": "ListItem", "position": 2, "name": "Compare", "item": SITE + "/compare/" },
+      { "@type": "ListItem", "position": 3, "name": "Match-3 vs Merge", "item": canonical },
+    ],
+  })} />
+</Base>

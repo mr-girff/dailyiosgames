@@ -31,6 +31,13 @@ export async function GET() {
     { loc: `${base}/controller-support/`,    changefreq: "daily",   priority: "0.7", lastmod: today },
     { loc: `${base}/offline/`,               changefreq: "daily",   priority: "0.7", lastmod: today },
     { loc: `${base}/like/`,                  changefreq: "weekly",  priority: "0.6", lastmod: today },
+    // Head-to-head comparison pages
+    { loc: `${base}/compare/`,               changefreq: "daily",   priority: "0.7", lastmod: today },
+    { loc: `${base}/compare/match3-vs-merge/`,   changefreq: "daily", priority: "0.7", lastmod: today },
+    { loc: `${base}/compare/free-vs-premium/`,   changefreq: "daily", priority: "0.7", lastmod: today },
+    { loc: `${base}/compare/offline-vs-online/`, changefreq: "daily", priority: "0.7", lastmod: today },
+    { loc: `${base}/compare/casual-vs-rpg/`,     changefreq: "daily", priority: "0.7", lastmod: today },
+    { loc: `${base}/compare/casino-vs-match3/`,  changefreq: "daily", priority: "0.7", lastmod: today },
     { loc: `${base}/about/`,                 changefreq: "monthly", priority: "0.3", lastmod: today },
     { loc: `${base}/methodology/`,           changefreq: "monthly", priority: "0.3", lastmod: today },
   ]

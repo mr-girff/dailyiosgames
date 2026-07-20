@@ -1,0 +1,78 @@
+---
+import Base from "../../layouts/Base.astro"
+import CompareTwo from "../../components/CompareTwo.astro"
+import KeepBrowsing from "../../components/KeepBrowsing.astro"
+import { loadAll, rankByHeat, isIndexable } from "../../lib/enriched"
+
+const all = loadAll()
+const a = rankByHeat(all.filter(g => isIndexable(g) && (g.archetype === "casual-arcade" || g.archetype === "idle")))
+const b = rankByHeat(all.filter(g => isIndexable(g) && g.archetype === "rpg"))
+
+const SITE = "https://ios.querygame.com"
+const canonical = `${SITE}/compare/casual-vs-rpg/`
+const title = "Casual Arcade vs RPG on iOS: Quick Fun or Deep Commitment? (2026)"
+const description = `${a.length} casual/arcade vs ${b.length} RPG iOS games compared — session length, depth, monetization and time commitment. Ranked from our daily US App Store crawl.`
+
+const rows = [
+  { label: "Session length", a: "1–5 min, pick-up-and-drop", b: "20+ min, sit-down sessions" },
+  { label: "Learning curve", a: "Instant", b: "Steep — systems, builds, gear" },
+  { label: "Progression", a: "Score / streak based", b: "Character, story, loot" },
+  { label: "Commitment", a: "None — quit anytime", b: "High — long arcs, dailies" },
+  { label: "Monetization pressure", a: "Ads + optional boosts", b: "Gacha / gear / battle-pass" },
+  { label: "Shelf size (tracked)", a: `${a.length} titles`, b: `${b.length} titles` },
+  { label: "Best for", a: "Waiting rooms, quick breaks", b: "Evenings, long-term hobby" },
+]
+const verdict = [
+  { pick: "Pick casual/arcade", when: "you want fun in the gaps of your day and zero mental setup cost." },
+  { pick: "Pick RPG", when: "you want a world to sink into over weeks and enjoy building characters and gear." },
+  { pick: "Watch the wallet", when: "RPGs lean gacha/battle-pass \u2014 check red flags before you commit to a live-service grind." },
+]
+---
+<Base title={title} description={description} canonical={canonical} image={`${SITE}/illus/compare-casual-rpg.svg`}>
+  <CompareTwo
+    eyebrow="Head to head · updated daily"
+    aLabel="Casual arcade"
+    bLabel="RPG"
+    lead="One shelf is built for the gaps in your day; the other wants to become a hobby. Casual arcade rewards reflexes and streaks in seconds; RPGs reward commitment over weeks. Here's how they compare, with live picks from each."
+    a={a}
+    b={b}
+    rows={rows}
+    verdict={verdict}
+  />
+
+  <section>
+    <h2>FAQ</h2>
+    <details><summary>What counts as \u201ccasual arcade\u201d here?</summary><p>Our casual-arcade and idle archetypes — games built around a simple, instantly-graspable loop and short sessions. RPGs are titles our classifier tags with character progression, story and gear systems.</p></details>
+    <details><summary>Which has worse monetization?</summary><p>Neither wins cleanly. Casual games lean on ads and optional boosters; RPGs lean on gacha, gear upgrades and battle passes. RPG spending tends to be deeper because the progression hooks are stronger — check each title's red flags.</p></details>
+    <details><summary>Can an RPG be a quick-session game?</summary><p>Some idle/RPG hybrids compress sessions to a few minutes of daily upkeep, but the classic RPG expects a real sit-down. If you only have minutes, start on the casual side.</p></details>
+  </section>
+
+  <KeepBrowsing
+    title="Keep comparing"
+    eyebrow="Related"
+    items={[
+      { href: "/compare/offline-vs-online/", title: "Offline vs online", sub: "Plane-proof or not", icon: "list" },
+      { href: "/archetype/rpg/", title: "All RPGs", sub: "The full shelf", icon: "grid" },
+      { href: "/archetype/casual-arcade/", title: "All casual games", sub: "The full shelf", icon: "grid" },
+      { href: "/hidden-gems/", title: "Hidden gems", sub: "High trust, low hype", icon: "star" },
+      { href: "/movers/", title: "Rising games", sub: "Today's movers", icon: "fire" },
+    ]}
+  />
+
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": title,
+    "description": description,
+    "url": canonical,
+  })} />
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": SITE + "/" },
+      { "@type": "ListItem", "position": 2, "name": "Compare", "item": SITE + "/compare/" },
+      { "@type": "ListItem", "position": 3, "name": "Casual vs RPG", "item": canonical },
+    ],
+  })} />
+</Base>

@@ -1,0 +1,88 @@
+---
+// CompareTwo — reusable head-to-head layout for /compare/* pages.
+// Renders a hero, a spec comparison table for two cohorts (A vs B), a
+// "top picks" GameCardList for each side, a verdict block and FAQ.
+import GameCardList from "./GameCardList.astro"
+
+const {
+  eyebrow,
+  aLabel,
+  bLabel,
+  lead,
+  a = [],          // ranked Game[] for side A
+  b = [],          // ranked Game[] for side B
+  rows = [],       // [{ label, a, b }] spec comparison rows
+  verdict = [],    // [{ pick, when }] short guidance bullets
+} = Astro.props
+---
+<section class="cmp-hero">
+  <div class="eyebrow">{eyebrow}</div>
+  <h1><span class="side-a">{aLabel}</span> <span class="vs">vs</span> <span class="side-b">{bLabel}</span></h1>
+  <p class="lead">{lead}</p>
+  <div class="cmp-count">
+    <div><span class="num">{a.length}</span><span class="lbl">{aLabel} tracked</span></div>
+    <div><span class="num">{b.length}</span><span class="lbl">{bLabel} tracked</span></div>
+  </div>
+</section>
+
+{rows.length > 0 && (
+  <section>
+    <h2>Side by side</h2>
+    <div class="cmp-table-wrap">
+      <table class="cmp-table">
+        <thead>
+          <tr><th></th><th class="side-a">{aLabel}</th><th class="side-b">{bLabel}</th></tr>
+        </thead>
+        <tbody>
+          {rows.map(r => (
+            <tr>
+              <th scope="row">{r.label}</th>
+              <td>{r.a}</td>
+              <td>{r.b}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </section>
+)}
+
+<section>
+  <h2>Top {aLabel} right now ({a.length})</h2>
+  <GameCardList games={a.slice(0, 12)} emptyText={`No ${aLabel.toLowerCase()} match today — the crawler refreshes every morning.`} />
+</section>
+
+<section>
+  <h2>Top {bLabel} right now ({b.length})</h2>
+  <GameCardList games={b.slice(0, 12)} emptyText={`No ${bLabel.toLowerCase()} match today — the crawler refreshes every morning.`} />
+</section>
+
+{verdict.length > 0 && (
+  <section>
+    <h2>Which should you install?</h2>
+    <ul class="verdict">
+      {verdict.map(v => (
+        <li><strong>{v.pick}</strong> — {v.when}</li>
+      ))}
+    </ul>
+    <p class="caveat">Both cohorts are pulled live from our daily US App Store crawl and ranked by heat score, so the lists above reflect what's actually gaining traction today — not a hand-built list that went stale months ago.</p>
+  </section>
+)}
+
+<style>
+  .cmp-hero { padding: 1.5rem 0 2rem; border-bottom: 1px solid var(--border); margin-bottom: 2rem; }
+  .cmp-hero h1 { font-size: clamp(1.8rem, 4vw, 2.6rem); line-height: 1.1; }
+  .cmp-hero .vs { color: var(--fg-muted); font-weight: 500; padding: 0 .25em; }
+  .side-a { color: #c15f3c; }
+  .side-b { color: #2f7d6b; }
+  .cmp-count { display: flex; gap: 2.5rem; margin-top: 1.25rem; }
+  .cmp-count .num { display: block; font-size: 1.9rem; font-weight: 800; line-height: 1; }
+  .cmp-count .lbl { display: block; font-size: .82rem; color: var(--fg-muted); margin-top: .3rem; }
+  .cmp-table-wrap { overflow-x: auto; }
+  .cmp-table { width: 100%; border-collapse: collapse; margin-top: .5rem; }
+  .cmp-table th, .cmp-table td { text-align: left; padding: .7rem .85rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+  .cmp-table thead th { font-size: .95rem; }
+  .cmp-table tbody th { font-weight: 600; color: var(--fg-muted); white-space: nowrap; }
+  .verdict { padding-left: 1.25rem; }
+  .verdict li { margin: .4rem 0; }
+</style>

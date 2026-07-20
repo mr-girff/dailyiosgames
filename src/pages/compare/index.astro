@@ -1,0 +1,74 @@
+---
+import Base from "../../layouts/Base.astro"
+import KeepBrowsing from "../../components/KeepBrowsing.astro"
+import { loadAll, isIndexable } from "../../lib/enriched"
+import { isOffline } from "../../lib/format"
+
+const all = loadAll().filter(isIndexable)
+const count = (fn) => all.filter(fn).length
+
+const SITE = "https://ios.querygame.com"
+const canonical = `${SITE}/compare/`
+const title = "iOS Game Comparisons: Head-to-Head Genre & Model Face-Offs (2026)"
+const description = "Data-driven head-to-head comparisons of iOS game genres and monetization models — match-3 vs merge, free vs premium, offline vs online, casual vs RPG, casino vs match-3. Refreshed daily."
+
+const cards = [
+  { href: "/compare/match3-vs-merge/", a: "Match-3", b: "Merge", blurb: "The two dominant puzzle loops. One sells you out of a fail state, the other out of a wait state.", n: `${count(g => g.archetype === "match3")} vs ${count(g => g.archetype === "merge")}` },
+  { href: "/compare/free-vs-premium/", a: "Free-to-play", b: "Premium", blurb: "\u201cFree\u201d and \u201c$4.99\u201d aren't the prices they look like. The honest cost comparison.", n: "ads vs pay-once" },
+  { href: "/compare/offline-vs-online/", a: "Offline", b: "Online", blurb: "What actually survives airplane mode \u2014 and how we verify the \u201cno WiFi\u201d claim.", n: `${count(isOffline)} verified offline` },
+  { href: "/compare/casual-vs-rpg/", a: "Casual arcade", b: "RPG", blurb: "Fun in the gaps of your day vs a world to sink into over weeks.", n: `${count(g => g.archetype === "casual-arcade" || g.archetype === "idle")} vs ${count(g => g.archetype === "rpg")}` },
+  { href: "/compare/casino-vs-match3/", a: "Casino", b: "Match-3", blurb: "The two most monetization-heavy shelves, side by side, with the red flags to watch.", n: `${count(g => g.archetype === "casino")} vs ${count(g => g.archetype === "match3")}` },
+]
+---
+<Base title={title} description={description} canonical={canonical} image={`${SITE}/og-default.svg`}>
+  <section class="page-hero">
+    <div>
+      <div class="eyebrow">Comparisons · updated daily</div>
+      <h1>iOS game face-offs</h1>
+      <p class="lead">Genre against genre, model against model. Every comparison pulls live cohorts from our daily US App Store crawl, ranks them by heat, and lays out the honest trade-offs \u2014 no stale hand-built lists.</p>
+    </div>
+  </section>
+
+  <ul class="cmp-index">
+    {cards.map(c => (
+      <li>
+        <a class="cmp-card" href={c.href}>
+          <div class="cmp-card__title"><span class="a">{c.a}</span> <span class="vs">vs</span> <span class="b">{c.b}</span></div>
+          <p class="cmp-card__blurb">{c.blurb}</p>
+          <span class="cmp-card__n">{c.n}</span>
+        </a>
+      </li>
+    ))}
+  </ul>
+
+  <KeepBrowsing
+    title="Keep browsing"
+    eyebrow="More"
+    items={[
+      { href: "/archetype/", title: "Browse by category", sub: "Every archetype", icon: "grid" },
+      { href: "/movers/", title: "Rising games", sub: "Today's movers", icon: "fire" },
+      { href: "/no-ads-no-iap/", title: "No ads, no IAP", sub: "Pay once, own it", icon: "star" },
+      { href: "/posts/", title: "Daily reports", sub: "What shipped today", icon: "calendar" },
+    ]}
+  />
+
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": title,
+    "description": description,
+    "url": canonical,
+  })} />
+
+  <style>
+    .cmp-index { list-style: none; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 1rem; margin: 1.5rem 0; }
+    .cmp-card { display: block; padding: 1.1rem 1.2rem; border: 1px solid var(--border); border-radius: 14px; background: var(--card, #fffdf8); text-decoration: none; color: inherit; transition: box-shadow .15s, transform .15s; }
+    .cmp-card:hover { box-shadow: 0 6px 24px rgba(168,64,31,.12); transform: translateY(-2px); }
+    .cmp-card__title { font-weight: 800; font-size: 1.15rem; }
+    .cmp-card__title .a { color: #c15f3c; }
+    .cmp-card__title .b { color: #2f7d6b; }
+    .cmp-card__title .vs { color: var(--fg-muted); font-weight: 500; }
+    .cmp-card__blurb { margin: .5rem 0 .75rem; color: var(--fg-muted); font-size: .92rem; }
+    .cmp-card__n { font-size: .8rem; font-weight: 600; color: var(--fg-muted); }
+  </style>
+</Base>

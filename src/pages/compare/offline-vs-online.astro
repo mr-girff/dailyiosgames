@@ -1,0 +1,80 @@
+---
+import Base from "../../layouts/Base.astro"
+import CompareTwo from "../../components/CompareTwo.astro"
+import KeepBrowsing from "../../components/KeepBrowsing.astro"
+import { loadAll, rankByHeat, isIndexable } from "../../lib/enriched"
+import { isOffline } from "../../lib/format"
+
+const all = loadAll()
+const a = rankByHeat(all.filter(g => isIndexable(g) && isOffline(g)))
+const offlineIds = new Set(a.map(g => g.id))
+const b = rankByHeat(all.filter(g => isIndexable(g) && !offlineIds.has(g.id)))
+
+const SITE = "https://ios.querygame.com"
+const canonical = `${SITE}/compare/offline-vs-online/`
+const title = "Offline vs Online iOS Games: What Actually Works on a Plane (2026)"
+const description = `${a.length} verified offline vs ${b.length} always-connected iOS games — what breaks in airplane mode, what doesn't, and how we verify the difference. Daily App Store crawl.`
+
+const rows = [
+  { label: "Needs a connection", a: "No — verified from App Store text", b: "Yes, for core play" },
+  { label: "Works on a flight", a: "Yes (cache assets online first)", b: "No, or degraded" },
+  { label: "Save location", a: "Usually on-device", b: "Often server-side" },
+  { label: "Ads", a: "If present, don't block offline play", b: "Can hard-block when offline" },
+  { label: "Multiplayer", a: "Rare / local only", b: "Common" },
+  { label: "Shelf size (tracked)", a: `${a.length} verified offline`, b: `${b.length} require connection` },
+  { label: "Best for", a: "Flights, subways, dead zones", b: "Live-service, social, real-money" },
+]
+const verdict = [
+  { pick: "Pick offline", when: "you commute through dead zones or fly often \u2014 but launch once on WiFi first to cache assets." },
+  { pick: "Pick online", when: "you want multiplayer, live events, or real-money play and you're always connected." },
+  { pick: "Always test", when: "even a tagged-offline game can need a first online launch \u2014 toggle airplane mode before you leave." },
+]
+---
+<Base title={title} description={description} canonical={canonical} image={`${SITE}/illus/compare-offline-online.svg`}>
+  <CompareTwo
+    eyebrow="Head to head · updated daily"
+    aLabel="Offline"
+    bLabel="Online"
+    lead="\u201cNo WiFi\u201d is the most abused label on the App Store. We only count offline games whose own listing claims it \u2014 then compare them against the always-connected majority. Here's what actually survives airplane mode."
+    a={a}
+    b={b}
+    rows={rows}
+    verdict={verdict}
+  />
+
+  <section>
+    <h2>FAQ</h2>
+    <details><summary>How do you verify a game is really offline?</summary><p>Conservatively. A game earns the offline label only if it carries an explicit offline tag in our dataset, or its App Store text says so — phrases like \u201cno internet required,\u201d \u201cplay offline,\u201d or \u201cairplane mode.\u201d We never infer offline support from genre.</p></details>
+    <details><summary>Why do some \u201coffline\u201d games still break on a plane?</summary><p>Three usual culprits: ad screens that can't finish loading offline, server-side saves, and daily-login economies. That's why we recommend a first online launch, then testing airplane mode before you rely on it.</p></details>
+    <details><summary>Can online games ever be played offline?</summary><p>Sometimes partially, but if the core loop is server-driven you'll hit an error or an empty profile. Assume no unless the listing says otherwise.</p></details>
+  </section>
+
+  <KeepBrowsing
+    title="Keep comparing"
+    eyebrow="Related"
+    items={[
+      { href: "/offline/", title: "Best offline games", sub: "The verified list", icon: "list" },
+      { href: "/controller-support/", title: "Controller support", sub: "Pair with a Backbone", icon: "grid" },
+      { href: "/compare/casual-vs-rpg/", title: "Casual vs RPG", sub: "Bursts or depth", icon: "star" },
+      { href: "/no-ads-no-iap/", title: "No ads, no IAP", sub: "Uninterrupted", icon: "star" },
+      { href: "/movers/", title: "Rising games", sub: "Today's movers", icon: "fire" },
+    ]}
+  />
+
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": title,
+    "description": description,
+    "url": canonical,
+  })} />
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": SITE + "/" },
+      { "@type": "ListItem", "position": 2, "name": "Compare", "item": SITE + "/compare/" },
+      { "@type": "ListItem", "position": 3, "name": "Offline vs Online", "item": canonical },
+    ],
+  })} />
+</Base>

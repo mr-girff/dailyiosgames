@@ -1,0 +1,80 @@
+---
+import Base from "../../layouts/Base.astro"
+import CompareTwo from "../../components/CompareTwo.astro"
+import KeepBrowsing from "../../components/KeepBrowsing.astro"
+import { loadAll, rankByHeat, isIndexable } from "../../lib/enriched"
+
+const all = loadAll()
+// Premium = pay-once / no-ads. Free = free-to-play with ads or IAP.
+const b = rankByHeat(all.filter(g => isIndexable(g) && (g.monetization === "premium" || (g.tags || []).includes("no-ads"))))
+const premiumIds = new Set(b.map(g => g.id))
+const a = rankByHeat(all.filter(g => isIndexable(g) && !premiumIds.has(g.id)))
+
+const SITE = "https://ios.querygame.com"
+const canonical = `${SITE}/compare/free-vs-premium/`
+const title = "Free vs Premium iOS Games: Which Is Actually Cheaper? (2026)"
+const description = `${a.length} free-to-play vs ${b.length} premium iOS games compared — real cost, ads, ownership and who each model is for. Ranked from our daily US App Store crawl.`
+
+const rows = [
+  { label: "Upfront price", a: "$0", b: "Usually $1.99–$9.99, once" },
+  { label: "Ads", a: "Common (banner / rewarded video)", b: "None" },
+  { label: "In-app purchases", a: "The business model", b: "None by definition" },
+  { label: "Real lifetime cost", a: "$0 to hundreds, depends on willpower", b: "Fixed, known upfront" },
+  { label: "Ownership", a: "You rent access; live-service can end", b: "You own the build you bought" },
+  { label: "Shelf size (tracked)", a: `${a.length} titles`, b: `${b.length} titles` },
+  { label: "Best for", a: "Try-before-commit, casual filler", b: "Focus, no dark patterns, gifting" },
+]
+const verdict = [
+  { pick: "Go free", when: "you want zero-commitment trials and you have the discipline to never open the IAP store." },
+  { pick: "Go premium", when: "you value focus and ownership \u2014 pay once, no timers, no \u201cremove ads\u201d nags." },
+  { pick: "Do the math", when: "if a free game tempts you past ~$10 in IAP, a premium title was the cheaper choice all along." },
+]
+---
+<Base title={title} description={description} canonical={canonical} image={`${SITE}/illus/compare-free-premium.svg`}>
+  <CompareTwo
+    eyebrow="Head to head · updated daily"
+    aLabel="Free-to-play"
+    bLabel="Premium"
+    lead="\u201cFree\u201d and \u201c$4.99\u201d are not the prices they appear to be. Free games monetize your time and attention; premium games charge once and leave you alone. Here's the honest comparison, with live top picks from both models."
+    a={a}
+    b={b}
+    rows={rows}
+    verdict={verdict}
+  />
+
+  <section>
+    <h2>FAQ</h2>
+    <details><summary>How do you decide a game is \u201cpremium\u201d?</summary><p>We classify a title premium when its monetization is flagged <code>premium</code> (a one-time price with no listed IAP) or it carries our <code>no-ads</code> tag. If a previously-premium game ships an update adding IAP, it drops to the free-to-play side within 24 hours.</p></details>
+    <details><summary>Are premium games always better?</summary><p>No. Plenty of free-to-play titles are genuinely great and fair. \u201cPremium\u201d only guarantees the *business model* respects you, not that the game is fun. Pair this with our verdicts and red-flag list.</p></details>
+    <details><summary>Why are there so many more free games?</summary><p>Because free-to-play dominates the App Store economically. Premium is a smaller, curated shelf — which actually makes it easier to find something good.</p></details>
+  </section>
+
+  <KeepBrowsing
+    title="Keep comparing"
+    eyebrow="Related"
+    items={[
+      { href: "/compare/casino-vs-match3/", title: "Casino vs match-3", sub: "Monetization face-off", icon: "tag" },
+      { href: "/no-ads-no-iap/", title: "No ads, no IAP", sub: "The premium shelf", icon: "star" },
+      { href: "/free-no-ads/", title: "Free, no ads", sub: "Best of both", icon: "fire" },
+      { href: "/hidden-gems/", title: "Hidden gems", sub: "High trust, low hype", icon: "star" },
+      { href: "/movers/", title: "Rising games", sub: "Today's movers", icon: "fire" },
+    ]}
+  />
+
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": title,
+    "description": description,
+    "url": canonical,
+  })} />
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": SITE + "/" },
+      { "@type": "ListItem", "position": 2, "name": "Compare", "item": SITE + "/compare/" },
+      { "@type": "ListItem", "position": 3, "name": "Free vs Premium", "item": canonical },
+    ],
+  })} />
+</Base>

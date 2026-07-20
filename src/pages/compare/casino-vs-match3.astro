@@ -1,0 +1,78 @@
+---
+import Base from "../../layouts/Base.astro"
+import CompareTwo from "../../components/CompareTwo.astro"
+import KeepBrowsing from "../../components/KeepBrowsing.astro"
+import { loadAll, rankByHeat, isIndexable } from "../../lib/enriched"
+
+const all = loadAll()
+const a = rankByHeat(all.filter(g => isIndexable(g) && g.archetype === "casino"))
+const b = rankByHeat(all.filter(g => isIndexable(g) && g.archetype === "match3"))
+
+const SITE = "https://ios.querygame.com"
+const canonical = `${SITE}/compare/casino-vs-match3/`
+const title = "Casino vs Match-3 iOS Games: The Monetization Face-Off (2026)"
+const description = `${a.length} casino-style vs ${b.length} match-3 iOS games compared — how each extracts spend, the psychology, red flags and who to trust. From our daily US App Store crawl.`
+
+const rows = [
+  { label: "Core hook", a: "Chance / near-miss reward", b: "Skill + progression" },
+  { label: "Spend trigger", a: "Coin refills, \u201cone more spin\u201d", b: "Extra moves, lives, boosters" },
+  { label: "Skill matters", a: "Little to none", b: "Real, but paywalls gate hard levels" },
+  { label: "Real-money variants", a: "Common (sweepstakes / cash)", b: "Rare" },
+  { label: "Red-flag rate", a: "High — watch for cash-play, high spend caps", b: "Moderate — energy walls, booster nags" },
+  { label: "Shelf size (tracked)", a: `${a.length} titles`, b: `${b.length} titles` },
+  { label: "Best for", a: "Slot/bingo fans who set hard limits", b: "Puzzle fans who want skill + polish" },
+]
+const verdict = [
+  { pick: "Approach casino with limits", when: "the loop is engineered around chance and near-misses \u2014 set a hard spend cap or skip entirely." },
+  { pick: "Pick match-3", when: "you want a skill-based loop where the paywall is a soft \u201cthat\u2019s enough for today,\u201d not a slot machine." },
+  { pick: "Read the red flags", when: "on both sides \u2014 our flags surface real-money play, high spend caps and predatory timers before you install." },
+]
+---
+<Base title={title} description={description} canonical={canonical} image={`${SITE}/illus/compare-casino-match3.svg`}>
+  <CompareTwo
+    eyebrow="Head to head · updated daily"
+    aLabel="Casino"
+    bLabel="Match-3"
+    lead="Both shelves are monetization machines, but they pull different levers. Casino games sell chance and near-misses; match-3 sells you out of a skill wall. Here's the honest face-off \u2014 with live picks and the red flags to watch on each side."
+    a={a}
+    b={b}
+    rows={rows}
+    verdict={verdict}
+  />
+
+  <section>
+    <h2>FAQ</h2>
+    <details><summary>Are these casino games real gambling?</summary><p>Some are \u201csocial casino\u201d (no cashout), and a growing number are sweepstakes/real-cash titles. We flag real-money and cash-play patterns in each game's red flags. Treat any casino-archetype title as a spend risk and set limits before you install.</p></details>
+    <details><summary>Why compare casino to match-3 specifically?</summary><p>Because they're the two most monetization-heavy shelves we track, and they represent the two dominant extraction models: chance-based (casino) and skill-wall-based (match-3). Seeing them side by side makes the mechanics obvious.</p></details>
+    <details><summary>Is match-3 the \u201csafe\u201d choice?</summary><p>Safer, not safe. Match-3 is skill-driven and easier to walk away from, but the top titles still gate hard levels behind boosters and lives. Check the tags and red flags on each card.</p></details>
+  </section>
+
+  <KeepBrowsing
+    title="Keep comparing"
+    eyebrow="Related"
+    items={[
+      { href: "/compare/free-vs-premium/", title: "Free vs premium", sub: "Real cost", icon: "tag" },
+      { href: "/compare/match3-vs-merge/", title: "Match-3 vs merge", sub: "Puzzle loops", icon: "grid" },
+      { href: "/no-ads-no-iap/", title: "No ads, no IAP", sub: "Zero pressure", icon: "star" },
+      { href: "/hidden-gems/", title: "Hidden gems", sub: "High trust", icon: "star" },
+      { href: "/methodology/", title: "How we flag risk", sub: "Red flags explained", icon: "list" },
+    ]}
+  />
+
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "CollectionPage",
+    "name": title,
+    "description": description,
+    "url": canonical,
+  })} />
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "Home", "item": SITE + "/" },
+      { "@type": "ListItem", "position": 2, "name": "Compare", "item": SITE + "/compare/" },
+      { "@type": "ListItem", "position": 3, "name": "Casino vs Match-3", "item": canonical },
+    ],
+  })} />
+</Base>

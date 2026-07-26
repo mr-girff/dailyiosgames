@@ -2066,3 +2066,141 @@
 
 </details>
 
+### `astro.config.mjs` — modified
+
+- **When:** 2026-07-26 03:39:58 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +8 / -2 lines
+- **What:** modified `astro.config.mjs`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-import tailwind from "@astrojs/tailwind"
++//
++// No Tailwind here on purpose. The design system lives in `public/styles.css`
++// and no page ever used a Tailwind utility class, but the integration still
++// injected Tailwind's preflight into every page — and preflight's
++// `h1..h6 { font-size: inherit; font-weight: inherit }` silently flattened every
++// heading on the site to 16px body text, while its `.grow { flex-grow: 1 }`
++// utility collided with the growth badge on /movers/. See public/styles.css
++// ("Base reset") for the small subset of preflight that is actually wanted.
+-  integrations: [tailwind()],
+```
+
+</details>
+
+### `docs/AUTOMATION-OVERVIEW.md` — modified
+
+- **When:** 2026-07-26 03:39:58 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +2 / -2 lines
+- **What:** modified `docs/AUTOMATION-OVERVIEW.md`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-│   ├── astro.config.mjs           # sitemap + tailwind
+-│   ├── tailwind.config.mjs
++│   ├── astro.config.mjs           # canonical site URL + build format
++│   ├── public/styles.css          # hand-written design system (no CSS framework)
+```
+
+</details>
+
+### `package-lock.json` — modified
+
+- **When:** 2026-07-26 03:39:58 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +1 / -661 lines
+- **What:** modified `package-lock.json`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-        "@astrojs/tailwind": "^5.1.0",
+-        "sharp": "^0.33.4",
+-        "tailwindcss": "^3.4.0"
+-      }
+-    },
+-    "node_modules/@alloc/quick-lru": {
+-      "version": "5.2.0",
+-      "resolved": "https://registry.npmjs.org/@alloc/quick-lru/-/quick-lru-5.2.0.tgz",
+-      "integrity": "sha512-UrcABB+4bUrFABwbluTIBErXwvbsU/V7TZWfmbgJfbkwiBuziS9gxdODUyuiecfdGQ85jglMW6juS3+z5TsKLw==",
+-      "license": "MIT",
+-      "engines": {
+-        "node": ">=10"
+```
+
+</details>
+
+### `package.json` — modified
+
+- **When:** 2026-07-26 03:39:58 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +0 / -2 lines
+- **What:** modified `package.json`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-    "@astrojs/tailwind": "^5.1.0",
+-    "tailwindcss": "^3.4.0",
+```
+
+</details>
+
+### `public/styles.css` — modified
+
+- **When:** 2026-07-26 03:39:58 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +13 / -0 lines
+- **What:** modified `public/styles.css`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++/* Base reset ---------------------------------------------------------------
++   Replaces the handful of Tailwind-preflight rules this design actually relied
++   on, now that the (otherwise unused) Tailwind integration is gone. Deliberately
++   does NOT reset headings or list markers: preflight's
++   `h1..h6 { font-size: inherit }` was flattening every heading on the site, and
++   its `ol,ul { list-style: none }` was eating the bullets in prose sections. */
++img, svg, video, canvas, iframe { display: block; vertical-align: middle; }
++img, video { max-width: 100%; }
++button, input, select, textarea { font-family: inherit; font-size: 100%; line-height: inherit; color: inherit; margin: 0; }
++button { background: none; border: 0; }
++input[type="search"] { -webkit-appearance: none; appearance: none; }
++:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+```
+
+</details>
+
+### `src/layouts/Base.astro` — modified
+
+- **When:** 2026-07-26 03:39:58 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +1 / -1 lines
+- **What:** modified `src/layouts/Base.astro`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-    <link rel="stylesheet" href="/styles.css?v=20260628d" />
++    <link rel="stylesheet" href="/styles.css?v=20260726a" />
+```
+
+</details>
+

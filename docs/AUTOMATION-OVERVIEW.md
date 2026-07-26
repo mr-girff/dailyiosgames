@@ -11,8 +11,8 @@ automation/
 │   ├── src/                       # Pages, layout, content schema
 │   ├── public/                    # robots.txt, styles
 │   ├── .github/workflows/daily.yml # Cron 07:00 UTC daily auto-commit
-│   ├── astro.config.mjs           # sitemap + tailwind
-│   ├── tailwind.config.mjs
+│   ├── astro.config.mjs           # canonical site URL + build format
+│   ├── public/styles.css          # hand-written design system (no CSS framework)
 │   ├── package.json
 │   ├── .env.example
 │   └── README.md

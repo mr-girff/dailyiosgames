@@ -757,3 +757,127 @@
 
 </details>
 
+### `functions/subscribe.ts` — modified
+
+- **When:** 2026-07-26 02:35:03 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +10 / -2 lines
+- **What:** modified `functions/subscribe.ts`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++async function sha256Hex(input: string): Promise<string> {
++  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(input))
++  return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, "0")).join("").slice(0, 32)
++}
++
+-    const rlKey = `rl:${ip}`
++    // Hashed here too, so no raw IP is ever written to KV.
++    const rlKey = `rl:${await sha256Hex(ip)}`
++  // Store a one-way hash instead of the raw IP: enough to spot abuse patterns,
++  // nothing that identifies a reader (and it matches what /privacy/ promises).
+-    ip: request.headers.get("cf-connecting-ip") || "",
++    ipHash: ip ? await sha256Hex(ip) : "",
+```
+
+</details>
+
+### `public/robots.txt` — modified
+
+- **When:** 2026-07-26 02:35:03 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +29 / -9 lines
+- **What:** modified `public/robots.txt`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++# The open dataset is the point of the site — keep it crawlable.
++Allow: /api/data.json
++Allow: /api/movers.json
++Allow: /llms.txt
++
+-Disallow: /api/
++Disallow: /api/games/
++Disallow: /search
+-Disallow: /*.json$
+-# LLM crawlers — explicitly allowed (we want to be cited)
++# LLM crawlers — explicitly allowed (we want to be cited), including the
++# machine-readable feeds that llms.txt advertises.
+```
+
+</details>
+
+### `reviews-worker/reviews-worker.js` — modified
+
+- **When:** 2026-07-26 02:35:03 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +8 / -4 lines
+- **What:** modified `reviews-worker/reviews-worker.js`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-  // Rate limit: max 1 pending per email per 10 min
+-  const ipKey = `rl:${email}`
+-  if (await env.REVIEWS.get(ipKey)) return new Response("Try again later.", { status: 429 })
+-  await env.REVIEWS.put(ipKey, "1", { expirationTtl: 600 })
++  // Rate limit: max 1 pending per email AND per client IP per 10 min.
++  // (Keying on the email alone was trivially bypassed by changing the address.)
++  const ip = req.headers.get("CF-Connecting-IP") || ""
++  const keys = [`rl:e:${email}`, ip ? `rl:i:${ip}` : null].filter(Boolean)
++  for (const k of keys) {
++    if (await env.REVIEWS.get(k)) return new Response("Try again later.", { status: 429 })
++  }
++  for (const k of keys) await env.REVIEWS.put(k, "1", { expirationTtl: 600 })
+```
+
+</details>
+
+### `reviews-worker/wrangler.toml` — modified
+
+- **When:** 2026-07-26 02:35:03 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +3 / -1 lines
+- **What:** modified `reviews-worker/wrangler.toml`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-main = "src/index.js"
++# The worker source lives next to this file — `main = "src/index.js"` pointed at a
++# path that does not exist in this repo, so `wrangler deploy` failed outright.
++main = "reviews-worker.js"
+```
+
+</details>
+
+### `src/pages/privacy.astro` — modified
+
+- **When:** 2026-07-26 02:35:03 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +2 / -2 lines
+- **What:** modified `src/pages/privacy.astro`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-        <p>Our host (Cloudflare) records standard, aggregated request logs (page, country, timing) to keep the site fast and secure. These are not used to identify individuals.</p>
++        <p>Our host (Cloudflare) records standard, aggregated request logs (page, country, timing) to keep the site fast and secure. These are not used to identify individuals. When configured, we also load one privacy-oriented page-analytics script (and, if advertising is enabled, Google Analytics) to count page views — see <em>Cookies &amp; advertising</em> below.</p>
+-        <p>If you subscribe to updates, we store only the address you give us, solely to send what you asked for. Unsubscribe any time.</p>
++        <p>If you subscribe to updates, we store the address you give us plus the minimum request metadata needed to stop abuse: which page the form was submitted from, your browser's user-agent string, your country, and a one-way hash of your IP address (never the raw IP). Used only to send what you asked for and to rate-limit spam. Unsubscribe or request deletion any time.</p>
+```
+
+</details>
+

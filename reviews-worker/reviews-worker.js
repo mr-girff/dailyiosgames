@@ -69,10 +69,14 @@ async function ingest(req, env) {
     return new Response("Invalid submission", { status: 400 })
   }
 
-  // Rate limit: max 1 pending per email per 10 min
-  const ipKey = `rl:${email}`
-  if (await env.REVIEWS.get(ipKey)) return new Response("Try again later.", { status: 429 })
-  await env.REVIEWS.put(ipKey, "1", { expirationTtl: 600 })
+  // Rate limit: max 1 pending per email AND per client IP per 10 min.
+  // (Keying on the email alone was trivially bypassed by changing the address.)
+  const ip = req.headers.get("CF-Connecting-IP") || ""
+  const keys = [`rl:e:${email}`, ip ? `rl:i:${ip}` : null].filter(Boolean)
+  for (const k of keys) {
+    if (await env.REVIEWS.get(k)) return new Response("Try again later.", { status: 429 })
+  }
+  for (const k of keys) await env.REVIEWS.put(k, "1", { expirationTtl: 600 })
 
   const token = randomToken()
   const review = {

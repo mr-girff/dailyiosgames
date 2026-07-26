@@ -6,6 +6,11 @@ interface Env {
   SUBSCRIBERS?: KVNamespace
 }
 
+async function sha256Hex(input: string): Promise<string> {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(input))
+  return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, "0")).join("").slice(0, 32)
+}
+
 export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   let email = ""
   let source = "unknown"
@@ -35,7 +40,8 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
   const RL_MAX = 5
   const ip = request.headers.get("cf-connecting-ip") || ""
   if (env.SUBSCRIBERS && ip) {
-    const rlKey = `rl:${ip}`
+    // Hashed here too, so no raw IP is ever written to KV.
+    const rlKey = `rl:${await sha256Hex(ip)}`
     const count = Number((await env.SUBSCRIBERS.get(rlKey)) || "0")
     if (count >= RL_MAX) {
       const accept = request.headers.get("accept") || ""
@@ -51,11 +57,13 @@ export const onRequestPost: PagesFunction<Env> = async ({ request, env }) => {
     await env.SUBSCRIBERS.put(rlKey, String(count + 1), { expirationTtl: RL_WINDOW })
   }
 
+  // Store a one-way hash instead of the raw IP: enough to spot abuse patterns,
+  // nothing that identifies a reader (and it matches what /privacy/ promises).
   const record = {
     email,
     source,
     ts: new Date().toISOString(),
-    ip: request.headers.get("cf-connecting-ip") || "",
+    ipHash: ip ? await sha256Hex(ip) : "",
     ua: (request.headers.get("user-agent") || "").slice(0, 200),
     country: (request as any).cf?.country || "",
   }

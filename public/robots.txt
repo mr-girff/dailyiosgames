@@ -1,37 +1,57 @@
 User-agent: *
 Allow: /
 
+# The open dataset is the point of the site — keep it crawlable.
+Allow: /api/data.json
+Allow: /api/movers.json
+Allow: /llms.txt
+
 # Block low-value / non-content endpoints from crawl budget
-Disallow: /api/
+Disallow: /api/games/
+Disallow: /search
 Disallow: /subscribe/thanks
 Disallow: /subscribe/thanks/
 Disallow: /video/
-Disallow: /*.json$
 
-# LLM crawlers — explicitly allowed (we want to be cited)
+# LLM crawlers — explicitly allowed (we want to be cited), including the
+# machine-readable feeds that llms.txt advertises.
 User-agent: GPTBot
 Allow: /
-Disallow: /api/
+Disallow: /api/games/
+Disallow: /search
+
+User-agent: OAI-SearchBot
+Allow: /
+Disallow: /api/games/
+Disallow: /search
+
+User-agent: ChatGPT-User
+Allow: /
 
 User-agent: ClaudeBot
 Allow: /
-Disallow: /api/
+Disallow: /api/games/
+Disallow: /search
 
 User-agent: Claude-Web
 Allow: /
-Disallow: /api/
+Disallow: /api/games/
+Disallow: /search
 
 User-agent: PerplexityBot
 Allow: /
-Disallow: /api/
+Disallow: /api/games/
+Disallow: /search
 
 User-agent: Google-Extended
 Allow: /
-Disallow: /api/
+Disallow: /api/games/
+Disallow: /search
 
 User-agent: CCBot
 Allow: /
-Disallow: /api/
+Disallow: /api/games/
+Disallow: /search
 
 # AdSense crawler — must be allowed everywhere ads may render
 User-agent: Mediapartners-Google

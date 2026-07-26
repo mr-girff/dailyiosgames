@@ -1,5 +1,7 @@
 name = "reviews-worker"
-main = "src/index.js"
+# The worker source lives next to this file — `main = "src/index.js"` pointed at a
+# path that does not exist in this repo, so `wrangler deploy` failed outright.
+main = "reviews-worker.js"
 compatibility_date = "2024-11-01"
 
 # Run `wrangler kv:namespace create REVIEWS` and paste the id here

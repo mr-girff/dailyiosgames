@@ -513,3 +513,247 @@
 
 </details>
 
+### `public/_headers` — modified
+
+- **When:** 2026-07-26 02:35:03 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +10 / -0 lines
+- **What:** modified `public/_headers`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++/*
++  X-Content-Type-Options: nosniff
++  Referrer-Policy: strict-origin-when-cross-origin
++  Permissions-Policy: geolocation=(), microphone=(), camera=(), payment=()
++  X-Frame-Options: SAMEORIGIN
++
++/search-index.json
++  Access-Control-Allow-Origin: *
++  Cache-Control: public, max-age=600, s-maxage=1800
++
+```
+
+</details>
+
+### `public/hero-controller.png` — created
+
+- **When:** 2026-07-26 02:35:03 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +(binary) / -(binary) lines
+- **What:** created `public/hero-controller.png`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+### `public/hero-hidden-gems.png` — created
+
+- **When:** 2026-07-26 02:35:03 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +(binary) / -(binary) lines
+- **What:** created `public/hero-hidden-gems.png`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+### `public/hero-like.png` — created
+
+- **When:** 2026-07-26 02:35:03 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +(binary) / -(binary) lines
+- **What:** created `public/hero-like.png`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+### `public/hero-new-today.png` — created
+
+- **When:** 2026-07-26 02:35:03 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +(binary) / -(binary) lines
+- **What:** created `public/hero-new-today.png`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+### `public/hero-no-iap.png` — created
+
+- **When:** 2026-07-26 02:35:03 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +(binary) / -(binary) lines
+- **What:** created `public/hero-no-iap.png`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+### `public/hero-this-week.png` — created
+
+- **When:** 2026-07-26 02:35:03 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +(binary) / -(binary) lines
+- **What:** created `public/hero-this-week.png`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+### `public/illus/compare-casino-match3.png` — created
+
+- **When:** 2026-07-26 02:35:03 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +(binary) / -(binary) lines
+- **What:** created `public/illus/compare-casino-match3.png`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+### `public/illus/compare-casual-rpg.png` — created
+
+- **When:** 2026-07-26 02:35:03 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +(binary) / -(binary) lines
+- **What:** created `public/illus/compare-casual-rpg.png`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+### `public/illus/compare-free-premium.png` — created
+
+- **When:** 2026-07-26 02:35:03 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +(binary) / -(binary) lines
+- **What:** created `public/illus/compare-free-premium.png`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+### `public/illus/compare-match3-merge.png` — created
+
+- **When:** 2026-07-26 02:35:03 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +(binary) / -(binary) lines
+- **What:** created `public/illus/compare-match3-merge.png`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+### `public/illus/compare-offline-online.png` — created
+
+- **When:** 2026-07-26 02:35:03 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +(binary) / -(binary) lines
+- **What:** created `public/illus/compare-offline-online.png`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+### `public/illus/free-no-ads.png` — created
+
+- **When:** 2026-07-26 02:35:03 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +(binary) / -(binary) lines
+- **What:** created `public/illus/free-no-ads.png`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+### `public/illus/like-monument-valley.png` — created
+
+- **When:** 2026-07-26 02:35:03 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +(binary) / -(binary) lines
+- **What:** created `public/illus/like-monument-valley.png`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+### `public/illus/no-ads.png` — created
+
+- **When:** 2026-07-26 02:35:03 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +(binary) / -(binary) lines
+- **What:** created `public/illus/no-ads.png`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+### `public/illus/no-iap.png` — created
+
+- **When:** 2026-07-26 02:35:03 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +(binary) / -(binary) lines
+- **What:** created `public/illus/no-iap.png`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+### `public/illus/offline.png` — created
+
+- **When:** 2026-07-26 02:35:03 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +(binary) / -(binary) lines
+- **What:** created `public/illus/offline.png`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+### `public/illus/this-week.png` — created
+
+- **When:** 2026-07-26 02:35:03 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +(binary) / -(binary) lines
+- **What:** created `public/illus/this-week.png`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+### `public/og-default.png` — created
+
+- **When:** 2026-07-26 02:35:03 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +(binary) / -(binary) lines
+- **What:** created `public/og-default.png`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+### `scripts/og.mjs` — created
+
+- **When:** 2026-07-26 02:35:03 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +50 / -0 lines
+- **What:** created `scripts/og.mjs`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++// Rasterise every SVG used as an Open Graph image into a 1200x630 PNG.
++//
++// Why: Facebook, X/Twitter, LinkedIn, Slack, Discord and iMessage all ignore
++// `og:image` values that point at an SVG, so the whole site was shipping link
++// previews with no image at all. Base.astro rewrites `*.svg` OG values to the
++// `.png` sibling produced here.
++//
++// Run: npm run og   (idempotent — skips PNGs newer than their source SVG)
++
++import fs from "node:fs/promises"
++import path from "node:path"
++import sharp from "sharp"
+```
+
+</details>
+
+### `src/layouts/Base.astro` — modified
+
+- **When:** 2026-07-26 02:35:03 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +40 / -9 lines
+- **What:** modified `src/layouts/Base.astro`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++import fs from "node:fs"
++import path from "node:path"
++
++// Same rule for the telemetry tag: ids live in the environment, never in the repo.
++const VL_PRODUCT_ID = import.meta.env.PUBLIC_VL_PRODUCT_ID || ""
++const VL_AUTH_KEY = import.meta.env.PUBLIC_VL_AUTH_KEY || ""
+-const ogImage = image || `${site}/og-default.svg`
++
++// Facebook / X / LinkedIn / Slack / iMessage all silently drop SVG og:images, so
++// every share of this site used to render without a preview image. scripts/og.mjs
++// rasterises the SVGs to 1200x630 PNGs; use the PNG whenever one exists.
++function rasterOg(url: string): string {
+```
+
+</details>
+

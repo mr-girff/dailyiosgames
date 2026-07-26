@@ -4,12 +4,10 @@ import GameGrid from "../../components/GameGrid.astro"
 import KeepBrowsing from "../../components/KeepBrowsing.astro"
 import { SEEDS } from "../../lib/likeSeeds"
 import type { LikeSeed } from "../../lib/likeSeeds"
-import fs from "node:fs"
-import path from "node:path"
+import { loadEnriched, demandOf } from "../../lib/enriched"
 
 export async function getStaticPaths() {
-  const p = path.join(process.cwd(), "data/enriched.json")
-  const data = fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, "utf8")) : { all: [], date: "n/a" }
+  const data = loadEnriched()
   const all = data.all || []
 
   return SEEDS.map(seed => {
@@ -27,10 +25,11 @@ export async function getStaticPaths() {
       for (const kw of seed.keywords) if (text.includes(kw.toLowerCase())) s += 4
       // Exclusions
       for (const kw of (seed.excludeKeywords || [])) if (text.includes(kw.toLowerCase())) s -= 10
-      // Quality boost
-      if (g.verdict === "build") s += 3
-      if (g.verdict === "watch") s += 1
-      if ((g.signal || 0) >= 12) s += 2
+      // Search-demand boost (was a "verdict" bonus: an autocomplete threshold
+      // dressed up as an editorial rating, and no longer populated).
+      const demand = demandOf(g)
+      if (demand >= 12) s += 3
+      else if (demand >= 5) s += 1
       // Rating gate (don't surface low-quality matches)
       const r = Number(g.rating || 0)
       if (r > 0 && r < 3.5) s -= 4

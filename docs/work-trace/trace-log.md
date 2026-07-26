@@ -1280,3 +1280,546 @@
 
 </details>
 
+### `src/components/GameGrid.astro` — modified
+
+- **When:** 2026-07-26 03:06:14 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +0 / -1 lines
+- **What:** modified `src/components/GameGrid.astro`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-                {g.verdict === "build" && <span class="tag signal">High signal</span>}
+```
+
+</details>
+
+### `src/lib/enriched.ts` — modified
+
+- **When:** 2026-07-26 03:06:14 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +74 / -6 lines
+- **What:** modified `src/lib/enriched.ts`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++  releaseDate?: string
++  currentVersionDate?: string
++  version?: string
++  // Derived at load time from the dates above — never stored. See hydrate().
++  /**
++   * Number of Google + YouTube autocomplete completions for the title: how much
++   * the game is already being searched for. Previously called `signal`, with a
++   * derived `verdict` of "build" | "watch" | "skip" — both inherited from the
++   * template's original "which keyword should I build a site for?" purpose. The
++   * verdict was rendered to readers as a "High signal" badge and used as
++   * "Editor's picks", implying an editorial review that never happened.
++   */
+```
+
+</details>
+
+### `src/pages/404.astro` — modified
+
+- **When:** 2026-07-26 03:06:14 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +1 / -1 lines
+- **What:** modified `src/pages/404.astro`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-      { href: "/hidden-gems/", title: "Hidden gems", sub: "High signal, small audience", icon: "star" },
++      { href: "/hidden-gems/", title: "Hidden gems", sub: "Well rated, small audience", icon: "star" },
+```
+
+</details>
+
+### `src/pages/api/data.json.ts` — modified
+
+- **When:** 2026-07-26 03:06:14 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +6 / -5 lines
+- **What:** modified `src/pages/api/data.json.ts`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-import fs from "node:fs"
+-import path from "node:path"
++import { loadEnriched } from "../../lib/enriched"
+-  const p = path.join(process.cwd(), "data/enriched.json")
+-  const data = fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, "utf8")) : { all: [] }
++  const data = loadEnriched()
+-    signal: g.signal ?? null,
++    // Count of Google + YouTube autocomplete completions for the title.
++    searchDemand: g.searchDemand ?? g.signal ?? null,
++    /** @deprecated renamed to searchDemand; kept so existing consumers keep working. */
++    signal: g.searchDemand ?? g.signal ?? null,
+```
+
+</details>
+
+### `src/pages/api/games/[id].json.ts` — modified
+
+- **When:** 2026-07-26 03:06:14 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +2 / -5 lines
+- **What:** modified `src/pages/api/games/[id].json.ts`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-import fs from "node:fs"
+-import path from "node:path"
++import { loadEnriched } from "../../../lib/enriched"
+-  const p = path.join(process.cwd(), "data/enriched.json")
+-  if (!fs.existsSync(p)) return []
+-  const data = JSON.parse(fs.readFileSync(p, "utf8"))
++  const data = loadEnriched()
+```
+
+</details>
+
+### `src/pages/api/movers.json.ts` — modified
+
+- **When:** 2026-07-26 03:06:14 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +2 / -4 lines
+- **What:** modified `src/pages/api/movers.json.ts`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-import fs from "node:fs"
+-import path from "node:path"
++import { loadEnriched } from "../../lib/enriched"
+-  const p = path.join(process.cwd(), "data/enriched.json")
+-  const data = fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, "utf8")) : { all: [], date: null }
++  const data = loadEnriched()
+```
+
+</details>
+
+### `src/pages/archetype/[archetype].astro` — modified
+
+- **When:** 2026-07-26 03:06:14 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +3 / -6 lines
+- **What:** modified `src/pages/archetype/[archetype].astro`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-import fs from "node:fs"
+-import path from "node:path"
++import { loadEnriched, demandOf } from "../../lib/enriched"
+-  const p = path.join(process.cwd(), "data/enriched.json")
+-  if (!fs.existsSync(p)) return []
+-  const data = JSON.parse(fs.readFileSync(p, "utf8"))
++  const data = loadEnriched()
+-const sorted = [...games].sort((a,b)=>(b.heatScore||0)-(a.heatScore||0) || (b.signal||0)-(a.signal||0))
++const sorted = [...games].sort((a,b)=>(b.heatScore||0)-(a.heatScore||0) || demandOf(b)-demandOf(a))
+```
+
+</details>
+
+### `src/pages/archetype/index.astro` — modified
+
+- **When:** 2026-07-26 03:06:14 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +2 / -4 lines
+- **What:** modified `src/pages/archetype/index.astro`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-import fs from "node:fs"
+-import path from "node:path"
+-const p = path.join(process.cwd(), "data/enriched.json")
+-const data = fs.existsSync(p) ? JSON.parse(fs.readFileSync(p,"utf8")) : { all: [] }
++import { loadEnriched } from "../../lib/enriched"
++const data = loadEnriched()
+```
+
+</details>
+
+### `src/pages/controller-support.astro` — modified
+
+- **When:** 2026-07-26 03:06:14 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +3 / -5 lines
+- **What:** modified `src/pages/controller-support.astro`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-import fs from "node:fs"
+-import path from "node:path"
++import { loadEnriched, demandOf } from "../lib/enriched"
+-const p = path.join(process.cwd(), "data/enriched.json")
+-const data = fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, "utf8")) : { all: [], date: "n/a" }
++const data = loadEnriched()
+-  .sort((a, b) => (b.signal || 0) - (a.signal || 0))
++  .sort((a, b) => demandOf(b) - demandOf(a))
+```
+
+</details>
+
+### `src/pages/games/[id].astro` — modified
+
+- **When:** 2026-07-26 03:06:14 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +9 / -6 lines
+- **What:** modified `src/pages/games/[id].astro`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-import fs from "node:fs"
+-import path from "node:path"
++import { loadEnriched } from "../../lib/enriched"
+-  const p = path.join(process.cwd(), "data/enriched.json")
+-  if (!fs.existsSync(p)) return []
+-  const data = JSON.parse(fs.readFileSync(p, "utf8"))
++  const data = loadEnriched()
+-const similar = (game.similar || []).map(s => all.find(g => g.id === s.id)).filter(Boolean).slice(0, 6)
++// `similar` holds ids only; resolve against the catalogue. Tolerates the older
++// [{ id, name }] shape so a stale data/enriched.json still renders.
++const byId = new Map(all.map(g => [g.id, g]))
++const similar = (game.similar || [])
+```
+
+</details>
+
+### `src/pages/games/index.astro` — modified
+
+- **When:** 2026-07-26 03:06:14 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +11 / -9 lines
+- **What:** modified `src/pages/games/index.astro`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-import fs from "node:fs"
+-import path from "node:path"
++import { loadEnriched, demandOf } from "../../lib/enriched"
+-const p = path.join(process.cwd(), "data/enriched.json")
+-const data = fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, "utf8")) : { all: [] }
++const data = loadEnriched()
+-// ---- Editor's picks: verdict=build, prefer recent ----
++// ---- Most-searched recent releases ----
++// Was "Editor's picks", selected by verdict === "build" — which only meant the
++// title had >= 10 autocomplete completions. Nobody edited anything, and the field
++// is no longer produced, so the row silently emptied. Now it is what it always
++// really was: recent releases with the most search demand.
+```
+
+</details>
+
+### `src/pages/hidden-gems.astro` — modified
+
+- **When:** 2026-07-26 03:06:14 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +17 / -18 lines
+- **What:** modified `src/pages/hidden-gems.astro`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-import fs from "node:fs"
+-import path from "node:path"
++import { loadEnriched } from "../lib/enriched"
+-const p = path.join(process.cwd(), "data/enriched.json")
+-const data = fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, "utf8")) : { all: [], date: "n/a" }
++const data = loadEnriched()
+-// "Hidden gem" = positive signal but small audience (low rating count).
+-// Recipe:
+-//   - verdict in {build, watch} OR signal >= 12
+-//   - rating either unknown OR >= 4.0
+-//   - ratingCount < 5,000 (avoids chart-toppers; this is the "hidden" filter)
+-//   - no big red flags (gacha / energy gating)
+```
+
+</details>
+
+### `src/pages/index.astro` — modified
+
+- **When:** 2026-07-26 03:06:14 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +2 / -3 lines
+- **What:** modified `src/pages/index.astro`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++import { loadEnriched } from "../lib/enriched"
+-const enrichedPath = path.join(process.cwd(), "data/enriched.json")
+-const enriched = fs.existsSync(enrichedPath) ? JSON.parse(fs.readFileSync(enrichedPath, "utf8")) : { all: [] }
++const enriched = loadEnriched()
+-                  {g.verdict === "build" && <span class="tag signal">High signal</span>}
+```
+
+</details>
+
+### `src/pages/like/[seed].astro` — modified
+
+- **When:** 2026-07-26 03:06:14 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +7 / -8 lines
+- **What:** modified `src/pages/like/[seed].astro`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-import fs from "node:fs"
+-import path from "node:path"
++import { loadEnriched, demandOf } from "../../lib/enriched"
+-  const p = path.join(process.cwd(), "data/enriched.json")
+-  const data = fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, "utf8")) : { all: [], date: "n/a" }
++  const data = loadEnriched()
+-      // Quality boost
+-      if (g.verdict === "build") s += 3
+-      if (g.verdict === "watch") s += 1
+-      if ((g.signal || 0) >= 12) s += 2
++      // Search-demand boost (was a "verdict" bonus: an autocomplete threshold
++      // dressed up as an editorial rating, and no longer populated).
+```
+
+</details>
+
+### `src/pages/like/index.astro` — modified
+
+- **When:** 2026-07-26 03:06:14 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +2 / -4 lines
+- **What:** modified `src/pages/like/index.astro`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-import fs from "node:fs"
+-import path from "node:path"
++import { loadEnriched } from "../../lib/enriched"
+-const p = path.join(process.cwd(), "data/enriched.json")
+-const data = fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, "utf8")) : { all: [], date: "n/a" }
++const data = loadEnriched()
+```
+
+</details>
+
+### `src/pages/llms.txt.ts` — modified
+
+- **When:** 2026-07-26 03:06:14 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +2 / -4 lines
+- **What:** modified `src/pages/llms.txt.ts`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-import fs from "node:fs"
+-import path from "node:path"
++import { loadEnriched } from "../lib/enriched"
+-  const p = path.join(process.cwd(), "data/enriched.json")
+-  const data = fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, "utf8")) : { all: [], date: "" }
++  const data = loadEnriched()
+```
+
+</details>
+
+### `src/pages/methodology.astro` — modified
+
+- **When:** 2026-07-26 03:06:14 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +1 / -1 lines
+- **What:** modified `src/pages/methodology.astro`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-  <p>Each game is classified into one of ~17 archetypes (match-3, idle, RPG, strategy, etc.) by a weighted rule-based detector: mechanic keywords are matched on word boundaries, a hit in the title counts more than one buried in the marketing copy, and Apple's own secondary genre acts as a prior (with a per-genre fallback when the description carries no mechanical signal at all). Where demand signal is strong enough (Google + YouTube Suggest combined ≥ 8), an LLM pass refines archetype, core loop and audience. Classification is a heuristic, not an editorial judgement — treat it as a filter, not a verdict.</p>
++  <p>Each game is classified into one of 19 archetypes (match-3, merge, idle, RPG, strategy, board, sandbox, casino, …) by a weighted rule-based detector in <code>scripts/lib/classify.mjs</code>: mechanic keywords are matched on word boundaries, a hit in the title counts more than one buried in the marketing copy, description evidence is capped so keyword-stuffed ad copy cannot outvote hard metadata, and Apple's own genres contribute score ranked by how much they actually narrow things down (&quot;Casino&quot; and &quot;Board&quot; are decisive; &quot;Entertainment&quot; is ignored). Two titles whose store metadata is actively misleading are corrected by hand and listed in that file. Where search demand is strong enough (Google + YouTube autocomplete completions combined &#8805; 8), an LLM pass refines archetype, core loop and audience. Classification is a heuristic, not an editorial judgement — treat it as a filter, not a recommendation.</p>
+```
+
+</details>
+
+### `src/pages/movers.astro` — modified
+
+- **When:** 2026-07-26 03:06:14 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +2 / -4 lines
+- **What:** modified `src/pages/movers.astro`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-import fs from "node:fs"
+-import path from "node:path"
++import { loadEnriched } from "../lib/enriched"
+-const p = path.join(process.cwd(), "data/enriched.json")
+-const data = fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, "utf8")) : { all: [] }
++const data = loadEnriched()
+```
+
+</details>
+
+### `src/pages/movers.xml.ts` — modified
+
+- **When:** 2026-07-26 03:06:14 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +2 / -4 lines
+- **What:** modified `src/pages/movers.xml.ts`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-import fs from "node:fs"
+-import path from "node:path"
++import { loadEnriched } from "../lib/enriched"
+-  const p = path.join(process.cwd(), "data/enriched.json")
+-  const data = fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, "utf8")) : { all: [], date: null }
++  const data = loadEnriched()
+```
+
+</details>
+
+### `src/pages/new-this-week.astro` — modified
+
+- **When:** 2026-07-26 03:06:14 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +8 / -10 lines
+- **What:** modified `src/pages/new-this-week.astro`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-import fs from "node:fs"
+-import path from "node:path"
++import { loadEnriched, demandOf } from "../lib/enriched"
+-const p = path.join(process.cwd(), "data/enriched.json")
+-const data = fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, "utf8")) : { all: [], date: "n/a" }
++const data = loadEnriched()
+-  .sort((a, b) => (b.signal || 0) - (a.signal || 0))
++  .sort((a, b) => demandOf(b) - demandOf(a))
+-const topPicks = week.filter(g => (g.signal || 0) >= 10)
+-const others = week.filter(g => (g.signal || 0) < 10)
++const topPicks = week.filter(g => demandOf(g) >= 10)
++const others = week.filter(g => demandOf(g) < 10)
+```
+
+</details>
+
+### `src/pages/new-today.astro` — modified
+
+- **When:** 2026-07-26 03:06:14 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +4 / -6 lines
+- **What:** modified `src/pages/new-today.astro`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-import fs from "node:fs"
+-import path from "node:path"
++import { loadEnriched, demandOf } from "../lib/enriched"
+-const p = path.join(process.cwd(), "data/enriched.json")
+-const data = fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, "utf8")) : { all: [], date: "n/a" }
++const data = loadEnriched()
+-  .sort((a, b) => (b.signal || 0) - (a.signal || 0))
++  .sort((a, b) => demandOf(b) - demandOf(a))
+-  .sort((a, b) => (b.signal || 0) - (a.signal || 0))
++  .sort((a, b) => demandOf(b) - demandOf(a))
+```
+
+</details>
+
+### `src/pages/no-iap.astro` — modified
+
+- **When:** 2026-07-26 03:06:14 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +3 / -5 lines
+- **What:** modified `src/pages/no-iap.astro`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-import fs from "node:fs"
+-import path from "node:path"
++import { loadEnriched, demandOf } from "../lib/enriched"
+-const p = path.join(process.cwd(), "data/enriched.json")
+-const data = fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, "utf8")) : { all: [], date: "n/a" }
++const data = loadEnriched()
+-const list = [...uniq.values()].sort((a, b) => (b.signal || 0) - (a.signal || 0))
++const list = [...uniq.values()].sort((a, b) => demandOf(b) - demandOf(a))
+```
+
+</details>
+
+### `src/pages/sitemap.xml.ts` — modified
+
+- **When:** 2026-07-26 03:06:14 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +2 / -2 lines
+- **What:** modified `src/pages/sitemap.xml.ts`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++import { loadEnriched } from "../lib/enriched"
+-  const p = path.join(process.cwd(), "data/enriched.json")
+-  const data = fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, "utf8")) : { all: [] }
++  const data = loadEnriched()
+```
+
+</details>
+

@@ -2,11 +2,9 @@
 import Base from "../../layouts/Base.astro"
 import KeepBrowsing from "../../components/KeepBrowsing.astro"
 import { SEEDS } from "../../lib/likeSeeds"
-import fs from "node:fs"
-import path from "node:path"
+import { loadEnriched } from "../../lib/enriched"
 
-const p = path.join(process.cwd(), "data/enriched.json")
-const data = fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, "utf8")) : { all: [], date: "n/a" }
+const data = loadEnriched()
 const allCount = (data.all || []).length
 
 const dateFmt = data.date

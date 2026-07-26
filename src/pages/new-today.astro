@@ -4,21 +4,19 @@ import GameGrid from "../components/GameGrid.astro"
 import KeepBrowsing from "../components/KeepBrowsing.astro"
 import Subscribe from "../components/Subscribe.astro"
 import { cap } from "../lib/format"
-import fs from "node:fs"
-import path from "node:path"
+import { loadEnriched, demandOf } from "../lib/enriched"
 
-const p = path.join(process.cwd(), "data/enriched.json")
-const data = fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, "utf8")) : { all: [], date: "n/a" }
+const data = loadEnriched()
 const all = data.all || []
 
 // "Today" = released in the last 1 day according to our last refresh.
 const today = all
   .filter(g => (g.daysSinceRelease ?? 9999) <= 1)
-  .sort((a, b) => (b.signal || 0) - (a.signal || 0))
+  .sort((a, b) => demandOf(b) - demandOf(a))
 
 const yesterday = all
   .filter(g => (g.daysSinceRelease ?? 9999) === 2)
-  .sort((a, b) => (b.signal || 0) - (a.signal || 0))
+  .sort((a, b) => demandOf(b) - demandOf(a))
   .slice(0, 12)
 
 const past48 = today.length + yesterday.length

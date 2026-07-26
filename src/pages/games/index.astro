@@ -1,20 +1,22 @@
 ---
 import Base from "../../layouts/Base.astro"
 import KeepBrowsing from "../../components/KeepBrowsing.astro"
-import fs from "node:fs"
-import path from "node:path"
+import { loadEnriched, demandOf } from "../../lib/enriched"
 
-const p = path.join(process.cwd(), "data/enriched.json")
-const data = fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, "utf8")) : { all: [] }
+const data = loadEnriched()
 const all = data.all || []
 
 function cap(s){ return (s||"").replace(/(^|-)\w/g, c => c.toUpperCase()).replace(/-/g," ") }
 function priceLabel(g){ const p = g.price; return (!p || p === "Free" || p === "0") ? "Free" : p }
 
-// ---- Editor's picks: verdict=build, prefer recent ----
+// ---- Most-searched recent releases ----
+// Was "Editor's picks", selected by verdict === "build" — which only meant the
+// title had >= 10 autocomplete completions. Nobody edited anything, and the field
+// is no longer produced, so the row silently emptied. Now it is what it always
+// really was: recent releases with the most search demand.
 const picks = all
-  .filter(g => g.verdict === "build")
-  .sort((a, b) => (a.daysSinceRelease ?? 9999) - (b.daysSinceRelease ?? 9999))
+  .filter(g => (g.daysSinceRelease ?? 9999) <= 45 && demandOf(g) > 0)
+  .sort((a, b) => demandOf(b) - demandOf(a) || (a.daysSinceRelease ?? 9999) - (b.daysSinceRelease ?? 9999))
   .slice(0, 4)
 const pickIds = new Set(picks.map(g => g.id))
 
@@ -37,7 +39,7 @@ function renderCard(g, eager=false) {
 ---
 <Base
   title="All Games — Daily iOS Games"
-  description={`Browse ${all.length} tracked iOS games. Editor's picks, new today, updated recently, by category.`}
+  description={`Browse ${all.length} tracked iOS games. Most searched new releases, new today, updated recently, by category.`}
 >
   <section class="hero-band">
     <div class="eyebrow">Catalog · {all.length} games</div>
@@ -64,7 +66,7 @@ function renderCard(g, eager=false) {
                 <div class="tags">
                   {g.archetype && <span class="tag">{cap(g.archetype)}</span>}
                   <span class={`tag ${priceLabel(g)==='Free' ? 'price-free' : ''}`}>{priceLabel(g)}</span>
-                  <span class="tag signal">High signal</span>
+                  <span class="tag signal">{demandOf(g)} search hits</span>
                 </div>
               </div>
             </a>

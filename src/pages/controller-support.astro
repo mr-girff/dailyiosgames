@@ -3,15 +3,13 @@ import Base from "../layouts/Base.astro"
 import GameGrid from "../components/GameGrid.astro"
 import KeepBrowsing from "../components/KeepBrowsing.astro"
 import { isControllerSupported } from "../lib/format"
-import fs from "node:fs"
-import path from "node:path"
+import { loadEnriched, demandOf } from "../lib/enriched"
 
-const p = path.join(process.cwd(), "data/enriched.json")
-const data = fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, "utf8")) : { all: [], date: "n/a" }
+const data = loadEnriched()
 const all = data.all || []
 
 const list = all.filter(isControllerSupported)
-  .sort((a, b) => (b.signal || 0) - (a.signal || 0))
+  .sort((a, b) => demandOf(b) - demandOf(a))
 
 // Bucket by archetype for browseability
 const byArch: Record<string, any[]> = {}

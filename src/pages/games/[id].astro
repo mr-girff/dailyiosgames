@@ -6,14 +6,11 @@ import HeatSparkline from "../../components/HeatSparkline.astro"
 import Reviews from "../../components/Reviews.astro"
 import Subscribe from "../../components/Subscribe.astro"
 import KeepBrowsing from "../../components/KeepBrowsing.astro"
-import fs from "node:fs"
-import path from "node:path"
 import { appStoreUrl } from "../../lib/appstore"
+import { loadEnriched } from "../../lib/enriched"
 
 export async function getStaticPaths() {
-  const p = path.join(process.cwd(), "data/enriched.json")
-  if (!fs.existsSync(p)) return []
-  const data = JSON.parse(fs.readFileSync(p, "utf8"))
+  const data = loadEnriched()
   return (data.all || []).map(g => ({ params: { id: g.id }, props: { game: g, all: data.all } }))
 }
 
@@ -22,7 +19,13 @@ const storeUrl = appStoreUrl(game)
 const robots = game.indexDirective || "index,follow"
 const canonical = `${Astro.site || ""}games/${game.id}/`.replace(/\/+/g,"/").replace(":/","://")
 
-const similar = (game.similar || []).map(s => all.find(g => g.id === s.id)).filter(Boolean).slice(0, 6)
+// `similar` holds ids only; resolve against the catalogue. Tolerates the older
+// [{ id, name }] shape so a stale data/enriched.json still renders.
+const byId = new Map(all.map(g => [g.id, g]))
+const similar = (game.similar || [])
+  .map(s => byId.get(typeof s === "string" ? s : s?.id))
+  .filter(Boolean)
+  .slice(0, 6)
 const sameStudio = all.filter(g => g.id !== game.id && g.seller === game.seller).slice(0, 4)
 
 // Prev / next within the same archetype, ranked by heat (then name)

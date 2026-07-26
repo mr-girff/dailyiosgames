@@ -1,9 +1,7 @@
 ---
 import Base from "../../layouts/Base.astro"
-import fs from "node:fs"
-import path from "node:path"
-const p = path.join(process.cwd(), "data/enriched.json")
-const data = fs.existsSync(p) ? JSON.parse(fs.readFileSync(p,"utf8")) : { all: [] }
+import { loadEnriched } from "../../lib/enriched"
+const data = loadEnriched()
 const counts = {}
 for (const g of data.all) counts[g.archetype || "other"] = (counts[g.archetype || "other"]||0)+1
 const list = Object.entries(counts).sort((a,b)=>b[1]-a[1])

@@ -1,12 +1,9 @@
 // Per-game JSON endpoint, CORS open.
-import fs from "node:fs"
-import path from "node:path"
 import { appStoreUrl } from "../../../lib/appstore"
+import { loadEnriched } from "../../../lib/enriched"
 
 export async function getStaticPaths() {
-  const p = path.join(process.cwd(), "data/enriched.json")
-  if (!fs.existsSync(p)) return []
-  const data = JSON.parse(fs.readFileSync(p, "utf8"))
+  const data = loadEnriched()
   return (data.all || []).map(g => ({ params: { id: g.id }, props: { game: g } }))
 }
 

@@ -1,13 +1,10 @@
 ---
 import Base from "../../layouts/Base.astro"
 import KeepBrowsing from "../../components/KeepBrowsing.astro"
-import fs from "node:fs"
-import path from "node:path"
+import { loadEnriched, demandOf } from "../../lib/enriched"
 
 export async function getStaticPaths() {
-  const p = path.join(process.cwd(), "data/enriched.json")
-  if (!fs.existsSync(p)) return []
-  const data = JSON.parse(fs.readFileSync(p, "utf8"))
+  const data = loadEnriched()
   const byArch = {}
   for (const g of data.all || []) (byArch[g.archetype || "other"] ||= []).push(g)
   const allArchs = Object.keys(byArch)
@@ -23,7 +20,7 @@ const description = `${games.length} ${cap(archetype)} games tracked daily. New 
 const site = Astro.site?.toString().replace(/\/$/, "") || ""
 const THEME = ["racing","puzzle","rpg","casino","match-3","shooter","strategy","arcade","action","simulation","sports"]
 const themeClass = THEME.includes(archetype) ? `theme-${archetype}` : ""
-const sorted = [...games].sort((a,b)=>(b.heatScore||0)-(a.heatScore||0) || (b.signal||0)-(a.signal||0))
+const sorted = [...games].sort((a,b)=>(b.heatScore||0)-(a.heatScore||0) || demandOf(b)-demandOf(a))
 function priceLabel(g){ const p=g.price; return (!p||p==="Free"||p==="0")?"Free":p }
 ---
 <Base title={title} description={description} canonical={`${site}/archetype/${archetype}/`} bodyClass={themeClass}>

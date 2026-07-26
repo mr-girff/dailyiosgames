@@ -1,11 +1,9 @@
 ---
 import Base from "../layouts/Base.astro"
 import KeepBrowsing from "../components/KeepBrowsing.astro"
-import fs from "node:fs"
-import path from "node:path"
+import { loadEnriched } from "../lib/enriched"
 
-const p = path.join(process.cwd(), "data/enriched.json")
-const data = fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, "utf8")) : { all: [] }
+const data = loadEnriched()
 const all = data.all || []
 
 const movers = all

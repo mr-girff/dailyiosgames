@@ -1,14 +1,14 @@
 // Hand-rolled sitemap. Avoids the @astrojs/sitemap incompat with Astro 4.x.
 import fs from "node:fs"
 import path from "node:path"
+import { loadEnriched } from "../lib/enriched"
 
 // Canonical site URL — hardcoded to avoid Cloudflare Pages env overrides
 // pointing the sitemap at the old preview domain.
 const CANONICAL_SITE = "https://ios.querygame.com"
 
 export async function GET() {
-  const p = path.join(process.cwd(), "data/enriched.json")
-  const data = fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, "utf8")) : { all: [] }
+  const data = loadEnriched()
   const base = CANONICAL_SITE
   const today = new Date().toISOString().slice(0, 10)
 

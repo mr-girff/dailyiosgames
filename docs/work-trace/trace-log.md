@@ -2387,3 +2387,255 @@
 
 </details>
 
+### `public/styles.css` — modified
+
+- **When:** 2026-07-26 03:40:48 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +270 / -2 lines
+- **What:** modified `public/styles.css`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-  color: var(--fg-muted); text-transform: capitalize;
++  color: var(--fg-muted);
+-.detail-hero .pill.primary { background: var(--accent); color: #fff; }
++/* Capitalise the archetype slug only. Applying it to every pill turned
++   "5–10 min" into "5–10 Min" and "181k ratings" into "181k Ratings". */
++.detail-hero .pill.primary { background: var(--accent); color: #fff; text-transform: capitalize; }
++/* ============================================================
++   SHARE ROW
++   ============================================================ */
++.share-row {
++  display: flex; align-items: center; flex-wrap: wrap; gap: .45rem;
++  margin: 1.25rem 0 0;
+```
+
+</details>
+
+### `src/components/HeatSparkline.astro` — modified
+
+- **When:** 2026-07-26 03:40:48 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +49 / -37 lines
+- **What:** modified `src/components/HeatSparkline.astro`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-// Rating-count trajectory sparkline, server-rendered from velocity.rcSeries.
+-// rating count is a public proxy for downloads; its slope is the "is it taking
+-// off" signal. Renders nothing if there's no usable history yet.
+-const { velocity } = Astro.props
+-// rcSeries is [[date, ratingCount], ...]; older data used [{date, rc}, ...].
+-const series = (velocity?.rcSeries || []).map(p => Array.isArray(p) ? p : [p?.date, p?.rc])
+-if (series.length < 2) return null
++// Rating-count trajectory, server-rendered from velocity.rcSeries.
++// Rating count is a public proxy for downloads; its slope is the "is it taking
++// off" signal. Renders nothing if there is no usable history yet.
++import { sparkGeom, rcValues, compactNum, growthLabel } from "../lib/spark"
+-const w = 280, h = 60, pad = 4
+```
+
+</details>
+
+### `src/components/Hero.astro` — modified
+
+- **When:** 2026-07-26 03:40:48 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +41 / -11 lines
+- **What:** modified `src/components/Hero.astro`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-// Falls back gracefully when screenshots are missing.
++// Falls back gracefully when the optimised image set or screenshots are missing.
++import { compactNum } from "../lib/spark"
++
+-const icon = game.images?.icon?.src || game.icon
+-const shots = Array.isArray(game.screenshots) ? game.screenshots.filter(Boolean) : []
++
++// scripts/images.mjs mirrors every icon and screenshot to R2 as avif/webp with a
++// srcset. Serving `game.screenshots` (Apple's original PNG/JPEG) instead — which
++// is what this component used to do — shipped several megabytes of unoptimised
++// images on the page with the most traffic.
++const icon = game.images?.icon
+```
+
+</details>
+
+### `src/components/Movers.astro` — modified
+
+- **When:** 2026-07-26 03:40:48 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +43 / -64 lines
+- **What:** modified `src/components/Movers.astro`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-// Renders nothing until velocity data exists, so it degrades gracefully on
+-// the first deploy before the daily pipeline has run the velocity step.
++// Renders nothing until velocity data exists, so it degrades gracefully on the
++// first deploy, before the daily pipeline has run the velocity step.
++//
++// Shares the leaderboard styling with /movers/ (see public/styles.css) so the
++// homepage teaser and the full page cannot drift apart.
++import { cap, priceLabel, gameIconSrc } from "../lib/enriched"
++import { sparkGeom, rcValues, growthLabel } from "../lib/spark"
++
+-  .filter(g => typeof g.heatScore === "number" && g.heatScore > 0)
+-  .sort((a, b) => (b.heatScore || 0) - (a.heatScore || 0))
+```
+
+</details>
+
+### `src/components/ShareRow.astro` — created
+
+- **When:** 2026-07-26 03:40:48 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +101 / -0 lines
+- **What:** created `src/components/ShareRow.astro`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++---
++// Share affordance for data pages.
++//
++// Progressive enhancement, in this order:
++//   1. No JS  -> three real <a> intents (X / Reddit / Hacker News) that work.
++//   2. JS     -> "Copy link" button becomes functional.
++//   3. Mobile -> if navigator.share exists, a native Share button is revealed
++//                and the intent links are collapsed behind it.
++//
++// The URL has to be absolute and known at build time (the site is static), so
++// callers pass the same canonical they gave <Base>.
++const {
+```
+
+</details>
+
+### `src/components/TrendSparkline.astro` — modified
+
+- **When:** 2026-07-26 03:40:48 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +33 / -25 lines
+- **What:** modified `src/components/TrendSparkline.astro`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-// Tiny inline SVG sparkline. Server-rendered. No JS.
++// Google Trends search interest. Server-rendered, no JS.
++import { sparkGeom } from "../lib/spark"
++
+-if (!trend?.points?.length) return null
+-const w = 280, h = 60, pad = 4
+-const pts = trend.points
+-const max = Math.max(...pts.map(p => p.v), 1)
+-const stepX = (w - pad*2) / (pts.length - 1 || 1)
+-const path = pts.map((p, i) => {
+-  const x = pad + i * stepX
+-  const y = h - pad - (p.v / max) * (h - pad*2)
+```
+
+</details>
+
+### `src/lib/spark.ts` — created
+
+- **When:** 2026-07-26 03:40:48 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +77 / -0 lines
+- **What:** created `src/lib/spark.ts`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++// Sparkline geometry, shared by every chart on the site.
++//
++// The same ~15 lines of "normalise a series into an SVG path" were copy-pasted
++// into HeatSparkline, TrendSparkline and the movers rows, each with slightly
++// different padding and a different bug (one divided by zero on a flat series,
++// another on a single point). One implementation, tested by rendering.
++
++export type SparkGeom = {
++  /** `M…L…` polyline through every point. */
++  line: string
++  /** Same polyline closed along the baseline, for a gradient fill. */
++  area: string
+```
+
+</details>
+
+### `src/pages/games/[id].astro` — modified
+
+- **When:** 2026-07-26 03:40:48 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +73 / -12 lines
+- **What:** modified `src/pages/games/[id].astro`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++import ShareRow from "../../components/ShareRow.astro"
++import { compactNum, growthLabel } from "../../lib/spark"
++import { monetizationLabel } from "../../lib/format"
+-function oneLine(s){ return (s||"").replace(/\s+/g," ").trim().slice(0, 240) }
++// Key-stat strip. Every tile is data we actually hold — no placeholders, and a
++// tile is dropped entirely rather than rendered as "—".
++const chartRank = game.rank?.free ?? game.rank?.grossing ?? game.rank?.new ?? null
++const chartRankLabel = game.rank?.free ? "Free chart" : game.rank?.grossing ? "Grossing chart" : game.rank?.new ? "New chart" : ""
++const growth7d = growthLabel(game.velocity?.rcGrowthPct)
++const added7d = Number(game.velocity?.rcDelta7d || 0)
++const daysTracked = Number(game.velocity?.daysTracked || 0)
++
+```
+
+</details>
+
+### `src/pages/movers.astro` — modified
+
+- **When:** 2026-07-26 03:40:48 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +183 / -114 lines
+- **What:** modified `src/pages/movers.astro`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-import { loadEnriched } from "../lib/enriched"
++import ShareRow from "../components/ShareRow.astro"
++import { loadEnriched, cap, priceLabel, gameIconSrc } from "../lib/enriched"
++import { sparkGeom, rcValues, compactNum, growthLabel } from "../lib/spark"
+-const strong  = movers.filter(g => g.traction === "strong").length
+-
+-function cap(s){ return (s||"").replace(/(^|-)\w/g, c => c.toUpperCase()).replace(/-/g," ") }
+-function priceLabel(g){ const p = g.price; return (!p || p === "Free" || p === "0") ? "Free" : p }
+-function growthLabel(g){
+-  const v = g.velocity?.rcGrowthPct
+-  if (v == null) return null
+-  return `+${v >= 1000 ? Math.round(v/1000)+"k" : v}% / 7d`
+```
+
+</details>
+

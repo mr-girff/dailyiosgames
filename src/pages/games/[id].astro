@@ -6,8 +6,11 @@ import HeatSparkline from "../../components/HeatSparkline.astro"
 import Reviews from "../../components/Reviews.astro"
 import Subscribe from "../../components/Subscribe.astro"
 import KeepBrowsing from "../../components/KeepBrowsing.astro"
+import ShareRow from "../../components/ShareRow.astro"
 import { appStoreUrl } from "../../lib/appstore"
 import { loadEnriched } from "../../lib/enriched"
+import { compactNum, growthLabel } from "../../lib/spark"
+import { monetizationLabel } from "../../lib/format"
 
 export async function getStaticPaths() {
   const data = loadEnriched()
@@ -47,7 +50,53 @@ const kbItems = [
 const title = `${game.name} — ${capitalize(game.archetype)} game by ${game.seller}`
 const description = oneLine(`${game.name} is a ${game.archetype} game by ${game.seller}. ${game.uniqueHook || game.coreLoop || ""} Latest version ${game.version} (${game.currentVersionDate}). Rating ${game.rating || "n/a"} from ${game.ratingCount || 0} reviews.`)
 
-function oneLine(s){ return (s||"").replace(/\s+/g," ").trim().slice(0, 240) }
+// Key-stat strip. Every tile is data we actually hold — no placeholders, and a
+// tile is dropped entirely rather than rendered as "—".
+const chartRank = game.rank?.free ?? game.rank?.grossing ?? game.rank?.new ?? null
+const chartRankLabel = game.rank?.free ? "Free chart" : game.rank?.grossing ? "Grossing chart" : game.rank?.new ? "New chart" : ""
+const growth7d = growthLabel(game.velocity?.rcGrowthPct)
+const added7d = Number(game.velocity?.rcDelta7d || 0)
+const daysTracked = Number(game.velocity?.daysTracked || 0)
+
+const stats = [
+  typeof game.heatScore === "number" && game.heatScore > 0 && {
+    label: "Heat score",
+    value: String(game.heatScore),
+    note: "of 100 · early traction",
+    accent: true,
+    meter: game.heatScore,
+  },
+  game.rating > 0 && {
+    label: "App Store rating",
+    value: `★ ${game.rating.toFixed(1)}`,
+    note: game.ratingCount ? `${compactNum(game.ratingCount)} ratings` : "",
+  },
+  added7d > 0 && {
+    label: "New ratings · 7d",
+    value: `+${compactNum(added7d)}`,
+    note: growth7d ? `${growth7d} week over week` : "",
+  },
+  chartRank && { label: chartRankLabel, value: `#${chartRank}`, note: "US App Store, today" },
+  daysTracked > 0 && {
+    label: "Tracked for",
+    value: `${daysTracked}d`,
+    note: game.velocity?.presenceStreak ? `${game.velocity.presenceStreak}-day chart streak` : "",
+  },
+].filter(Boolean) as { label: string; value: string; note?: string; accent?: boolean; meter?: number }[]
+
+const shareText = oneLine(
+  `${game.name} — ${game.uniqueHook || game.coreLoop || `${capitalize(game.archetype)} game by ${game.seller}`}`,
+)
+
+// Truncate on a word boundary. A hard .slice(0, 240) was cutting the visible
+// TL;DR mid-word ("…and help the frien") on every long description.
+function oneLine(s, max = 240){
+  const t = (s || "").replace(/\s+/g, " ").trim()
+  if (t.length <= max) return t
+  const cut = t.slice(0, max - 1)
+  const at = cut.lastIndexOf(" ")
+  return (at > max * 0.6 ? cut.slice(0, at) : cut).replace(/[,;:.\s]+$/, "") + "…"
+}
 function capitalize(s){ return (s||"").replace(/(^|-)\w/g, c => c.toUpperCase()).replace(/-/g," ") }
 ---
 <Base
@@ -85,17 +134,34 @@ function capitalize(s){ return (s||"").replace(/(^|-)\w/g, c => c.toUpperCase())
     </section>
   )}
 
+  {stats.length > 0 && (
+    <ul class="stat-strip">
+      {stats.map(s => (
+        <li class="stat-tile">
+          <span class="stat-tile__label">{s.label}</span>
+          <span class={`stat-tile__value${s.accent ? " is-accent" : ""}`}>{s.value}</span>
+          {s.note && <span class="stat-tile__note">{s.note}</span>}
+          {typeof s.meter === "number" && (
+            <span class="stat-tile__meter" aria-hidden="true"><i style={`width:${Math.max(2, Math.min(100, s.meter))}%`}></i></span>
+          )}
+        </li>
+      ))}
+    </ul>
+  )}
+
   <p class="tldr"><strong>TL;DR</strong><br/>{description}</p>
+
+  <ShareRow url={canonical} title={game.name} text={shareText} label="Share this game" compact={true} />
 
   {game.velocity?.rcSeries?.length >= 2 && (
     <section>
       <h2>Momentum</h2>
       <div class="momentum-row">
-        {game.momentum && <span class={`mbadge m-${game.momentum}`}>{
+        {game.momentum && <span class={`badge m-${game.momentum}`}>{
           { surging:"🔥 Surging", rising:"📈 Rising", steady:"Steady", fading:"Fading" }[game.momentum] || game.momentum
         }</span>}
-        {game.traction === "strong" && <span class="mbadge t-strong">Strong traction</span>}
-        {typeof game.heatScore === "number" && <span class="mbadge heat">Heat {game.heatScore}/100</span>}
+        {game.traction === "strong" && <span class="badge badge--strong">Strong traction</span>}
+        {typeof game.heatScore === "number" && <span class="badge">Heat {game.heatScore}/100</span>}
       </div>
       <HeatSparkline velocity={game.velocity} />
       <p class="caveat">Rating count is a public proxy for downloads. Trajectory derived from our own daily App Store snapshots.</p>
@@ -116,7 +182,7 @@ function capitalize(s){ return (s||"").replace(/(^|-)\w/g, c => c.toUpperCase())
       <div><dt>Core loop</dt><dd>{game.coreLoop || "—"}</dd></div>
       <div><dt>Typical session</dt><dd>{game.sessionLength || "—"}</dd></div>
       <div><dt>Built for</dt><dd>{game.audience || "—"}</dd></div>
-      <div><dt>Monetization</dt><dd>{game.monetization || "—"}</dd></div>
+      <div><dt>Monetization</dt><dd>{monetizationLabel(game)}</dd></div>
       {game.tags?.length > 0 && <div><dt>Features</dt><dd>{game.tags.join(" · ")}</dd></div>}
     </dl>
   </section>
@@ -259,12 +325,7 @@ function capitalize(s){ return (s||"").replace(/(^|-)\w/g, c => c.toUpperCase())
       background: rgba(127,127,127,.08); border-left: 3px solid var(--border-strong);
       border-radius: 8px; font-size: .88rem; color: var(--fg-muted);
     }
-    .momentum-row { display:flex; gap:.5rem; flex-wrap:wrap; margin:.25rem 0 .5rem; }
-    .mbadge { font-size:.78rem; padding:.2rem .6rem; border-radius:999px; line-height:1.6; }
-    .mbadge.m-surging { background:rgba(255,99,71,.18); color:#ff6347; }
-    .mbadge.m-rising  { background:rgba(92,214,133,.18); color:#3fae63; }
-    .mbadge.m-steady, .mbadge.m-fading { background:rgba(127,127,127,.15); color:var(--fg-muted); }
-    .mbadge.t-strong  { background:rgba(255,165,0,.18); color:#d68a00; font-weight:600; }
-    .mbadge.heat      { background:rgba(127,127,127,.12); font-variant-numeric:tabular-nums; }
+    .momentum-row { display:flex; gap:.4rem; flex-wrap:wrap; margin:.25rem 0 .75rem; }
+    .momentum-row :global(.badge) { font-size:.76rem; padding:.22rem .65rem; }
   </style>
 </Base>

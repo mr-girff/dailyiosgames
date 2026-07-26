@@ -881,3 +881,87 @@
 
 </details>
 
+### `.github/workflows/build.yml` — created
+
+- **When:** 2026-07-26 02:35:04 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +31 / -0 lines
+- **What:** created `.github/workflows/build.yml`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++name: Build & integrity check
++
++on:
++  pull_request:
++  push:
++    branches: [main]
++    paths-ignore:
++      - "data/**"
++      - "docs/**"
++      - "**/*.md"
++  workflow_dispatch: {}
++
+```
+
+</details>
+
+### `.github/workflows/daily.yml` — modified
+
+- **When:** 2026-07-26 02:35:04 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +33 / -14 lines
+- **What:** modified `.github/workflows/daily.yml`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-      - name: System deps for video pipeline
+-        run: |
+-          sudo apt-get update
+-          sudo apt-get install -y ffmpeg python3-pip
+-          pip3 install --quiet --break-system-packages edge-tts || pip3 install --quiet edge-tts
+-
+-            const MIN = 50; // site has been ~130; 50 = generous floor
++            const MIN = 50; // active set has been ~130; 50 = generous floor
+-            const n = (d.all || []).length;
++            const all = d.all || [];
++            const n = all.length;
++            // `all` is now the persistent catalogue (every game ever seen), so the
+```
+
+</details>
+
+### `scripts/check_build.mjs` — created
+
+- **When:** 2026-07-26 02:35:04 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +86 / -0 lines
+- **What:** created `scripts/check_build.mjs`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++#!/usr/bin/env node
++// Post-build integrity check. Run after `npm run build`.
++//
++// Catches the class of bug that shipped silently before: internal links pointing
++// at pages that are not generated (e.g. /archetype/strategy/ linked from
++// /like/clash-royale/), sitemap entries with no page, and missing key routes.
++//
++// Exit code 1 on any hard failure so CI blocks the merge.
++
++import fs from "node:fs/promises"
++import path from "node:path"
++
+```
+
+</details>
+

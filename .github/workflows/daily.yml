@@ -15,12 +15,6 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: "20" }
 
-      - name: System deps for video pipeline
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y ffmpeg python3-pip
-          pip3 install --quiet --break-system-packages edge-tts || pip3 install --quiet edge-tts
-
       - run: npm install --no-audit --no-fund
 
       - name: Fetch
@@ -36,12 +30,20 @@ jobs:
         run: |
           node -e '
             const fs = require("fs");
-            const MIN = 50; // site has been ~130; 50 = generous floor
+            const MIN = 50; // active set has been ~130; 50 = generous floor
             const d = JSON.parse(fs.readFileSync("data/enriched.json", "utf8"));
-            const n = (d.all || []).length;
+            const all = d.all || [];
+            const n = all.length;
+            // `all` is now the persistent catalogue (every game ever seen), so the
+            // floor has to be checked against the games seen in TODAY's snapshot.
+            const active = all.filter(g => g.active).length;
             const today = new Date().toISOString().slice(0,10);
-            if (n < MIN) {
-              console.error(`SANITY FAIL: enriched.json has ${n} games (< ${MIN}). Aborting before commit to protect data + site.`);
+            if (active < MIN) {
+              console.error(`SANITY FAIL: only ${active} active games today (< ${MIN}), catalogue ${n}. Aborting before commit to protect data + site.`);
+              process.exit(1);
+            }
+            if (n < active) {
+              console.error(`SANITY FAIL: catalogue (${n}) smaller than today's active set (${active}) — catalogue regression.`);
               process.exit(1);
             }
             const snap = `data/${today}.json`;
@@ -67,20 +69,37 @@ jobs:
           R2_PUBLIC_BASE: ${{ vars.R2_PUBLIC_BASE }}
         run: npm run images
 
-      - name: Video teasers
-        run: npm run video
-        continue-on-error: true   # video gen is best-effort; never block deploy
+      # Social-share cards. SVG og:images are ignored by every major platform,
+      # so the SVGs are rasterised to 1200x630 PNGs here (the runner has fonts).
+      - name: Open Graph images
+        run: npm run og
+
+      # Teaser videos are disabled: the last runs produced nothing (0 games in
+      # enriched.json carry a video), the README documents them as useless, and
+      # each run added ~1 MB/day of committed MP4s. Re-enable by restoring this
+      # step plus the ffmpeg/edge-tts apt install above.
+      # - name: Video teasers
+      #   run: npm run video
+      #   continue-on-error: true
 
       - name: Sync reader reviews
         env:
           PUBLIC_REVIEWS_WORKER: ${{ vars.PUBLIC_REVIEWS_WORKER }}
         run: npm run reviews
 
+      # Slims snapshots older than 60 days down to the fields velocity.mjs needs.
+      # Without this, data/ grows ~140 MB/year of git objects.
+      - name: Compact old snapshots
+        run: npm run compact
+
+      - name: Verify the site still builds from the new data
+        run: npm run verify
+
       - name: Commit
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add data/ public/video/ src/content/posts/ 2>/dev/null || true
+          git add data/ public/*.png public/illus/*.png src/content/posts/ 2>/dev/null || true
           if git diff --cached --quiet; then
             echo "No data changes to commit."
             exit 0

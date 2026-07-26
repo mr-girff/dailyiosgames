@@ -35,16 +35,24 @@ function daysSince(from, to) {
 // daily git diff small.
 const DROP_FIELDS = ["googleSuggest", "youtubeSuggest", "domains", "designPalette", "heroLayout"]
 
-const MONETIZATION_HINTS = {
-  premium:     /\bno ads\b|\bpremium\b|\bpaid\b|\bbuy once\b/i,
-  subscription:/\bsubscription\b|\bsubscribe\b|\bweekly\b.{0,10}\$|\bmonthly\b.{0,10}\$/i,
-  iapAds:      /\bin-app purchase\b|\bin app purchase\b|\biap\b|\bads\b/i,
-}
+// "premium" means one thing on this site: you pay once, up front. It is the
+// filter behind /no-iap/ and /no-ads-no-iap/ ("pay once and own it").
+//
+// The old version also awarded "premium" to any *free* listing whose copy
+// contained "no ads", "premium", "paid" or "buy once" — so 25 of the 33 premium
+// games in the dataset were free-to-play, including Slotomania, Jackpot World
+// and "Triumph: Play for Cash". Casino apps were being presented as pay-once
+// titles with no gem packs. Only the price decides "premium" now.
+const SUBSCRIPTION_RE = /\bsubscription\b|\bsubscribe\b|\bweekly\b.{0,10}\$|\bmonthly\b.{0,10}\$/i
+const AD_FREE_RE = /\bno ads\b|\bad[- ]free\b|\bwithout ads\b/i
+const IAP_ADS_RE = /\bin-app purchase\b|\bin app purchase\b|\biap\b|\bads\b/i
 
 function detectMonetization(g) {
   const t = (g.desc || "") + " " + (g.releaseNotes || "")
-  if (g.price && g.price !== "Free") return "premium"
-  for (const [k, re] of Object.entries(MONETIZATION_HINTS)) if (re.test(t)) return k
+  if (g.price && g.price !== "Free" && g.price !== "0") return "premium"
+  if (SUBSCRIPTION_RE.test(t)) return "subscription"
+  // Check ad-free before the IAP/ads hint: /\bads\b/ also matches "no ads".
+  if (AD_FREE_RE.test(t) && !IAP_ADS_RE.test(t.replace(AD_FREE_RE, ""))) return "free"
   return "iapAds"
 }
 

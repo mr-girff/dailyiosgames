@@ -2204,3 +2204,186 @@
 
 </details>
 
+### `scripts/enrich.mjs` — modified
+
+- **When:** 2026-07-26 03:40:16 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +15 / -7 lines
+- **What:** modified `scripts/enrich.mjs`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-const MONETIZATION_HINTS = {
+-  premium:     /\bno ads\b|\bpremium\b|\bpaid\b|\bbuy once\b/i,
+-  subscription:/\bsubscription\b|\bsubscribe\b|\bweekly\b.{0,10}\$|\bmonthly\b.{0,10}\$/i,
+-  iapAds:      /\bin-app purchase\b|\bin app purchase\b|\biap\b|\bads\b/i,
+-}
++// "premium" means one thing on this site: you pay once, up front. It is the
++// filter behind /no-iap/ and /no-ads-no-iap/ ("pay once and own it").
++//
++// The old version also awarded "premium" to any *free* listing whose copy
++// contained "no ads", "premium", "paid" or "buy once" — so 25 of the 33 premium
++// games in the dataset were free-to-play, including Slotomania, Jackpot World
++// and "Triumph: Play for Cash". Casino apps were being presented as pay-once
+```
+
+</details>
+
+### `src/lib/format.ts` — modified
+
+- **When:** 2026-07-26 03:40:16 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +31 / -0 lines
+- **What:** modified `src/lib/format.ts`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++/**
++ * Human label for the monetization enum, which was being printed raw ("iapAds")
++ * on the game detail page and in the archetype list.
++ *
++ * Price wins over the classifier. `detectMonetization` used to return "premium"
++ * for any *free* listing whose copy contained "no ads" / "premium" / "paid", so
++ * 25 of the 33 "premium" games in the dataset were free-to-play — casino slots
++ * among them, shown on /no-ads-no-iap/ as pay-once titles. enrich.mjs no longer
++ * does that, but archived snapshots still carry the old value, so read defensively.
++ */
++export function monetizationLabel(g: any): string {
++  const mon = String(g?.monetization || "")
+```
+
+</details>
+
+### `src/pages/archetype/[archetype].astro` — modified
+
+- **When:** 2026-07-26 03:40:16 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +2 / -1 lines
+- **What:** modified `src/pages/archetype/[archetype].astro`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++import { monetizationShort } from "../../lib/format"
+-          <span class="rl-meta">{g.seller}{g.sessionLength ? ` · ${g.sessionLength}` : ""}{g.monetization ? ` · ${g.monetization}` : ""}</span>
++          <span class="rl-meta">{g.seller}{g.sessionLength ? ` · ${g.sessionLength}` : ""}{g.monetization ? ` · ${monetizationShort(g)}` : ""}</span>
+```
+
+</details>
+
+### `src/pages/compare/free-vs-premium.astro` — modified
+
+- **When:** 2026-07-26 03:40:16 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +2 / -1 lines
+- **What:** modified `src/pages/compare/free-vs-premium.astro`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++import { isPremium } from "../../lib/format"
+-const b = rankByHeat(all.filter(g => isIndexable(g) && (g.monetization === "premium" || (g.tags || []).includes("no-ads"))))
++const b = rankByHeat(all.filter(g => isIndexable(g) && (isPremium(g) || (g.tags || []).includes("no-ads"))))
+```
+
+</details>
+
+### `src/pages/like-monument-valley/index.astro` — modified
+
+- **When:** 2026-07-26 03:40:16 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +2 / -1 lines
+- **What:** modified `src/pages/like-monument-valley/index.astro`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++import { isPremium } from "../../lib/format"
+-      { num: matching.filter(g => g.monetization === "premium").length, lbl: "Premium (no IAP)" },
++      { num: matching.filter(g => isPremium(g)).length, lbl: "Premium (no IAP)" },
+```
+
+</details>
+
+### `src/pages/no-ads-no-iap/index.astro` — modified
+
+- **When:** 2026-07-26 03:40:16 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +5 / -2 lines
+- **What:** modified `src/pages/no-ads-no-iap/index.astro`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++import { isPremium } from "../../lib/format"
+-      g.monetization === "premium" ||
++      // `isPremium` requires an actual price. Testing monetization directly let
++      // free-to-play slots apps onto a "pay once and own it" page.
++      isPremium(g) ||
+-      { num: all.filter(g => g.monetization === "premium").length, lbl: "Pure premium titles" },
++      { num: all.filter(g => isPremium(g)).length, lbl: "Pure premium titles" },
+```
+
+</details>
+
+### `src/pages/no-iap.astro` — modified
+
+- **When:** 2026-07-26 03:40:16 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +8 / -4 lines
+- **What:** modified `src/pages/no-iap.astro`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-import { isFree, hasTag } from "../lib/format"
++import { isFree, hasTag, isPremium } from "../lib/format"
+-//   - monetization === "premium"  OR
+-//   - paid app + tagged no-ads
+-const premium = all.filter(g => g.monetization === "premium")
++//   - a genuinely paid app (isPremium: priced, and premium/no-ads flagged)  OR
++//   - a free app tagged no-ads whose monetization is not iapAds
++//
++// This used to read `g.monetization === "premium"` directly, which — because the
++// old classifier handed "premium" to any free listing mentioning "no ads" —
++// filled the page with free-to-play casino and slots apps.
++const premium = all.filter(g => isPremium(g))
+```
+
+</details>
+
+### `src/pages/offline/index.astro` — modified
+
+- **When:** 2026-07-26 03:40:16 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +2 / -1 lines
+- **What:** modified `src/pages/offline/index.astro`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++import { isPremium } from "../../lib/format"
+-      { num: matching.filter(g => g.monetization === "premium").length, lbl: "Premium (no IAP) offline picks" },
++      { num: matching.filter(g => isPremium(g)).length, lbl: "Premium (no IAP) offline picks" },
+```
+
+</details>
+

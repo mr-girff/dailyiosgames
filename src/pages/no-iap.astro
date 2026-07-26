@@ -2,16 +2,20 @@
 import Base from "../layouts/Base.astro"
 import GameGrid from "../components/GameGrid.astro"
 import KeepBrowsing from "../components/KeepBrowsing.astro"
-import { isFree, hasTag } from "../lib/format"
+import { isFree, hasTag, isPremium } from "../lib/format"
 import { loadEnriched, demandOf } from "../lib/enriched"
 
 const data = loadEnriched()
 const all = data.all || []
 
 // "No in-app purchases":
-//   - monetization === "premium"  OR
-//   - paid app + tagged no-ads
-const premium = all.filter(g => g.monetization === "premium")
+//   - a genuinely paid app (isPremium: priced, and premium/no-ads flagged)  OR
+//   - a free app tagged no-ads whose monetization is not iapAds
+//
+// This used to read `g.monetization === "premium"` directly, which — because the
+// old classifier handed "premium" to any free listing mentioning "no ads" —
+// filled the page with free-to-play casino and slots apps.
+const premium = all.filter(g => isPremium(g))
 const adFreeFree = all.filter(g => isFree(g) && hasTag(g, "no-ads") && g.monetization !== "iapAds")
 
 const all2 = [...premium, ...adFreeFree]

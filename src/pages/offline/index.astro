@@ -4,6 +4,7 @@ import LongTailHero from "../../components/LongTailHero.astro"
 import GameCardList from "../../components/GameCardList.astro"
 import KeepBrowsing from "../../components/KeepBrowsing.astro"
 import { loadAll, rankByHeat, isIndexable } from "../../lib/enriched"
+import { isPremium } from "../../lib/format"
 
 const all = loadAll()
 const matching = rankByHeat(
@@ -25,7 +26,7 @@ const description = `${matching.length} iPhone & iPad games that work fully offl
     illustrationAlt="A phone in airplane mode playing a puzzle game with mountains and a sun in the background"
     stats={[
       { num: matching.length, lbl: "Offline games on this list" },
-      { num: matching.filter(g => g.monetization === "premium").length, lbl: "Premium (no IAP) offline picks" },
+      { num: matching.filter(g => isPremium(g)).length, lbl: "Premium (no IAP) offline picks" },
       { num: "24h", lbl: "Refresh cadence" },
     ]}
   />

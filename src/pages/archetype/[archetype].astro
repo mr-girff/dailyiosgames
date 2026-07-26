@@ -2,6 +2,7 @@
 import Base from "../../layouts/Base.astro"
 import KeepBrowsing from "../../components/KeepBrowsing.astro"
 import { loadEnriched, demandOf } from "../../lib/enriched"
+import { monetizationShort } from "../../lib/format"
 
 export async function getStaticPaths() {
   const data = loadEnriched()
@@ -45,7 +46,7 @@ function priceLabel(g){ const p=g.price; return (!p||p==="Free"||p==="0")?"Free"
         {(g.images?.icon?.src || g.icon) && <img class="rl-icon" src={g.images?.icon?.src || g.icon} alt={`${g.name} icon`} width="44" height="44" loading={i<8?"eager":"lazy"} />}
         <span class="rl-body">
           <span class="rl-name"><a href={`/games/${g.id}/`}>{g.name}</a></span>
-          <span class="rl-meta">{g.seller}{g.sessionLength ? ` · ${g.sessionLength}` : ""}{g.monetization ? ` · ${g.monetization}` : ""}</span>
+          <span class="rl-meta">{g.seller}{g.sessionLength ? ` · ${g.sessionLength}` : ""}{g.monetization ? ` · ${monetizationShort(g)}` : ""}</span>
         </span>
         {typeof g.heatScore === "number" && g.heatScore > 0 && <span class="rl-tag hot">heat {g.heatScore}</span>}
         <span class="rl-tag">{priceLabel(g)}</span>

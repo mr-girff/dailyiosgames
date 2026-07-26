@@ -4,6 +4,7 @@ import LongTailHero from "../../components/LongTailHero.astro"
 import GameCardList from "../../components/GameCardList.astro"
 import KeepBrowsing from "../../components/KeepBrowsing.astro"
 import { loadAll, rankByHeat, isIndexable } from "../../lib/enriched"
+import { isPremium } from "../../lib/format"
 
 const all = loadAll()
 // Visual / art-puzzle bucket: any archetype that's puzzle-flavored
@@ -30,7 +31,7 @@ const description = `${matching.length} iPhone & iPad puzzle games with the same
     illustrationAlt="Warm isometric impossible-geometry architecture with a small silhouette walking the path"
     stats={[
       { num: matching.length, lbl: "Art-puzzle picks" },
-      { num: matching.filter(g => g.monetization === "premium").length, lbl: "Premium (no IAP)" },
+      { num: matching.filter(g => isPremium(g)).length, lbl: "Premium (no IAP)" },
       { num: matching.filter(g => (g.tags||[]).includes("offline")).length, lbl: "Playable offline" },
     ]}
   />

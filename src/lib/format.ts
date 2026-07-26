@@ -21,6 +21,37 @@ export function isPremium(g: any): boolean {
   return Array.isArray(g?.tags) && g.tags.includes("no-ads")
 }
 
+/**
+ * Human label for the monetization enum, which was being printed raw ("iapAds")
+ * on the game detail page and in the archetype list.
+ *
+ * Price wins over the classifier. `detectMonetization` used to return "premium"
+ * for any *free* listing whose copy contained "no ads" / "premium" / "paid", so
+ * 25 of the 33 "premium" games in the dataset were free-to-play — casino slots
+ * among them, shown on /no-ads-no-iap/ as pay-once titles. enrich.mjs no longer
+ * does that, but archived snapshots still carry the old value, so read defensively.
+ */
+export function monetizationLabel(g: any): string {
+  const mon = String(g?.monetization || "")
+  if (!isFree(g)) return mon === "subscription" ? `Paid up front, plus a subscription` : "Paid up front"
+  switch (mon) {
+    case "subscription": return "Free with a subscription"
+    case "free": return "Free, no ads or purchases advertised"
+    case "premium": return "Free to download" // stale value on a free listing
+    case "iapAds": return "Free with in-app purchases or ads"
+    default: return mon ? mon.replace(/([a-z])([A-Z])/g, "$1 $2").toLowerCase() : "—"
+  }
+}
+
+/** Same idea, sized for a dense list row. */
+export function monetizationShort(g: any): string {
+  const mon = String(g?.monetization || "")
+  if (!isFree(g)) return "pay once"
+  if (mon === "subscription") return "subscription"
+  if (mon === "free") return "no ads or IAP"
+  return "IAP / ads"
+}
+
 export function hasTag(g: any, t: string): boolean {
   return Array.isArray(g?.tags) && g.tags.includes(t)
 }

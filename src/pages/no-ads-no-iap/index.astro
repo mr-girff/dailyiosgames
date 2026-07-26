@@ -4,12 +4,15 @@ import LongTailHero from "../../components/LongTailHero.astro"
 import GameCardList from "../../components/GameCardList.astro"
 import KeepBrowsing from "../../components/KeepBrowsing.astro"
 import { loadAll, rankByHeat, isIndexable } from "../../lib/enriched"
+import { isPremium } from "../../lib/format"
 
 const all = loadAll()
 const matching = rankByHeat(
   all.filter(g =>
     isIndexable(g) && (
-      g.monetization === "premium" ||
+      // `isPremium` requires an actual price. Testing monetization directly let
+      // free-to-play slots apps onto a "pay once and own it" page.
+      isPremium(g) ||
       (g.tags || []).includes("no-ads")
     )
   )
@@ -30,7 +33,7 @@ const description = `${matching.length} curated iPhone & iPad games with no ads 
     illustrationAlt="Open treasure chest with a single padlock — a game where everything is unlocked when you buy it"
     stats={[
       { num: matching.length, lbl: "Games on this list" },
-      { num: all.filter(g => g.monetization === "premium").length, lbl: "Pure premium titles" },
+      { num: all.filter(g => isPremium(g)).length, lbl: "Pure premium titles" },
       { num: all.filter(g => (g.tags||[]).includes("no-ads")).length, lbl: "Tagged no-ads" },
     ]}
   />

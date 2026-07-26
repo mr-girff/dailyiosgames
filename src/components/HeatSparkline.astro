@@ -3,18 +3,19 @@
 // rating count is a public proxy for downloads; its slope is the "is it taking
 // off" signal. Renders nothing if there's no usable history yet.
 const { velocity } = Astro.props
-const series = velocity?.rcSeries || []
+// rcSeries is [[date, ratingCount], ...]; older data used [{date, rc}, ...].
+const series = (velocity?.rcSeries || []).map(p => Array.isArray(p) ? p : [p?.date, p?.rc])
 if (series.length < 2) return null
 
 const w = 280, h = 60, pad = 4
-const vals = series.map(p => p.rc)
+const vals = series.map(p => Number(p[1]) || 0)
 const min = Math.min(...vals)
 const max = Math.max(...vals)
 const span = (max - min) || 1
 const stepX = (w - pad * 2) / (series.length - 1)
-const path = series.map((p, i) => {
+const path = vals.map((v, i) => {
   const x = pad + i * stepX
-  const y = h - pad - ((p.rc - min) / span) * (h - pad * 2)
+  const y = h - pad - ((v - min) / span) * (h - pad * 2)
   return `${i === 0 ? "M" : "L"}${x.toFixed(1)},${y.toFixed(1)}`
 }).join(" ")
 const lastX = pad + (series.length - 1) * stepX

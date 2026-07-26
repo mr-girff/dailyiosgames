@@ -16,6 +16,7 @@
 
 import fs from "node:fs/promises"
 import path from "node:path"
+import { serialize } from "./lib/json.mjs"
 
 const ROOT = process.cwd()
 const DATA_DIR = path.join(ROOT, "data")
@@ -126,7 +127,10 @@ function computeVelocity(points, todayDate) {
     else break
   }
 
-  const rcSeries = points.slice(-SERIES_DAYS).map(p => ({ date: p.date, rc: p.rc }))
+  // [date, ratingCount] pairs rather than {date, rc} objects: the pretty-printer
+  // keeps object arrays expanded, and this window shifts every day, so the object
+  // form rewrote ~50 lines per game per run. See scripts/lib/json.mjs.
+  const rcSeries = points.slice(-SERIES_DAYS).map(p => [p.date, p.rc])
   const seenToday = last.date === todayDate
 
   return {
@@ -153,6 +157,13 @@ function normalizer(values) {
   return (v) => (span > 0 && typeof v === "number" && isFinite(v)) ? (v - min) / span : 0
 }
 
+/** Days since a YYYY-MM-DD date; 60 (neutral) when unknown or unparseable. */
+function ageDays(date) {
+  if (!date) return 60
+  const d = Math.round((Date.now() - Date.parse(`${String(date).slice(0, 10)}T00:00:00Z`)) / 86400000)
+  return Number.isFinite(d) ? Math.max(0, d) : 60
+}
+
 function scoreCohort(items) {
   // Raw component values (log-compress the heavy-tailed ones).
   const comp = items.map(it => {
@@ -162,8 +173,10 @@ function scoreCohort(items) {
       download: Math.log1p(Math.max(0, v.rcVelocity)),
       accel:    Math.log1p(Math.max(0, v.accel)),
       rankmom:  v.rankDelta7d == null ? null : v.rankDelta7d, // higher = climbing
-      fresh:    1 / (1 + Math.max(0, it.daysSinceRelease ?? 60) / 7),
-      search:   Math.max(0, it.signal || 0),
+      // daysSinceRelease is no longer persisted (see scripts/lib/catalog.mjs),
+      // so freshness is derived from the stored release date.
+      fresh:    1 / (1 + ageDays(it.releaseDate) / 7),
+      search:   Math.max(0, it.searchDemand || 0),
     }
   })
 
@@ -246,7 +259,7 @@ async function main() {
   }
 
   const out = { ...enriched, velocityComputedAt: new Date().toISOString(), all }
-  await fs.writeFile(ENRICHED, JSON.stringify(out, null, 2))
+  await fs.writeFile(ENRICHED, serialize(out))
 
   const movers = all.filter(g => g.traction !== "none").length
   const surging = all.filter(g => g.momentum === "surging").length

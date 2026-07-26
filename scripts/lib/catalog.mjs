@@ -13,6 +13,7 @@
 
 import fs from "node:fs/promises"
 import path from "node:path"
+import { serialize } from "./json.mjs"
 
 const DAY = 86400000
 
@@ -20,7 +21,7 @@ const DAY = 86400000
 const RAW_FIELDS = [
   "id", "name", "seller", "bundle", "price", "genres", "releaseDate",
   "currentVersionDate", "version", "rating", "ratingCount", "size_mb", "url",
-  "rank", "icon", "screenshots", "desc", "releaseNotes", "signal", "verdict",
+  "rank", "icon", "screenshots", "desc", "releaseNotes", "searchDemand",
 ]
 
 // Enrichment that is expensive to recompute and must be carried across runs
@@ -28,6 +29,9 @@ const RAW_FIELDS = [
 const CARRY_FIELDS = [
   "images", "video", "trends", "competitors", "llmEnriched",
 ]
+
+// Recomputed from a stored date on every read, so they must never be written out.
+const DERIVED_FIELDS = ["daysSinceRelease", "daysSinceUpdate", "daysSinceSeen"]
 
 const daysBetween = (a, b) => Math.round((new Date(b) - new Date(a)) / DAY)
 
@@ -61,6 +65,19 @@ export async function buildCatalog({ dataDir, today, carryFrom }) {
   const byId = new Map(Object.entries(previous.games || {}))
 
   const files = await snapshotFiles(dataDir)
+
+  // Presence is recounted from the snapshots on every run instead of being
+  // incremented off the persisted value: every run replays the full snapshot
+  // history, so incrementing added the whole history again each time (daysSeen
+  // climbed by ~1 per snapshot per run — 118 became 157 on a single re-run) and
+  // rewrote the field for every game in the process. compact.mjs keeps every id
+  // in every snapshot, so the count is always recoverable from them.
+  const seenDays = new Map()   // id -> distinct snapshot dates
+  const countedOn = new Map()  // id -> last date already counted (same-day dedupe:
+                               // a game can be in newReleases *and* updates)
+  const seenFirst = new Map()  // id -> earliest snapshot date
+  const seenLast = new Map()   // id -> latest snapshot date
+
   for (const f of files) {
     const date = f.slice(0, 10)
     const snap = await readJSON(path.join(dataDir, f), null)
@@ -70,16 +87,26 @@ export async function buildCatalog({ dataDir, today, carryFrom }) {
       const prev = byId.get(id)
       const raw = pick(g, RAW_FIELDS)
       raw.id = id
-      // Newest snapshot wins for metadata; keep the earliest firstSeen.
-      const merged = prev ? { ...prev, ...raw } : raw
-      merged.firstSeen = prev?.firstSeen && prev.firstSeen < date ? prev.firstSeen : (prev?.firstSeen || date)
-      merged.lastSeen = !prev?.lastSeen || prev.lastSeen < date ? date : prev.lastSeen
-      merged.daysSeen = (prev?.lastSeen === date ? (prev.daysSeen || 1) : (prev?.daysSeen || 0) + 1)
-      byId.set(id, merged)
+      // Newest snapshot wins for metadata (files are replayed in date order).
+      byId.set(id, prev ? { ...prev, ...raw } : raw)
+
+      if (countedOn.get(id) !== date) {
+        seenDays.set(id, (seenDays.get(id) || 0) + 1)
+        countedOn.set(id, date)
+      }
+      if (!seenFirst.has(id)) seenFirst.set(id, date)
+      seenLast.set(id, date)
     }
   }
 
-  const refDate = today || files[files.length - 1]?.slice(0, 10) || new Date().toISOString().slice(0, 10)
+  // Reference date = the most recent evidence we have, whichever source it comes
+  // from. Taking `today` (data/latest.json's date) alone is unsafe: if latest.json
+  // is stale while a newer data/YYYY-MM-DD.json exists — a partially failed run,
+  // a manual backfill — then no game's lastSeen equals refDate, every entry is
+  // marked archived at once, and the whole catalogue flips to noindex.
+  const newestSnapshot = files[files.length - 1]?.slice(0, 10)
+  const refDate = [today, newestSnapshot].filter(Boolean).sort().pop()
+    || new Date().toISOString().slice(0, 10)
 
   // Carry expensive enrichment forward.
   const carry = new Map(((carryFrom || {}).all || []).map(g => [String(g.id), g]))
@@ -87,12 +114,29 @@ export async function buildCatalog({ dataDir, today, carryFrom }) {
   const games = [...byId.values()].map(g => {
     const carried = carry.get(g.id)
     const out = { ...g, ...(carried ? pick(carried, CARRY_FIELDS) : {}) }
-    out.daysSinceSeen = Math.max(0, daysBetween(out.lastSeen, refDate))
+    // firstSeen / lastSeen / daysSeen are recomputed from the snapshots, which are
+    // only ever slimmed, never deleted (see compact.mjs). Carrying them forward
+    // from the persisted catalogue made them monotonic and therefore unfixable:
+    // one snapshot with a wrong or future date would pin lastSeen ahead of every
+    // real snapshot, no entry would match refDate, and the entire catalogue would
+    // be marked archived and noindexed — permanently, since the bad value kept
+    // being carried. The stored value is now only a fallback for an entry that no
+    // snapshot mentions at all.
+    out.firstSeen = seenFirst.get(out.id) ?? out.firstSeen
+    out.lastSeen = seenLast.get(out.id) ?? out.lastSeen
+    out.daysSeen = seenDays.get(out.id) ?? out.daysSeen ?? 0
     out.active = out.lastSeen === refDate
-    // Recompute age relative to the reference date so archived entries do not
-    // keep reporting "2d ago" forever.
-    if (out.releaseDate) out.daysSinceRelease = Math.max(0, daysBetween(out.releaseDate, refDate))
-    if (out.currentVersionDate) out.daysSinceUpdate = Math.max(0, daysBetween(out.currentVersionDate, refDate))
+    // `daysSinceSeen` / `daysSinceRelease` / `daysSinceUpdate` are deliberately
+    // NOT stored: they are a function of a stored date and the current day, so
+    // persisting them rewrote every entry on every run (the largest single
+    // source of churn in data/enriched.json) and left the numbers stale on any
+    // build that did not refresh data. src/lib/enriched.ts derives them at build
+    // time from lastSeen / releaseDate / currentVersionDate.
+    for (const f of DERIVED_FIELDS) delete out[f]
+    // One-time migration of the old names (see fetch_daily.mjs).
+    if (out.searchDemand === undefined && out.signal !== undefined) out.searchDemand = out.signal
+    delete out.signal
+    delete out.verdict
     return out
   })
 
@@ -101,12 +145,12 @@ export async function buildCatalog({ dataDir, today, carryFrom }) {
     g.id,
     { ...pick(g, RAW_FIELDS), ...pick(g, CARRY_FIELDS), firstSeen: g.firstSeen, lastSeen: g.lastSeen, daysSeen: g.daysSeen },
   ]))
-  await fs.writeFile(catalogPath, JSON.stringify({
+  await fs.writeFile(catalogPath, serialize({
     updatedAt: new Date().toISOString(),
     referenceDate: refDate,
     count: games.length,
     games: persisted,
-  }, null, 2))
+  }))
 
   return {
     games,

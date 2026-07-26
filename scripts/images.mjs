@@ -9,6 +9,7 @@
 import fs from "node:fs/promises"
 import path from "node:path"
 import sharp from "sharp"
+import { serialize } from "./lib/json.mjs"
 
 const ROOT = process.cwd()
 const SRC = path.join(ROOT, "data/enriched.json")
@@ -136,7 +137,7 @@ async function main() {
       console.warn(`Image failed for ${g.name}:`, e.message)
     }
   })
-  await fs.writeFile(SRC, JSON.stringify(data, null, 2))
+  await fs.writeFile(SRC, serialize(data))
   console.log(`Images done. ${ok}/${games.length} games processed.`)
 }
 

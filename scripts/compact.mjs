@@ -13,6 +13,7 @@
 
 import fs from "node:fs/promises"
 import path from "node:path"
+import { serialize } from "./lib/json.mjs"
 
 const DATA_DIR = path.join(process.cwd(), "data")
 const KEEP_FULL_DAYS = Number(process.env.KEEP_FULL_DAYS || 60)
@@ -46,7 +47,7 @@ async function main() {
       updates: (snap.updates || []).map(slimGame),
       generatedAt: snap.generatedAt,
     }
-    await fs.writeFile(p, JSON.stringify(out, null, 2))
+    await fs.writeFile(p, serialize(out))
     const after = (await fs.stat(p)).size
     compacted++
     saved += before - after

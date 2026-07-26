@@ -1114,3 +1114,169 @@
 
 </details>
 
+### `scripts/compact.mjs` — modified
+
+- **When:** 2026-07-26 03:06:14 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +2 / -1 lines
+- **What:** modified `scripts/compact.mjs`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++import { serialize } from "./lib/json.mjs"
+-    await fs.writeFile(p, JSON.stringify(out, null, 2))
++    await fs.writeFile(p, serialize(out))
+```
+
+</details>
+
+### `scripts/images.mjs` — modified
+
+- **When:** 2026-07-26 03:06:14 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +2 / -1 lines
+- **What:** modified `scripts/images.mjs`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++import { serialize } from "./lib/json.mjs"
+-  await fs.writeFile(SRC, JSON.stringify(data, null, 2))
++  await fs.writeFile(SRC, serialize(data))
+```
+
+</details>
+
+### `scripts/lib/catalog.mjs` — modified
+
+- **When:** 2026-07-26 03:06:14 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +59 / -15 lines
+- **What:** modified `scripts/lib/catalog.mjs`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++import { serialize } from "./json.mjs"
+-  "rank", "icon", "screenshots", "desc", "releaseNotes", "signal", "verdict",
++  "rank", "icon", "screenshots", "desc", "releaseNotes", "searchDemand",
++// Recomputed from a stored date on every read, so they must never be written out.
++const DERIVED_FIELDS = ["daysSinceRelease", "daysSinceUpdate", "daysSinceSeen"]
++
++
++  // Presence is recounted from the snapshots on every run instead of being
++  // incremented off the persisted value: every run replays the full snapshot
++  // history, so incrementing added the whole history again each time (daysSeen
++  // climbed by ~1 per snapshot per run — 118 became 157 on a single re-run) and
++  // rewrote the field for every game in the process. compact.mjs keeps every id
+```
+
+</details>
+
+### `scripts/lib/json.mjs` — created
+
+- **When:** 2026-07-26 03:06:14 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +45 / -0 lines
+- **What:** created `scripts/lib/json.mjs`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++// Diff-friendly JSON writer for the generated data files.
++//
++// `JSON.stringify(x, null, 2)` puts every array element on its own line. For this
++// dataset that is the dominant source of repository growth: velocity.rcSeries is a
++// sliding 14-day window, so appending one day shifts every element and rewrites
++// ~50 lines per game — around 3400 changed lines per day across the active set,
++// for data nobody reads as text. `tags`, `genres`, `similar` and `screenshots`
++// behave the same way.
++//
++// Objects stay expanded (they are the part a human reviews in a diff); arrays that
++// contain no objects are emitted inline. One shifted series is then one changed
++// line instead of fifty, and the file is ~25% smaller.
+```
+
+</details>
+
+### `scripts/trends.mjs` — modified
+
+- **When:** 2026-07-26 03:06:14 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +2 / -1 lines
+- **What:** modified `scripts/trends.mjs`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++import { serialize } from "./lib/json.mjs"
+-  await fs.writeFile(SRC, JSON.stringify(data, null, 2))
++  await fs.writeFile(SRC, serialize(data))
+```
+
+</details>
+
+### `scripts/velocity.mjs` — modified
+
+- **When:** 2026-07-26 03:06:14 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +17 / -4 lines
+- **What:** modified `scripts/velocity.mjs`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++import { serialize } from "./lib/json.mjs"
+-  const rcSeries = points.slice(-SERIES_DAYS).map(p => ({ date: p.date, rc: p.rc }))
++  // [date, ratingCount] pairs rather than {date, rc} objects: the pretty-printer
++  // keeps object arrays expanded, and this window shifts every day, so the object
++  // form rewrote ~50 lines per game per run. See scripts/lib/json.mjs.
++  const rcSeries = points.slice(-SERIES_DAYS).map(p => [p.date, p.rc])
++/** Days since a YYYY-MM-DD date; 60 (neutral) when unknown or unparseable. */
++function ageDays(date) {
++  if (!date) return 60
++  const d = Math.round((Date.now() - Date.parse(`${String(date).slice(0, 10)}T00:00:00Z`)) / 86400000)
++  return Number.isFinite(d) ? Math.max(0, d) : 60
++}
+```
+
+</details>
+
+### `src/components/HeatSparkline.astro` — modified
+
+- **When:** 2026-07-26 03:06:14 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +5 / -4 lines
+- **What:** modified `src/components/HeatSparkline.astro`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-const series = velocity?.rcSeries || []
++// rcSeries is [[date, ratingCount], ...]; older data used [{date, rc}, ...].
++const series = (velocity?.rcSeries || []).map(p => Array.isArray(p) ? p : [p?.date, p?.rc])
+-const vals = series.map(p => p.rc)
++const vals = series.map(p => Number(p[1]) || 0)
+-const path = series.map((p, i) => {
++const path = vals.map((v, i) => {
+-  const y = h - pad - ((p.rc - min) / span) * (h - pad * 2)
++  const y = h - pad - ((v - min) / span) * (h - pad * 2)
+```
+
+</details>
+

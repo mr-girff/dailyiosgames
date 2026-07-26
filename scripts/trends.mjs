@@ -4,6 +4,7 @@
 
 import fs from "node:fs/promises"
 import path from "node:path"
+import { serialize } from "./lib/json.mjs"
 
 const ROOT = process.cwd()
 const SRC = path.join(ROOT, "data/enriched.json")
@@ -73,7 +74,7 @@ async function main() {
       await sleep(1500)
     }
   }
-  await fs.writeFile(SRC, JSON.stringify(data, null, 2))
+  await fs.writeFile(SRC, serialize(data))
   console.log(`Trends collected for ${ok}/${games.length} games`)
 }
 

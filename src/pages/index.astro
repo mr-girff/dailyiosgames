@@ -175,7 +175,10 @@ function priceLabel(g){ const p = g.price; return (!p || p === "Free" || p === "
     "inLanguage": "en",
     "potentialAction": {
       "@type": "SearchAction",
-      "target": `${(Astro.site?.toString() || "https://ios.querygame.com").replace(/\/$/, "")}/games/?q={search_term_string}`,
+      "target": {
+        "@type": "EntryPoint",
+        "urlTemplate": `${(Astro.site?.toString() || "https://ios.querygame.com").replace(/\/$/, "")}/search/?q={search_term_string}`
+      },
       "query-input": "required name=search_term_string"
     }
   })} />

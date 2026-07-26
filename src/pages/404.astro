@@ -1,0 +1,91 @@
+---
+// 404 page. Cloudflare Pages serves /404.html automatically for unmatched paths.
+// The site previously had none, so every stale link (and there were hundreds of
+// them, see the catalogue fix in scripts/lib/catalog.mjs) dead-ended on the
+// platform's blank error page.
+import Base from "../layouts/Base.astro"
+import KeepBrowsing from "../components/KeepBrowsing.astro"
+import { loadAll, rankByHeat, gameIconSrc, priceLabel, cap } from "../lib/enriched"
+
+const all = loadAll()
+const active = all.filter(g => g.active !== false)
+const suggestions = rankByHeat(active).slice(0, 6)
+const SITE = (Astro.site || "").toString().replace(/\/$/, "")
+---
+<Base
+  title="Page not found — Daily iOS Games"
+  description="That page doesn't exist (or the game left our tracked charts). Search the catalogue or jump to today's new releases."
+  canonical={`${SITE}/404/`}
+  robots="noindex,follow"
+>
+  <section class="hero-band">
+    <div class="eyebrow">Error 404</div>
+    <h1>We couldn't find that page</h1>
+    <p class="lead">
+      The URL may be mistyped, or it pointed at something we no longer publish.
+      Every game we have ever tracked keeps its page, so a game link should still
+      work — try searching for it by name.
+    </p>
+  </section>
+
+  <form class="nf-search" role="search" action="/search/" method="get">
+    <label class="visually-hidden" for="nf-q">Search games</label>
+    <input id="nf-q" name="q" type="search" placeholder="Search a game, studio or category" enterkeyhint="search" />
+    <button type="submit">Search</button>
+  </form>
+
+  {suggestions.length > 0 && (
+    <section>
+      <div class="section-head">
+        <h2>Rising right now</h2>
+        <a class="more" href="/movers/">All movers →</a>
+      </div>
+      <ul class="game-grid compact">
+        {suggestions.map(g => (
+          <li>
+            <a class="game-card" href={`/games/${g.id}/`}>
+              {gameIconSrc(g) && <img class="icon" src={gameIconSrc(g)} alt={`${g.name} app icon`} width="56" height="56" loading="lazy" />}
+              <div class="meta">
+                <div class="name">{g.name}</div>
+                <div class="dev">{g.seller}</div>
+                <div class="tags">
+                  {g.archetype && <span class="tag">{cap(g.archetype)}</span>}
+                  <span class={`tag ${priceLabel(g) === "Free" ? "price-free" : ""}`}>{priceLabel(g)}</span>
+                </div>
+              </div>
+            </a>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )}
+
+  <KeepBrowsing
+    title="Popular entry points"
+    eyebrow="Try one of these"
+    items={[
+      { href: "/new-today/", title: "New today", sub: "Today's App Store releases", icon: "calendar" },
+      { href: "/movers/", title: "Rising games", sub: "Early-traction radar", icon: "fire" },
+      { href: "/hidden-gems/", title: "Hidden gems", sub: "High signal, small audience", icon: "star" },
+      { href: "/games/", title: "All tracked games", sub: `${all.length} in the catalogue`, icon: "list" },
+      { href: "/archetype/", title: "Browse by category", sub: "By game archetype", icon: "grid" },
+      { href: "/posts/", title: "Daily reports", sub: "Every morning's roundup", icon: "tag" },
+    ]}
+  />
+
+  <style>
+    .nf-search { display: flex; gap: .5rem; margin: 1.5rem 0 2rem; max-width: 560px; }
+    .nf-search input {
+      flex: 1; min-width: 0; padding: .8rem 1rem; font: inherit;
+      background: var(--bg); color: var(--fg);
+      border: 1px solid var(--border-strong); border-radius: 10px;
+    }
+    .nf-search input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(193,95,60,.15); }
+    .nf-search button {
+      padding: .8rem 1.25rem; font: inherit; font-weight: 500; cursor: pointer;
+      background: var(--fg); color: var(--bg); border: 0; border-radius: 10px;
+    }
+    .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
+    @media (max-width: 540px) { .nf-search { flex-direction: column; } .nf-search button { width: 100%; } }
+  </style>
+</Base>

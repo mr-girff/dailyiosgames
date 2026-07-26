@@ -45,7 +45,16 @@ export async function getStaticPaths() {
 
     return {
       params: { seed: seed.slug },
-      props: { seed, matches: ranked, date: data.date, allCount: all.length },
+      props: {
+        seed,
+        matches: ranked,
+        date: data.date,
+        allCount: all.length,
+        // Only archetypes that actually have a generated page. Seeds list
+        // aspirational archetypes (e.g. "strategy") that the classifier never
+        // emits, which used to produce 404 links in "Keep browsing".
+        existingArchetypes: [...new Set(all.map((g: any) => g.archetype).filter(Boolean))],
+      },
     }
   })
 }
@@ -55,8 +64,9 @@ interface Props {
   matches: any[]
   date: string
   allCount: number
+  existingArchetypes: string[]
 }
-const { seed, matches, date, allCount } = Astro.props as Props
+const { seed, matches, date, allCount, existingArchetypes } = Astro.props as Props
 
 const top = matches.slice(0, 12)
 const more = matches.slice(12, 36)
@@ -139,12 +149,15 @@ const description = seed.metaDescription
       { href: "/hidden-gems/", title: "Hidden gems", sub: "Indies worth a shot", icon: "star" },
       { href: "/movers/", title: "Rising games", sub: "Hot momentum", icon: "fire" },
       { href: "/new-today/", title: "New today", sub: "Fresh launches", icon: "calendar" },
-      ...seed.archetypes.slice(0, 2).map(a => ({
-        href: `/archetype/${a}/`,
-        title: a.replace(/-/g, " ") + " category",
-        sub: "Browse the whole archetype",
-        icon: "list",
-      })),
+      ...seed.archetypes
+        .filter(a => (existingArchetypes || []).includes(a))
+        .slice(0, 2)
+        .map(a => ({
+          href: `/archetype/${a}/`,
+          title: a.replace(/-/g, " ") + " category",
+          sub: "Browse the whole archetype",
+          icon: "list",
+        })),
     ].slice(0, 6)
     return <KeepBrowsing title="Keep exploring" eyebrow="More" items={items} />
   })()}

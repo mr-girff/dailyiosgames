@@ -62,6 +62,16 @@ function capitalize(s){ return (s||"").replace(/(^|-)\w/g, c => c.toUpperCase())
 
   <Hero game={game} />
 
+  {game.active === false && (
+    <p class="archived-note">
+      <strong>Archived entry.</strong> This game last appeared on a US App Store chart we
+      track on <time datetime={game.lastSeen}>{game.lastSeen}</time>
+      {game.daysSinceSeen != null && ` (${game.daysSinceSeen} days ago)`}, so the figures
+      below are from that date. The page is kept online so links to it keep working —
+      check the App Store for current details.
+    </p>
+  )}
+
   {game.video?.mp4 && (
     <section>
       <h2>15-second look</h2>
@@ -89,7 +99,7 @@ function capitalize(s){ return (s||"").replace(/(^|-)\w/g, c => c.toUpperCase())
     </section>
   )}
 
-  {game.trends && (
+  {game.trends?.points?.length > 1 && (
     <section>
       <h2>Search interest</h2>
       <TrendSparkline trend={game.trends} />
@@ -241,6 +251,11 @@ function capitalize(s){ return (s||"").replace(/(^|-)\w/g, c => c.toUpperCase())
   })} />
 
   <style>
+    .archived-note {
+      margin: 1rem 0 0; padding: .8rem 1rem;
+      background: rgba(127,127,127,.08); border-left: 3px solid var(--border-strong);
+      border-radius: 8px; font-size: .88rem; color: var(--fg-muted);
+    }
     .momentum-row { display:flex; gap:.5rem; flex-wrap:wrap; margin:.25rem 0 .5rem; }
     .mbadge { font-size:.78rem; padding:.2rem .6rem; border-radius:999px; line-height:1.6; }
     .mbadge.m-surging { background:rgba(255,99,71,.18); color:#ff6347; }

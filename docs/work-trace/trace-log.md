@@ -305,3 +305,211 @@
 
 </details>
 
+### `src/pages/404.astro` — created
+
+- **When:** 2026-07-26 02:34:47 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +91 / -0 lines
+- **What:** created `src/pages/404.astro`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++---
++// 404 page. Cloudflare Pages serves /404.html automatically for unmatched paths.
++// The site previously had none, so every stale link (and there were hundreds of
++// them, see the catalogue fix in scripts/lib/catalog.mjs) dead-ended on the
++// platform's blank error page.
++import Base from "../layouts/Base.astro"
++import KeepBrowsing from "../components/KeepBrowsing.astro"
++import { loadAll, rankByHeat, gameIconSrc, priceLabel, cap } from "../lib/enriched"
++
++const all = loadAll()
++const active = all.filter(g => g.active !== false)
++const suggestions = rankByHeat(active).slice(0, 6)
+```
+
+</details>
+
+### `src/pages/games/[id].astro` — modified
+
+- **When:** 2026-07-26 02:34:47 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +16 / -1 lines
+- **What:** modified `src/pages/games/[id].astro`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++  {game.active === false && (
++    <p class="archived-note">
++      <strong>Archived entry.</strong> This game last appeared on a US App Store chart we
++      track on <time datetime={game.lastSeen}>{game.lastSeen}</time>
++      {game.daysSinceSeen != null && ` (${game.daysSinceSeen} days ago)`}, so the figures
++      below are from that date. The page is kept online so links to it keep working —
++      check the App Store for current details.
++    </p>
++  )}
++
+-  {game.trends && (
++  {game.trends?.points?.length > 1 && (
+```
+
+</details>
+
+### `src/pages/games/index.astro` — modified
+
+- **When:** 2026-07-26 02:34:47 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +49 / -16 lines
+- **What:** modified `src/pages/games/index.astro`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-          <li data-arch={g.archetype || "other"}>
++          <li data-arch={g.archetype || "other"} data-q={`${g.name || ""} ${g.seller || ""}`.toLowerCase()}>
+-  <!-- ===== FILTER PILLS ===== -->
+-  <section class="filter-bar" aria-label="Filter by category">
++  <!-- ===== SEARCH + FILTER PILLS ===== -->
++  <section class="filter-bar" aria-label="Filter the catalogue">
++    <form class="cat-search" role="search" action="/search/" method="get">
++      <label class="visually-hidden" for="cat-q">Filter by title or developer</label>
++      <input id="cat-q" name="q" type="search" autocomplete="off" placeholder="Filter by title or developer…" />
++      <noscript><button type="submit">Search</button></noscript>
++    </form>
+-          <li data-arch={g.archetype || "other"}>
+```
+
+</details>
+
+### `src/pages/index.astro` — modified
+
+- **When:** 2026-07-26 02:34:47 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +4 / -1 lines
+- **What:** modified `src/pages/index.astro`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-      "target": `${(Astro.site?.toString() || "https://ios.querygame.com").replace(/\/$/, "")}/games/?q={search_term_string}`,
++      "target": {
++        "@type": "EntryPoint",
++        "urlTemplate": `${(Astro.site?.toString() || "https://ios.querygame.com").replace(/\/$/, "")}/search/?q={search_term_string}`
++      },
+```
+
+</details>
+
+### `src/pages/like/[seed].astro` — modified
+
+- **When:** 2026-07-26 02:34:47 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +21 / -8 lines
+- **What:** modified `src/pages/like/[seed].astro`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-      props: { seed, matches: ranked, date: data.date, allCount: all.length },
++      props: {
++        seed,
++        matches: ranked,
++        date: data.date,
++        allCount: all.length,
++        // Only archetypes that actually have a generated page. Seeds list
++        // aspirational archetypes (e.g. "strategy") that the classifier never
++        // emits, which used to produce 404 links in "Keep browsing".
++        existingArchetypes: [...new Set(all.map((g: any) => g.archetype).filter(Boolean))],
++      },
++  existingArchetypes: string[]
+```
+
+</details>
+
+### `src/pages/search-index.json.ts` — created
+
+- **When:** 2026-07-26 02:34:47 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +35 / -0 lines
+- **What:** created `src/pages/search-index.json.ts`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++// Compact static search index consumed by /search/ (client-side, no server).
++// Keys are short on purpose: the whole catalogue has to stay a small download.
++//   i id · n name · s seller · a archetype · m monetization · p price
++//   t tags · h heatScore · r rating · c ratingCount · d daysSinceRelease · x active
++import { loadAll, priceLabel } from "../lib/enriched"
++
++export async function GET() {
++  const games = loadAll()
++    .sort((a, b) =>
++      Number(b.active ?? true) - Number(a.active ?? true) ||
++      (b.heatScore || 0) - (a.heatScore || 0) ||
++      (a.name || "").localeCompare(b.name || ""))
+```
+
+</details>
+
+### `src/pages/search.astro` — created
+
+- **When:** 2026-07-26 02:34:47 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +172 / -0 lines
+- **What:** created `src/pages/search.astro`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++---
++// Site search. The homepage has always published a schema.org SearchAction
++// (sitelinks searchbox) but no search existed — this is the page that makes the
++// promise real. Fully client-side: it fetches the static /search-index.json,
++// so it works on Cloudflare Pages with no server and no third-party service.
++import Base from "../layouts/Base.astro"
++import KeepBrowsing from "../components/KeepBrowsing.astro"
++import { loadAll } from "../lib/enriched"
++
++const all = loadAll()
++const total = all.length
++const activeCount = all.filter(g => g.active !== false).length
+```
+
+</details>
+
+### `src/pages/sitemap.xml.ts` — modified
+
+- **When:** 2026-07-26 02:34:47 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +3 / -0 lines
+- **What:** modified `src/pages/sitemap.xml.ts`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++  // Note: /subscribe/, /team/, /search/, /this-week/ and /like-monument-valley/
++  // are deliberately noindex (duplicate or utility pages) and must stay out of
++  // the sitemap — `npm run check` fails the build if that ever drifts.
+```
+
+</details>
+

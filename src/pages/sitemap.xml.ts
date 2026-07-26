@@ -41,6 +41,9 @@ export async function GET() {
     { loc: `${base}/about/`,                 changefreq: "monthly", priority: "0.3", lastmod: today },
     { loc: `${base}/methodology/`,           changefreq: "monthly", priority: "0.3", lastmod: today },
   ]
+  // Note: /subscribe/, /team/, /search/, /this-week/ and /like-monument-valley/
+  // are deliberately noindex (duplicate or utility pages) and must stay out of
+  // the sitemap — `npm run check` fails the build if that ever drifts.
 
   // "Games like" seed pages
   try {

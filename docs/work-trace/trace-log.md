@@ -1823,3 +1823,78 @@
 
 </details>
 
+### `package.json` — modified
+
+- **When:** 2026-07-26 03:06:39 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +2 / -1 lines
+- **What:** modified `package.json`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-    "verify":        "npm run build && npm run check",
++    "test":          "node --test scripts/test/",
++    "verify":        "npm test && npm run build && npm run check",
+```
+
+</details>
+
+### `scripts/lib/classify.mjs` — created
+
+- **When:** 2026-07-26 03:06:39 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +235 / -0 lines
+- **What:** created `scripts/lib/classify.mjs`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++// Archetype classifier.
++//
++// The archetype drives the page title, the /archetype/ landing pages, the
++// session-length estimate and the similar-games graph, so a wrong label is
++// visible in production and in search results.
++//
++// History of this file:
++//   1. "first archetype with any substring hit wins", scanning the whole
++//      marketing description for loose words ("blast", "crush", "hero", "race").
++//      101 of 393 games (26%) came out as `match3`, including a sniper shooter.
++//   2. Weighted word-boundary matching + Apple genre as a tie-breaker. Much
++//      better, but the genre could only ever *boost* an archetype that already
+```
+
+</details>
+
+### `scripts/test/classify.test.mjs` — created
+
+- **When:** 2026-07-26 03:06:39 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +118 / -0 lines
+- **What:** created `scripts/test/classify.test.mjs`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++// Regression tests for the archetype classifier: `npm test`.
++//
++// The archetype is user-visible (page titles, /archetype/ pages, related games),
++// and it is decided by heuristics over marketing copy, so it needs a fixed set of
++// hand-labelled expectations. Two layers:
++//
++//   1. Synthetic cases — pure logic, always run.
++//   2. Live catalogue — the biggest titles in data/enriched.json, labelled by
++//      hand. Skipped when the data file is absent (fresh clone, no snapshots).
++
++import test from "node:test"
++import assert from "node:assert/strict"
+```
+
+</details>
+

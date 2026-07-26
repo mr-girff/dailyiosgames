@@ -18,7 +18,8 @@
     "dev":           "astro dev",
     "build":         "astro build",
     "check":         "node scripts/check_build.mjs",
-    "verify":        "npm run build && npm run check",
+    "test":          "node --test scripts/test/",
+    "verify":        "npm test && npm run build && npm run check",
     "preview": "astro preview"
   },
   "dependencies": {

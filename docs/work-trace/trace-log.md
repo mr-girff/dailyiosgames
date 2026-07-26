@@ -1898,3 +1898,143 @@
 
 </details>
 
+### `data/catalog.json` — modified
+
+- **When:** 2026-07-26 03:07:32 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +1190 / -3499 lines
+- **What:** modified `data/catalog.json`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-  "updatedAt": "2026-07-26T02:27:33.423Z",
++  "updatedAt": "2026-07-26T02:57:14.278Z",
+-      "genres": [
+-        "Games",
+-        "Entertainment",
+-        "Word",
+-        "Puzzle"
+-      ],
++      "genres": ["Games","Entertainment","Word","Puzzle"],
+-      "screenshots": [
+-        "https://is1-ssl.mzstatic.com/image/thumb/PurpleSource211/v4/70/8a/65/708a650c-a257-79c9-a4d3-a671553619a0/a6bd7996-146e-41ea-9b50-eeb9dbb9eb7d_Games8_1Wordle.png/392x696bb.png",
+-        "https://is1-ssl.mzstatic.com/image/thumb/PurpleSource221/v4/da/80/dc/da80dc03-3c48-66da-6aee-c8b175746168/6a0c0f6b-d1dd-4c99-963f-e8a2a9515731_NYTGames_iPhone_5.5__iPhone_8_2.jpg/392x696bb.jpg",
+```
+
+</details>
+
+### `data/enriched.json` — modified
+
+- **When:** 2026-07-26 03:07:32 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +2243 / -24334 lines
+- **What:** modified `data/enriched.json`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-      "genres": [
+-        "Games",
+-        "Music"
+-      ],
++      "genres": ["Games","Music"],
+-      "googleSuggest": [
+-        "hololive dreams",
+-        "hololive dreams tier list",
+-        "hololive dreams reddit",
+-        "hololive dreams chest locations",
+-        "hololive dreams reroll",
+-        "hololive dreams songs",
+```
+
+</details>
+
+### `scripts/enrich.mjs` — modified
+
+- **When:** 2026-07-26 03:07:32 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +53 / -132 lines
+- **What:** modified `scripts/enrich.mjs`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++import { detectArchetype } from "./lib/classify.mjs"
++import { serialize } from "./lib/json.mjs"
++const DAY_MS = 86400000
++
++/** Whole days between two YYYY-MM-DD dates; 0 when either is missing/invalid. */
++function daysSince(from, to) {
++  if (!from || !to) return 0
++  const d = Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / DAY_MS)
++  return Number.isFinite(d) ? Math.max(0, d) : 0
++}
+-// ─── 1. Archetype detector ──────────────────────────────────────────
+-//
+```
+
+</details>
+
+### `scripts/fetch_daily.mjs` — modified
+
+- **When:** 2026-07-26 03:07:32 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +14 / -8 lines
+- **What:** modified `scripts/fetch_daily.mjs`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++import { serialize } from "./lib/json.mjs"
+-      g.signal = (g.googleSuggest.length + g.youtubeSuggest.length)
+-      g.verdict = g.signal >= 10 ? "build" : g.signal >= 5 ? "watch" : "skip"
++      // Count of Google + YouTube autocomplete completions for the title: a proxy
++      // for how much people are already searching for this game. It was called
++      // `signal`, and a derived `verdict` of "build" / "watch" / "skip" — leftovers
++      // from the template's original purpose (deciding which keyword to build a
++      // site around). "build" was rendered to readers as a "High signal" badge,
++      // which said nothing about the game. The number is useful; the advice is not.
++      g.searchDemand = (g.googleSuggest.length + g.youtubeSuggest.length)
+-  await fs.writeFile(path.join(DATA_DIR, `${today}.json`), JSON.stringify(payload, null, 2))
+-  await fs.writeFile(path.join(DATA_DIR, "latest.json"), JSON.stringify(payload, null, 2))
+```
+
+</details>
+
+### `src/lib/format.ts` — modified
+
+- **When:** 2026-07-26 03:07:32 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +19 / -6 lines
+- **What:** modified `src/lib/format.ts`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-  // Composite signal for "hidden gem" selection: high rating + decent review base,
+-  // recent release, "build" verdict, low red-flag count.
++  // Ranking score for /hidden-gems/.
++  //
++  // This used to be `searchDemand + verdictBoost + rating + log(ratingCount)`,
++  // where the two demand terms contributed up to 28 points and the rating at most
++  // 10 — so the "hidden gems" list was ranked, overwhelmingly, by how *popular* a
++  // game already was. On a page whose entire premise is finding titles the charts
++  // have not noticed yet, that is backwards.
++  //
++  // Now: rating quality first, a modest credibility bonus for having enough
++  // reviews to trust the average, and a small bonus for *low* search demand —
+```
+
+</details>
+

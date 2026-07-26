@@ -5,6 +5,7 @@
 
 import fs from "node:fs/promises"
 import path from "node:path"
+import { serialize } from "./lib/json.mjs"
 
 const ROOT = process.cwd()
 const DATA_DIR = path.join(ROOT, "data")
@@ -182,8 +183,13 @@ async function main() {
       const [gs, ys] = await Promise.all([suggest(g.name), suggest(g.name, "yt")])
       g.googleSuggest = gs.slice(0, 10)
       g.youtubeSuggest = ys.slice(0, 10)
-      g.signal = (g.googleSuggest.length + g.youtubeSuggest.length)
-      g.verdict = g.signal >= 10 ? "build" : g.signal >= 5 ? "watch" : "skip"
+      // Count of Google + YouTube autocomplete completions for the title: a proxy
+      // for how much people are already searching for this game. It was called
+      // `signal`, and a derived `verdict` of "build" / "watch" / "skip" — leftovers
+      // from the template's original purpose (deciding which keyword to build a
+      // site around). "build" was rendered to readers as a "High signal" badge,
+      // which said nothing about the game. The number is useful; the advice is not.
+      g.searchDemand = (g.googleSuggest.length + g.youtubeSuggest.length)
       g.domains = domainIdeas(g.name)
     }
   }
@@ -191,8 +197,8 @@ async function main() {
   await enrichWithKw(updates, 30)
 
   const payload = { date: today, newReleases, updates, generatedAt: new Date().toISOString() }
-  await fs.writeFile(path.join(DATA_DIR, `${today}.json`), JSON.stringify(payload, null, 2))
-  await fs.writeFile(path.join(DATA_DIR, "latest.json"), JSON.stringify(payload, null, 2))
+  await fs.writeFile(path.join(DATA_DIR, `${today}.json`), serialize(payload))
+  await fs.writeFile(path.join(DATA_DIR, "latest.json"), serialize(payload))
 
   // Emit markdown post for the daily aggregator site
   const post = renderPost(payload)
@@ -211,10 +217,10 @@ function renderPost(p) {
     "---",
     "",
   ].join("\n")
-  const tldr = `**TL;DR** — On ${p.date}, the US App Store added ${p.newReleases.length} new games and ${p.updates.length} top-chart games shipped updates. Highest-signal new game: ${p.newReleases.find(g=>g.verdict==="build")?.name || p.newReleases[0]?.name || "n/a"}. Biggest update: ${p.updates[0]?.name || "n/a"}.\n`
-  const row = (g) => `| [${g.name}](${g.url}) | ${g.seller || ""} | ${g.releaseDate} | ${g.rating || "-"} (${g.ratingCount}) | ${g.signal ?? "-"} |`
-  const newTable = ["## New Releases", "", "| Game | Developer | Released | Rating | Signal |", "|---|---|---|---|---|", ...p.newReleases.slice(0,30).map(row)].join("\n")
-  const updTable = ["## Updates (Top Charts)", "", "| Game | Developer | Updated | Rating | Signal |", "|---|---|---|---|---|", ...p.updates.slice(0,30).map(g=>`| [${g.name}](${g.url}) | ${g.seller||""} | ${g.currentVersionDate} (${g.daysSinceUpdate}d) | ${g.rating || "-"} (${g.ratingCount}) | ${g.signal ?? "-"} |`)].join("\n")
+  const tldr = `**TL;DR** — On ${p.date}, the US App Store added ${p.newReleases.length} new games and ${p.updates.length} top-chart games shipped updates. Most searched-for new game: ${[...p.newReleases].sort((a,b)=>(b.searchDemand||0)-(a.searchDemand||0))[0]?.name || "n/a"}. Biggest update: ${p.updates[0]?.name || "n/a"}.\n`
+  const row = (g) => `| [${g.name}](${g.url}) | ${g.seller || ""} | ${g.releaseDate} | ${g.rating || "-"} (${g.ratingCount}) | ${g.searchDemand ?? "-"} |`
+  const newTable = ["## New Releases", "", "| Game | Developer | Released | Rating | Search demand |", "|---|---|---|---|---|", ...p.newReleases.slice(0,30).map(row)].join("\n")
+  const updTable = ["## Updates (Top Charts)", "", "| Game | Developer | Updated | Rating | Search demand |", "|---|---|---|---|---|", ...p.updates.slice(0,30).map(g=>`| [${g.name}](${g.url}) | ${g.seller||""} | ${g.currentVersionDate} (${g.daysSinceUpdate}d) | ${g.rating || "-"} (${g.ratingCount}) | ${g.searchDemand ?? "-"} |`)].join("\n")
   return fm + "\n" + tldr + "\n" + newTable + "\n\n" + updTable + "\n"
 }
 

@@ -38,13 +38,26 @@ export function isOffline(g: any): boolean {
 }
 
 export function trustScore(g: any): number {
-  // Composite signal for "hidden gem" selection: high rating + decent review base,
-  // recent release, "build" verdict, low red-flag count.
+  // Ranking score for /hidden-gems/.
+  //
+  // This used to be `searchDemand + verdictBoost + rating + log(ratingCount)`,
+  // where the two demand terms contributed up to 28 points and the rating at most
+  // 10 — so the "hidden gems" list was ranked, overwhelmingly, by how *popular* a
+  // game already was. On a page whose entire premise is finding titles the charts
+  // have not noticed yet, that is backwards.
+  //
+  // Now: rating quality first, a modest credibility bonus for having enough
+  // reviews to trust the average, and a small bonus for *low* search demand —
+  // undiscovered is the point. Red flags subtract.
   const r = Number(g?.rating || 0)
   const rc = Number(g?.ratingCount || 0)
-  const sig = Number(g?.signal || 0)
-  const v = g?.verdict
+  const demand = Number(g?.searchDemand ?? g?.signal ?? 0)
   const flagPenalty = Math.min((g?.redFlags?.length || 0) * 3, 9)
-  const verdictBoost = v === "build" ? 8 : v === "watch" ? 3 : 0
-  return Math.max(0, Math.round(sig + verdictBoost + Math.min(r * 2, 10) + Math.min(Math.log10(rc + 1) * 2, 10) - flagPenalty))
+
+  const quality = r > 0 ? (r - 3.5) * 8 : 0            // 4.9 -> ~11, 3.5 -> 0
+  const credibility = Math.min(Math.log10(rc + 1) * 3, 9)
+  const undiscovered = demand <= 4 ? 4 : demand <= 10 ? 2 : 0
+
+  return Math.max(0, Math.round(quality + credibility + undiscovered - flagPenalty))
 }
+

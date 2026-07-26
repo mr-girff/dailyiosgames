@@ -2038,3 +2038,31 @@
 
 </details>
 
+### `scripts/fetch_daily.mjs` — modified
+
+- **When:** 2026-07-26 03:07:32 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +53 / -3 lines
+- **What:** modified `scripts/fetch_daily.mjs`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++//
++// Verified against the live API on 2026-07-26: the only app feeds that exist are
++// `top-free` and `top-paid`. `games-we-love` and `new-apps-we-love` both 404 —
++// the previous mapping for `newapplications` could never have worked — and there
++// is no grossing feed at all, so mapping `topgrossingapplications` to `top-paid`
++// silently recorded paid-chart positions as grossing ranks.
++//
++// A feed with no modern equivalent falls back to nothing rather than to the wrong
++// chart: new releases are identified from the release date returned by the lookup
++// step, not from which feed an id came out of, so losing the legacy `newapplications`
++// feed degrades coverage without corrupting anything.
++//
+```
+
+</details>
+

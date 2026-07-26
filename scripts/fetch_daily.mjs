@@ -58,15 +58,31 @@ async function rssEntries(feed) {
 }
 
 // rss.applemarketingtools.com equivalents of the legacy feeds.
+//
+// Verified against the live API on 2026-07-26: the only app feeds that exist are
+// `top-free` and `top-paid`. `games-we-love` and `new-apps-we-love` both 404 —
+// the previous mapping for `newapplications` could never have worked — and there
+// is no grossing feed at all, so mapping `topgrossingapplications` to `top-paid`
+// silently recorded paid-chart positions as grossing ranks.
+//
+// A feed with no modern equivalent falls back to nothing rather than to the wrong
+// chart: new releases are identified from the release date returned by the lookup
+// step, not from which feed an id came out of, so losing the legacy `newapplications`
+// feed degrades coverage without corrupting anything.
+//
+// Note the modern feed is not genre-filtered (the legacy one is, via genre=6014);
+// non-games are dropped after lookup by the existing `genres.includes("Games")`
+// filter in main().
 const MARKETING_FEED = {
-  newapplications: "games-we-love",
   topfreeapplications: "top-free",
-  topgrossingapplications: "top-paid",
 }
 
 async function marketingToolsFeed(feed) {
   const kind = MARKETING_FEED[feed]
-  if (!kind) return []
+  if (!kind) {
+    console.warn(`feed ${feed}: no modern equivalent exists — skipping this feed for today`)
+    return []
+  }
   const url = `https://rss.applemarketingtools.com/api/v2/${COUNTRY}/apps/${kind}/100/apps.json`
   const j = await getJSON(url)
   return (j.feed?.results || []).map(r => r.id).filter(Boolean)
@@ -115,6 +131,39 @@ function domainIdeas(name) {
   return [`${slug}.online`, `${slug}game.com`, `play${slug}.io`, `${slug}guide.com`, `${slug}wiki.com`]
 }
 
+/**
+ * Refuse to write a snapshot that is a fraction of a normal day's harvest.
+ *
+ * "Did we get *any* games?" is not a strong enough check. The modern fallback
+ * feed is not genre-filtered — a live probe of 50 fallback ids returned 2 games —
+ * so a total outage of the legacy RSS feeds yields a handful of games, which is
+ * far worse than yielding none: the catalogue would mark almost everything as
+ * not-seen-today, heat scores would collapse, and 21 days of that would noindex
+ * the site. A snapshot well below the recent norm is a failed run, not news.
+ */
+async function assertPlausibleHarvest(count) {
+  const files = (await fs.readdir(DATA_DIR))
+    .filter(f => /^\d{4}-\d{2}-\d{2}\.json$/.test(f)).sort().slice(-7)
+  const counts = []
+  for (const f of files) {
+    try {
+      const snap = JSON.parse(await fs.readFile(path.join(DATA_DIR, f), "utf8"))
+      counts.push((snap.newReleases?.length || 0) + (snap.updates?.length || 0))
+    } catch {}
+  }
+  if (counts.length < 3) return // not enough history to judge
+  counts.sort((a, b) => a - b)
+  const median = counts[Math.floor(counts.length / 2)]
+  const floor = Math.max(20, Math.round(median * 0.4))
+  if (count < floor) {
+    throw new Error(
+      `only ${count} games harvested, expected at least ${floor} (median of last ` +
+      `${counts.length} snapshots: ${median}) — refusing to write a truncated snapshot`,
+    )
+  }
+  console.log(`harvest sanity: ${count} games (median ${median}, floor ${floor})`)
+}
+
 async function main() {
   await fs.mkdir(DATA_DIR, { recursive: true })
   await fs.mkdir(POSTS_DIR, { recursive: true })
@@ -136,6 +185,7 @@ async function main() {
 
   const now = Date.now(), DAY = 86400000
   const games = apps.filter(a => (a.genres || []).includes("Games"))
+  await assertPlausibleHarvest(games.length)
   // Null instead of NaN when Apple omits a date.
   const ageDays = (d) => {
     const t = d ? new Date(d).getTime() : NaN

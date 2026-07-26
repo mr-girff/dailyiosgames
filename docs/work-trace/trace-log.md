@@ -16,3 +16,141 @@
 - **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
 - **Note:** treated as 0% hand-written code; review the diff before merging.
 
+## 2026-07-26
+
+### `data/catalog.json` — created
+
+- **When:** 2026-07-26 02:34:28 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +15224 / -0 lines
+- **What:** created `data/catalog.json`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++{
++  "updatedAt": "2026-07-26T02:27:33.423Z",
++  "referenceDate": "2026-07-25",
++  "count": 393,
++  "games": {
++    "307569751": {
++      "id": "307569751",
++      "name": "NYT Games: Wordle & Crossword",
++      "seller": "The New York Times Company",
++      "bundle": "com.magmic.NYTCrosswords09",
++      "price": "Free",
++      "genres": [
+```
+
+</details>
+
+### `data/enriched.json` — modified
+
+- **When:** 2026-07-26 02:34:28 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +36510 / -23318 lines
+- **What:** modified `data/enriched.json`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-      ],
+-      "archetype": "rpg",
+-      "monetization": "iapAds",
+-      "tags": [],
+-      "coreLoop": "The first official hololive mobile game『hololive Dreams (holodori)』 is here, featuring a rhythm & RPG gameplay! Centered around rhythm games, the game includes a variety of content such as theme park development and mini-games!",
+-      "sessionLength": "15–30 min",
+-      "audience": "midcore players, 18–35, gacha/strategy comfortable",
+-      "uniqueHook": "The first official hololive mobile game『hololive Dreams (holodori)』 is here, featuring a rhythm & RPG gameplay!",
+-      "redFlags": [],
+-      "indexDirective": "index,follow",
+-      "designPalette": "dark-pixel",
+-      "heroLayout": "character-card",
+```
+
+</details>
+
+### `scripts/enrich.mjs` — modified
+
+- **When:** 2026-07-26 02:34:28 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +162 / -58 lines
+- **What:** modified `scripts/enrich.mjs`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-// Reads data/latest.json, classifies each game (rules + optional LLM), writes data/enriched.json.
++// Reads data/latest.json + the persistent catalogue (every game ever seen),
++// classifies each game (rules + optional LLM), writes data/enriched.json.
++//
++// The catalogue is what keeps /games/<id>/ URLs alive after a game drops off the
++// charts: stale entries stay in `all` (marked inactive + noindex) instead of
++// vanishing from the build and 404-ing.
++import { buildCatalog } from "./lib/catalog.mjs"
++const DATA_DIR = path.join(ROOT, "data")
+-// ─── 1. Rule-based archetype detector ───────────────────────────────
+-const ARCHETYPES = [
+-  { key: "match3",       any: ["match-3", "match 3", "matching", "swap", "blast", "crush", "candy", "jewel"] },
+```
+
+</details>
+
+### `scripts/lib/catalog.mjs` — created
+
+- **When:** 2026-07-26 02:34:28 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +120 / -0 lines
+- **What:** created `scripts/lib/catalog.mjs`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++// Persistent game catalogue.
++//
++// Why this exists: the pipeline used to build the whole site from data/latest.json,
++// i.e. *today's* App Store chart snapshot only. 7–16 games fall off the charts
++// every day, so their /games/<id>/ pages disappeared from the next build and every
++// already-indexed URL turned into a 404 (~260 dead URLs accumulated in 40 days).
++//
++// The catalogue is the union of every game ever seen. It is rebuilt from the daily
++// snapshots on every run and persisted to data/catalog.json so it survives snapshot
++// pruning/compaction. Pages are generated for every catalogue entry; staleness is
++// expressed with `active` / `daysSinceSeen` (and a noindex directive) instead of
++// deleting the page.
+```
+
+</details>
+
+### `src/lib/enriched.ts` — modified
+
+- **When:** 2026-07-26 02:34:28 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +8 / -0 lines
+- **What:** modified `src/lib/enriched.ts`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++  momentum?: string
++  traction?: string
++  // Catalogue bookkeeping (see scripts/lib/catalog.mjs).
++  active?: boolean
++  firstSeen?: string
++  lastSeen?: string
++  daysSeen?: number
++  daysSinceSeen?: number
+```
+
+</details>
+

@@ -22,10 +22,18 @@ export type Game = {
   icon?: string
   images?: { icon?: { src?: string } }
   heatScore?: number
+  momentum?: string
+  traction?: string
   signal?: number
   verdict?: string
   indexDirective?: string
   similar?: { id: string }[]
+  // Catalogue bookkeeping (see scripts/lib/catalog.mjs).
+  active?: boolean
+  firstSeen?: string
+  lastSeen?: string
+  daysSeen?: number
+  daysSinceSeen?: number
 }
 
 export function loadAll(): Game[] {

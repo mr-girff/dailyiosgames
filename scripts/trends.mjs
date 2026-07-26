@@ -52,7 +52,9 @@ function summarize(series) {
 
 async function main() {
   const data = JSON.parse(await fs.readFile(SRC, "utf8"))
-  const games = data.all.filter(g => g.indexDirective?.startsWith("index"))
+  // Active + indexable only: archived catalogue entries would otherwise burn the
+  // (heavily rate-limited) Trends quota on games nobody charts any more.
+  const games = data.all.filter(g => g.active !== false && g.indexDirective?.startsWith("index"))
   console.log(`Pulling trends for ${games.length} games`)
   let ok = 0, fail429 = 0
   for (const g of games) {

@@ -154,3 +154,154 @@
 
 </details>
 
+### `package.json` — modified
+
+- **When:** 2026-07-26 02:34:47 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +6 / -2 lines
+- **What:** modified `package.json`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-    "data":       "npm run fetch && npm run enrich && npm run velocity && npm run trends && npm run images && npm run video && npm run reviews",
+-    "data:novideo": "npm run fetch && npm run enrich && npm run velocity && npm run trends && npm run images && npm run reviews",
++    "og":      "node scripts/og.mjs",
++    "compact": "node scripts/compact.mjs",
++    "data":       "npm run fetch && npm run enrich && npm run velocity && npm run trends && npm run images && npm run og && npm run video && npm run reviews && npm run compact",
++    "data:novideo": "npm run fetch && npm run enrich && npm run velocity && npm run trends && npm run images && npm run og && npm run reviews && npm run compact",
++    "check":         "node scripts/check_build.mjs",
++    "verify":        "npm run build && npm run check",
+```
+
+</details>
+
+### `scripts/compact.mjs` — created
+
+- **When:** 2026-07-26 02:34:47 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +58 / -0 lines
+- **What:** created `scripts/compact.mjs`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++// Snapshot compaction — keeps the repository from growing without bound.
++//
++// Every day the pipeline commits a full data/YYYY-MM-DD.json (~380 KB: full
++// descriptions, release notes, screenshot URLs for ~130 games). That is ~140 MB
++// of git objects per year for data that is only ever read again by velocity.mjs,
++// which needs nothing but the time series (id, ratingCount, rating, chart ranks).
++//
++// Snapshots older than KEEP_FULL_DAYS are rewritten in "slim" form: the fields
++// velocity.mjs uses, nothing else. The persistent catalogue (data/catalog.json)
++// already holds the newest full record for every game, so no page content is lost.
++//
++// Idempotent: a snapshot already slim is left untouched.
+```
+
+</details>
+
+### `scripts/fetch_daily.mjs` — modified
+
+- **When:** 2026-07-26 02:34:47 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +83 / -12 lines
+- **What:** modified `scripts/fetch_daily.mjs`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-async function getJSON(url) {
+-  const r = await fetch(url, { headers: { "User-Agent": "DailyGameBot/1.0" } })
+-  if (!r.ok) throw new Error(`${url} -> ${r.status}`)
+-  return r.json()
++const sleep = (ms) => new Promise(r => setTimeout(r, ms))
++
++// Apple's public endpoints return sporadic 403/429/5xx from cloud IPs. Without
++// retries a single blip aborted the whole daily refresh (and the site then went
++// a day stale), so every request gets bounded exponential backoff with jitter.
++async function getJSON(url, { retries = 4, timeoutMs = 20000 } = {}) {
++  let lastErr
++  for (let attempt = 0; attempt <= retries; attempt++) {
+```
+
+</details>
+
+### `scripts/images.mjs` — modified
+
+- **When:** 2026-07-26 02:34:47 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +6 / -1 lines
+- **What:** modified `scripts/images.mjs`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-  const games = data.all.filter(g => g.indexDirective.startsWith("index")) // only for indexable pages
++  // Indexable pages only, and only games still on a chart (archived entries keep
++  // the variants they already have, carried forward by the catalogue).
++  // `indexDirective` is read defensively: a missing value used to throw here and
++  // abort the whole step.
++  const games = (data.all || []).filter(g =>
++    g.active !== false && (g.indexDirective || "").startsWith("index") && !g.images)
+```
+
+</details>
+
+### `scripts/trends.mjs` — modified
+
+- **When:** 2026-07-26 02:34:47 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +3 / -1 lines
+- **What:** modified `scripts/trends.mjs`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-  const games = data.all.filter(g => g.indexDirective?.startsWith("index"))
++  // Active + indexable only: archived catalogue entries would otherwise burn the
++  // (heavily rate-limited) Trends quota on games nobody charts any more.
++  const games = data.all.filter(g => g.active !== false && g.indexDirective?.startsWith("index"))
+```
+
+</details>
+
+### `scripts/velocity.mjs` — modified
+
+- **When:** 2026-07-26 02:34:47 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +14 / -2 lines
+- **What:** modified `scripts/velocity.mjs`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-  // Score only games that have a velocity object (cohort = today's tracked set).
+-  scoreCohort(all.filter(g => g.velocity))
++  // Score only games seen in today's snapshot: heat is a *live* signal, and an
++  // archived entry must never keep a stale high heat score on /movers/.
++  scoreCohort(all.filter(g => g.velocity && g.active !== false))
++  for (const g of all) {
++    if (g.active === false) {
++      g.heatScore = 0
++      g.momentum = "archived"
++      g.traction = "none"
++      // Charts for archived games are noise; drop the heavy series to keep the
++      // daily enriched.json diff (and the git repo) small.
+```
+
+</details>
+

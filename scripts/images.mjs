@@ -97,7 +97,12 @@ async function pool(items, limit, worker) {
 
 async function main() {
   const data = JSON.parse(await fs.readFile(SRC, "utf8"))
-  const games = data.all.filter(g => g.indexDirective.startsWith("index")) // only for indexable pages
+  // Indexable pages only, and only games still on a chart (archived entries keep
+  // the variants they already have, carried forward by the catalogue).
+  // `indexDirective` is read defensively: a missing value used to throw here and
+  // abort the whole step.
+  const games = (data.all || []).filter(g =>
+    g.active !== false && (g.indexDirective || "").startsWith("index") && !g.images)
   console.log(`Processing ${games.length} indexable games (${USE_R2 ? "R2: " + R2_BUCKET : "local public/img"})`)
   let ok = 0
   await pool(games, USE_R2 ? 8 : 4, async (g) => {

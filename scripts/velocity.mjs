@@ -230,8 +230,20 @@ async function main() {
     g.velocity = computeVelocity(points, todayDate)
   }
 
-  // Score only games that have a velocity object (cohort = today's tracked set).
-  scoreCohort(all.filter(g => g.velocity))
+  // Score only games seen in today's snapshot: heat is a *live* signal, and an
+  // archived entry must never keep a stale high heat score on /movers/.
+  scoreCohort(all.filter(g => g.velocity && g.active !== false))
+  for (const g of all) {
+    if (g.active === false) {
+      g.heatScore = 0
+      g.momentum = "archived"
+      g.traction = "none"
+      // Charts for archived games are noise; drop the heavy series to keep the
+      // daily enriched.json diff (and the git repo) small.
+      if (g.velocity) delete g.velocity.rcSeries
+      if (g.trends) delete g.trends.points
+    }
+  }
 
   const out = { ...enriched, velocityComputedAt: new Date().toISOString(), all }
   await fs.writeFile(ENRICHED, JSON.stringify(out, null, 2))

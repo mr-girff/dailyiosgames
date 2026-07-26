@@ -46,12 +46,15 @@ at the bottom for what worked and what did not.
 ┌──────────────────────────────────────────────────────────────┐
 │  GitHub Actions  (cron: 07:00 UTC daily)                     │
 │  ─────────────────────────────────────────                   │
-│  1. scripts/fetch_daily.mjs   → Apple iTunes RSS + Lookup    │
-│  2. scripts/enrich.mjs        → AI: archetype/hook/loop      │
-│  3. scripts/trends.mjs        → Google Trends (best-effort)  │
-│  4. scripts/images.mjs        → cache/optimise assets        │
-│  5. scripts/video.mjs         → optional 15-sec teasers      │
-│  6. scripts/reviews.mjs       → seed reviews schema          │
+│  1. scripts/fetch_daily.mjs   → Apple RSS + Lookup (retries) │
+│  2. scripts/enrich.mjs        → catalogue + classification   │
+│  3. scripts/velocity.mjs      → heat / momentum from history │
+│  4. scripts/trends.mjs        → Google Trends (best-effort)  │
+│  5. scripts/images.mjs        → cache/optimise assets → R2   │
+│  6. scripts/og.mjs            → 1200x630 social cards        │
+│  7. scripts/reviews.mjs       → pull confirmed UGC reviews   │
+│  8. scripts/compact.mjs       → slim snapshots > 60 days old │
+│  → npm run verify  (build + link/sitemap integrity gate)     │
 │  → git commit "data: daily refresh YYYY-MM-DD"               │
 │  → git push origin main                                      │
 └────────────────────────────┬─────────────────────────────────┘
@@ -60,7 +63,7 @@ at the bottom for what worked and what did not.
 ┌──────────────────────────────────────────────────────────────┐
 │  Cloudflare Pages   (build: `npm run build`)                 │
 │  ─────────────────────────────────────────                   │
-│  • Astro static build (139+ pages, JSON-LD per page)         │
+│  • Astro static build (490+ pages, JSON-LD per page)         │
 │  • Custom sitemap.xml endpoint                               │
 │  • Open /api/data.json feed (CC-BY, CORS *)                  │
 │  • Pages Function /subscribe   ─→ Cloudflare KV (emails)     │
@@ -97,16 +100,22 @@ at the bottom for what worked and what did not.
 ├─ .github/workflows/daily.yml       ← cron pipeline
 ├─ .github/workflows/trace-summary.yml ← PR trace/changelog summary
 ├─ scripts/                         ← data pipeline (Node ESM)
-│  ├─ fetch_daily.mjs               apple RSS + lookup
-│  ├─ enrich.mjs                    AI classification
+│  ├─ fetch_daily.mjs               apple RSS + lookup (retry/backoff + fallback)
+│  ├─ lib/catalog.mjs               persistent catalogue (every game ever seen)
+│  ├─ enrich.mjs                    classification + index decisions
+│  ├─ velocity.mjs                  heat / momentum from snapshot history
 │  ├─ trends.mjs                    google trends (best-effort)
-│  ├─ images.mjs                    asset caching
-│  ├─ video.mjs                     ffmpeg teaser generation
+│  ├─ images.mjs                    asset caching → R2
+│  ├─ og.mjs                        SVG → 1200x630 PNG social cards
+│  ├─ compact.mjs                   slim snapshots older than 60 days
+│  ├─ check_build.mjs               post-build link/sitemap/canonical gate
+│  ├─ video.mjs                     ffmpeg teaser generation (disabled in cron)
 │  └─ reviews.mjs                   reviews-schema seed
 ├─ data/
-│  ├─ latest.json                   today's payload
-│  ├─ enriched.json                 full catalogue w/ AI fields
-│  └─ YYYY-MM-DD.json               daily archives
+│  ├─ latest.json                   today's payload (charts seen today)
+│  ├─ catalog.json                  persistent union of every game ever seen
+│  ├─ enriched.json                 catalogue + classification + heat signals
+│  └─ YYYY-MM-DD.json               daily archives (slimmed after 60 days)
 ├─ src/
 │  ├─ layouts/Base.astro            shared shell, SEO meta
 │  ├─ components/
@@ -122,6 +131,9 @@ at the bottom for what worked and what did not.
 │  │  ├─ archetype/                 category pages
 │  │  ├─ posts/                     daily roundups
 │  │  ├─ api/data.json.ts           open data feed
+│  │  ├─ search.astro               client-side catalogue search
+│  │  ├─ search-index.json.ts       static search index
+│  │  ├─ 404.astro                  not-found page w/ search + recovery links
 │  │  ├─ sitemap.xml.ts             custom sitemap (replaces broken @astrojs/sitemap)
 │  │  └─ llms.txt.ts                LLM cite manifest
 │  └─ lib/                          palette, helpers
@@ -141,7 +153,9 @@ at the bottom for what worked and what did not.
 npm install
 npm run dev                  # http://localhost:4321
 npm run build                # astro build (uses data/ already committed to the repo)
-npm run data                 # full local pipeline (fetch → enrich → velocity → trends → images → video → reviews)
+npm run verify               # build + integrity check (broken links / sitemap drift)
+npm run data                 # full local pipeline
+npm run enrich && npm run velocity   # rebuild catalogue + heat offline (no network, no keys)
 ```
 
 > **Note**: `npm run build` only runs `astro build` — it does **not** refresh
@@ -149,6 +163,46 @@ npm run data                 # full local pipeline (fetch → enrich → velocit
 > Data is refreshed exclusively by the GitHub Actions cron (see below), which
 > commits new `data/` before Cloudflare Pages rebuilds. Run `npm run data`
 > locally if you want to regenerate the data set yourself.
+
+### Data contract: the catalogue (why URLs never 404)
+
+Apple's charts churn: 7–16 games leave the tracked feeds every single day. The
+pipeline originally rendered the whole site from `data/latest.json` (today's
+snapshot), so those games' `/games/<id>/` pages simply stopped being generated —
+they turned into 404s the next morning, after having been submitted in the
+sitemap. Over 40 days of history, 393 distinct games had existed but only ~130
+pages were alive at any time.
+
+`scripts/lib/catalog.mjs` fixes that:
+
+- `data/catalog.json` is the persistent union of every game ever seen, rebuilt
+  from all snapshots on every run (so it survives snapshot compaction).
+- `data/enriched.json` → `all[]` is that catalogue, not just today's charts.
+- Every entry carries `active`, `firstSeen`, `lastSeen`, `daysSeen`,
+  `daysSinceSeen`. `active: false` entries render an *Archived entry* notice.
+- Not seen on a chart for > 21 days ⇒ `noindex,follow` (page stays online, drops
+  out of the sitemap). Heat/momentum are computed only over the active cohort, so
+  `/movers/` can never show a stale score.
+- Expensive enrichment (R2 image variants, teaser videos, Google Trends series,
+  LLM polish) is carried forward per id instead of being recomputed.
+
+`npm run check` (run by `npm run verify`, the daily job and PR CI) fails the build
+if any internal link, sitemap entry or canonical breaks this contract.
+
+### Environment variables
+
+| Variable | Effect if unset |
+|---|---|
+| `PUBLIC_SITE_NAME` | falls back to "Daily iOS Games" |
+| `COUNTRY` | `us` |
+| `PUBLIC_ADSENSE_CLIENT` | AdSense tag not emitted |
+| `PUBLIC_GA_ID` | GA4 not emitted |
+| `PUBLIC_VL_PRODUCT_ID` + `PUBLIC_VL_AUTH_KEY` | page-telemetry tag not emitted |
+| `OPENAI_API_KEY` | LLM polish skipped (rules only) |
+| `CF_API_TOKEN` + `CF_ACCOUNT_ID` | images written to local `public/img/` instead of R2 |
+| `PUBLIC_REVIEWS_WORKER` | reviews block shows "not enabled" |
+
+No account id or tracking key is hardcoded in `src/` — forks must supply their own.
 
 ### Work-trace mechanism (0% hand-written code)
 
@@ -239,8 +293,9 @@ What didn't:
   inconsistent UX.
 - **Auto-generated 15-sec videos**: useless, removed from Cloudflare
   build path (still optional in cron).
-- **Per-game noindex strategy**: not implemented yet; many low-quality
-  detail pages risk Helpful Content penalties.
+- **Per-game noindex strategy**: now implemented (`indexDecision()` in
+  `scripts/enrich.mjs`) — low-signal and archived pages are `noindex,follow`
+  and excluded from the sitemap.
 - **Initial assumption "build it and SEO will come"**: false. New site
   needs 3–6 months minimum for any Google traction. The site is real
   but the audience is not.
@@ -312,7 +367,7 @@ property of their respective owners. Not affiliated with Apple Inc.
 ┌──────────────────────────────────────────────────────────────┐
 │  Cloudflare Pages（构建：npm run build）                      │
 │  ─────────────────────────────────────────                   │
-│  • Astro 静态构建（139+ 页面，每页带 JSON-LD）                 │
+│  • Astro 静态构建（490+ 页面，每页带 JSON-LD）                 │
 │  • 自定义 sitemap.xml                                         │
 │  • 开放 /api/data.json（CC-BY，CORS *）                       │
 │  • Pages Function /subscribe ─→ KV 存订阅邮箱                 │
@@ -346,7 +401,9 @@ property of their respective owners. Not affiliated with Apple Inc.
 npm install
 npm run dev                  # http://localhost:4321
 npm run build                # astro build（使用已提交到 repo 的 data/）
-npm run data                 # 完整本地 pipeline（fetch → enrich → velocity → trends → images → video → reviews）
+npm run verify               # 构建 + 完整性检查（死链 / sitemap 漂移）
+npm run data                 # 完整本地 pipeline
+npm run enrich && npm run velocity   # 离线重建 catalogue + heat（无需网络与密钥）
 ```
 
 > **注意**：`npm run build` 只跑 `astro build`，**不会**刷新数据。站点从已提交在
@@ -438,8 +495,8 @@ git push origin main         # Cloudflare Pages 推送即部署
 
 - **每游戏配色 + 8 种 Google Font**：已删除。过度工程化、体验不一致
 - **自动生成 15 秒视频**：没用，已从 Cloudflare 构建路径移除（cron 中仍可选）
-- **低质游戏页 noindex 策略**：尚未落地。大量低质详情页可能触发
-  Google Helpful Content 惩罚
+- **低质游戏页 noindex 策略**：已落地（`scripts/enrich.mjs` 的
+  `indexDecision()`）——低信号页与归档页标记 `noindex,follow` 并从 sitemap 移除
 - **「做出来 SEO 就会自来」的假设**：错了。新站至少要 3–6 个月才有任何
   Google 表现。站是真站，受众是空的
 - **想在 1–2 个月内靠广告 / 联盟赚到钱**：在零流量阶段数学不成立

@@ -965,3 +965,107 @@
 
 </details>
 
+### `.env.example` — modified
+
+- **When:** 2026-07-26 02:35:04 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +6 / -0 lines
+- **What:** modified `.env.example`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++# Optional page telemetry (vibeloft.ai). Both must be set or the tag is not
++# emitted. Previously hardcoded in src/layouts/Base.astro — set these in the
++# Cloudflare Pages environment to re-enable it in production.
++# PUBLIC_VL_PRODUCT_ID=00000000-0000-0000-0000-000000000000
++# PUBLIC_VL_AUTH_KEY=vl_web.xxxxxxxxxxxxxxxxxxxxxxxx
++
+```
+
+</details>
+
+### `AGENTS.md` — modified
+
+- **When:** 2026-07-26 02:35:04 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +49 / -0 lines
+- **What:** modified `AGENTS.md`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++# AGENTS.md — tool-neutral agent contract
++
++Same contract as [`CLAUDE.md`](CLAUDE.md), for agents that read `AGENTS.md`
++(Codex, Cursor, Aider, Copilot Workspace, Gemini CLI, ...). The file was committed
++empty, so non-Claude tools had no rules to follow — this is the content.
++
++## 1. Work-trace is mandatory
++
++- Enable the git layer once per clone: `bash .githooks/install.sh`
++  (sets `core.hooksPath=.githooks`). It logs the staged diff on **every** commit,
++  whichever model or tool produced it.
++- Tag the model so the log records who did the work:
+```
+
+</details>
+
+### `README.md` — modified
+
+- **When:** 2026-07-26 02:35:04 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +78 / -21 lines
+- **What:** modified `README.md`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-│  1. scripts/fetch_daily.mjs   → Apple iTunes RSS + Lookup    │
+-│  2. scripts/enrich.mjs        → AI: archetype/hook/loop      │
+-│  3. scripts/trends.mjs        → Google Trends (best-effort)  │
+-│  4. scripts/images.mjs        → cache/optimise assets        │
+-│  5. scripts/video.mjs         → optional 15-sec teasers      │
+-│  6. scripts/reviews.mjs       → seed reviews schema          │
++│  1. scripts/fetch_daily.mjs   → Apple RSS + Lookup (retries) │
++│  2. scripts/enrich.mjs        → catalogue + classification   │
++│  3. scripts/velocity.mjs      → heat / momentum from history │
++│  4. scripts/trends.mjs        → Google Trends (best-effort)  │
++│  5. scripts/images.mjs        → cache/optimise assets → R2   │
++│  6. scripts/og.mjs            → 1200x630 social cards        │
+```
+
+</details>
+
+### `src/pages/methodology.astro` — modified
+
+- **When:** 2026-07-26 02:35:04 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +8 / -2 lines
+- **What:** modified `src/pages/methodology.astro`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-  <p>Each game is classified into one of ~16 archetypes (match-3, idle, RPG, etc.) using a rule-based detector applied to the description and release notes. Where signal is strong enough (Google + YouTube Suggest combined ≥ 8), an LLM pass refines archetype, core loop, audience, and visual treatment.</p>
++  <p>Each game is classified into one of ~17 archetypes (match-3, idle, RPG, strategy, etc.) by a weighted rule-based detector: mechanic keywords are matched on word boundaries, a hit in the title counts more than one buried in the marketing copy, and Apple's own secondary genre acts as a prior (with a per-genre fallback when the description carries no mechanical signal at all). Where demand signal is strong enough (Google + YouTube Suggest combined ≥ 8), an LLM pass refines archetype, core loop and audience. Classification is a heuristic, not an editorial judgement — treat it as a filter, not a verdict.</p>
++
++  <h2>The catalogue, and why pages don't disappear</h2>
++  <p>The daily job only sees the games currently on the charts it tracks, and 7–16 games drop off every day. Those games are kept in a persistent catalogue, so every <code>/games/&lt;id&gt;/</code> URL we have ever published stays online. An entry that has not been on a tracked chart for more than 21 days is labelled <em>archived</em> on the page itself and switched to <code>noindex,follow</code> — the link keeps working, but a stale page stops competing in search.</p>
+-  <p>Pages without organic demand signal AND without substantive metadata are marked <code>noindex,follow</code> to keep the site lean. Pages with no traffic after 30 days are removed (HTTP 410). We index quality, not quantity.</p>
++  <p>Pages without organic demand signal AND without substantive metadata are marked <code>noindex,follow</code>, as are archived entries. Nothing is deleted, so no inbound link ever breaks. We index quality, not quantity.</p>
++
++  <h2>Finding things</h2>
++  <p>The whole catalogue is searchable client-side at <a href="/search/">/search/</a> (title, developer, category, monetisation, feature tags) from a static index — no query is sent to a server. Machine-readable equivalents: <a href="/api/data.json">/api/data.json</a> (indexable catalogue, CC BY 4.0), <a href="/api/movers.json">/api/movers.json</a> (heat ranking) and <a href="/llms.txt">/llms.txt</a>.</p>
+```
+
+</details>
+

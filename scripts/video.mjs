@@ -6,25 +6,47 @@
 // than read from public/img/. This keeps video generation working in CI, where
 // images.mjs runs in R2 mode and does NOT write local files (see images.mjs).
 //
+// Scratch files (downloaded screenshots, narration mp3) go to .cache/video/<id>/,
+// which is gitignored. They used to be written straight into public/video/<id>/
+// and were only deleted on the success path, so whenever ffmpeg or edge-tts was
+// missing the job left the intermediates behind and the daily commit shipped
+// them: 39 MB of src-*.jpg and voice.mp3 accumulated in the repo without a
+// single finished teaser.mp4. Nothing under public/video/ is a work file now.
+//
 // Requires: ffmpeg in PATH and `npm i -D edge-tts node-edge-tts` OR system `edge-tts` python.
 // We shell out so the JS code stays dependency-light.
 //
 //   sudo apt-get install -y ffmpeg
 //   pip install edge-tts   # provides the `edge-tts` CLI (free, Microsoft Edge voices)
 //   node scripts/video.mjs
+//
+// Env: MAX_VIDEOS caps how many clips one run may build (default 20) so a cold
+// start cannot download 1500 screenshots in a single job.
 
 import fs from "node:fs/promises"
 import path from "node:path"
 import { execFile } from "node:child_process"
 import { promisify } from "node:util"
+import { serialize } from "./lib/json.mjs"
 const sh = promisify(execFile)
 
 const ROOT = process.cwd()
 const SRC  = path.join(ROOT, "data/enriched.json")
 const OUT  = path.join(ROOT, "public/video")
+const WORK = path.join(ROOT, ".cache/video")
 const FPS  = 30
 const SEC_PER_SHOT = 3.5  // 4 shots × 3.5s ≈ 14s, fits typical 15s budget
 const VOICE = process.env.TTS_VOICE || "en-US-AriaNeural"
+const MAX_VIDEOS = Number(process.env.MAX_VIDEOS || 20)
+
+/** Both binaries must exist, otherwise the run is a guaranteed no-op. */
+async function haveTooling() {
+  const missing = []
+  for (const [bin, args] of [["ffmpeg", ["-version"]], ["edge-tts", ["--help"]]]) {
+    try { await sh(bin, args, { maxBuffer: 4e6 }) } catch { missing.push(bin) }
+  }
+  return missing
+}
 
 async function download(url) {
   const r = await fetch(url, { headers: { "User-Agent": "DailyGameBot/1.0" } })
@@ -55,17 +77,18 @@ async function ttsToFile(text, outWav) {
 async function buildClip(game) {
   const id = game.id
   const dir = path.join(OUT, id)
-  await fs.mkdir(dir, { recursive: true })
+  const work = path.join(WORK, id)
   const out = path.join(dir, "teaser.mp4")
   const poster = path.join(dir, "poster.jpg")
   if (await exists(out)) return { mp4: `/video/${id}/teaser.mp4`, poster: `/video/${id}/poster.jpg`, cached: true }
+  await fs.mkdir(work, { recursive: true })
 
-  // Download up to 4 official screenshots into the working dir. Fetched directly
+  // Download up to 4 official screenshots into the scratch dir. Fetched directly
   // from Apple URLs so this works even when images.mjs uploaded to R2 (no local files).
   const shots = []
   const srcShots = (game.screenshots || []).slice(0, 4)
   for (let i = 0; i < srcShots.length; i++) {
-    const local = path.join(dir, `src-${i}.jpg`)
+    const local = path.join(work, `src-${i}.jpg`)
     try {
       if (!(await exists(local))) await fs.writeFile(local, await download(srcShots[i]))
       shots.push(local)
@@ -76,11 +99,12 @@ async function buildClip(game) {
   if (shots.length < 2) return null // not enough media
 
   // 1) Synthesize narration
-  const narration = path.join(dir, "voice.mp3")
+  const narration = path.join(work, "voice.mp3")
   if (!(await exists(narration))) {
     try { await ttsToFile(script(game), narration) }
     catch (e) { console.warn(`TTS failed for ${game.name}: ${e.message}`); return null }
   }
+  await fs.mkdir(dir, { recursive: true })
 
   // 2) Build a Ken-Burns slideshow with ffmpeg
   //    Each screenshot: zoom 1.0→1.08 over SEC_PER_SHOT, crossfade 0.4s between shots.
@@ -113,29 +137,51 @@ async function buildClip(game) {
     "-y", out,
   ]
   try { await sh("ffmpeg", args, { maxBuffer: 50e6 }) }
-  catch (e) { console.warn(`ffmpeg failed for ${game.name}: ${e.message}`); return null }
+  catch (e) {
+    console.warn(`ffmpeg failed for ${game.name}: ${e.message}`)
+    // Do not leave an empty teaser.mp4 behind: `exists(out)` would then treat
+    // this game as "cached" forever and it would never be retried.
+    try { await fs.unlink(out) } catch {}
+    return null
+  }
 
   // 3) Extract poster frame
   try {
     await sh("ffmpeg", ["-y", "-ss", "1.5", "-i", out, "-frames:v", "1", "-q:v", "3", poster])
   } catch {}
 
-  // Clean up the raw downloaded screenshots so only teaser.mp4 + poster.jpg ship.
-  for (const s of shots) { try { await fs.unlink(s) } catch {} }
-
   return { mp4: `/video/${id}/teaser.mp4`, poster: `/video/${id}/poster.jpg`, durationSec: Math.round(total) }
 }
 
 async function main() {
-  const data = JSON.parse(await fs.readFile(SRC, "utf8"))
-  const games = data.all.filter(g => g.indexDirective?.startsWith("index"))
-  console.log(`Building teaser videos for ${games.length} games`)
-  let ok = 0
-  for (const g of games) {
-    const v = await buildClip(g)
-    if (v) { g.video = v; ok++; if (!v.cached) console.log(`✓ ${g.name}`) }
+  const missing = await haveTooling()
+  if (missing.length) {
+    // Exit 0: the teaser is a nice-to-have, and failing the daily job over a
+    // missing optional binary would block the data refresh.
+    console.log(`Skipping videos — not installed: ${missing.join(", ")}`)
+    return
   }
-  await fs.writeFile(SRC, JSON.stringify(data, null, 2))
+
+  const data = JSON.parse(await fs.readFile(SRC, "utf8"))
+  // Active + indexable only, same gate as images.mjs / trends.mjs. Archived
+  // entries keep whatever the catalogue carried forward.
+  const games = data.all
+    .filter(g => g.active !== false && g.indexDirective?.startsWith("index") && !g.video?.mp4)
+    .slice(0, MAX_VIDEOS)
+  console.log(`Building teaser videos for ${games.length} games (cap ${MAX_VIDEOS})`)
+  let ok = 0
+  try {
+    for (const g of games) {
+      let v = null
+      try { v = await buildClip(g) }
+      catch (e) { console.warn(`video failed for ${g.name}: ${e.message}`) }
+      if (v) { g.video = v; ok++; if (!v.cached) console.log(`✓ ${g.name}`) }
+    }
+  } finally {
+    // Always drop the scratch tree, success or not.
+    await fs.rm(WORK, { recursive: true, force: true })
+    await fs.writeFile(SRC, serialize(data))
+  }
   console.log(`Done. ${ok}/${games.length} videos available.`)
 }
 

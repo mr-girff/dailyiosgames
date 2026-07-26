@@ -1069,3 +1069,48 @@
 
 </details>
 
+### `.gitignore` — modified
+
+- **When:** 2026-07-26 03:05:59 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +1 / -0 lines
+- **What:** modified `.gitignore`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++.cache/
+```
+
+</details>
+
+### `scripts/video.mjs` — modified
+
+- **When:** 2026-07-26 03:05:59 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +60 / -14 lines
+- **What:** modified `scripts/video.mjs`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++// Scratch files (downloaded screenshots, narration mp3) go to .cache/video/<id>/,
++// which is gitignored. They used to be written straight into public/video/<id>/
++// and were only deleted on the success path, so whenever ffmpeg or edge-tts was
++// missing the job left the intermediates behind and the daily commit shipped
++// them: 39 MB of src-*.jpg and voice.mp3 accumulated in the repo without a
++// single finished teaser.mp4. Nothing under public/video/ is a work file now.
++//
++//
++// Env: MAX_VIDEOS caps how many clips one run may build (default 20) so a cold
++// start cannot download 1500 screenshots in a single job.
++import { serialize } from "./lib/json.mjs"
++const WORK = path.join(ROOT, ".cache/video")
+```
+
+</details>
+

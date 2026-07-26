@@ -1,17 +1,36 @@
 ---
 // Unified hero: prominent app icon + name + dev + hook + key facts.
-// Falls back gracefully when screenshots are missing.
+// Falls back gracefully when the optimised image set or screenshots are missing.
 import { appStoreUrl } from "../lib/appstore"
+import { compactNum } from "../lib/spark"
+
 const { game } = Astro.props
 const storeUrl = appStoreUrl(game)
-const icon = game.images?.icon?.src || game.icon
-const shots = Array.isArray(game.screenshots) ? game.screenshots.filter(Boolean) : []
+
+// scripts/images.mjs mirrors every icon and screenshot to R2 as avif/webp with a
+// srcset. Serving `game.screenshots` (Apple's original PNG/JPEG) instead — which
+// is what this component used to do — shipped several megabytes of unoptimised
+// images on the page with the most traffic.
+const icon = game.images?.icon
+const iconSrc = icon?.src || game.icon
+const optimised = Array.isArray(game.images?.screenshots) ? game.images.screenshots.filter(Boolean) : []
+const raw = Array.isArray(game.screenshots) ? game.screenshots.filter(Boolean) : []
+const shots = (optimised.length ? optimised : raw.map((src: string) => ({ src }))).slice(0, 8)
+
 const price = game.price === "Free" || game.price === "0" ? "Free" : (game.price || "Free")
-function cap(s){ return (s||"").replace(/(^|-)\w/g, c => c.toUpperCase()).replace(/-/g," ") }
+function cap(s: string) { return (s || "").replace(/(^|-)\w/g, c => c.toUpperCase()).replace(/-/g, " ") }
 ---
 <section class="detail-hero">
-  {icon && (
-    <img class="icon-xl" src={icon} alt={`${game.name} app icon`} width="168" height="168" fetchpriority="high" loading="eager" />
+  {iconSrc && (
+    <img
+      class="icon-xl"
+      src={iconSrc}
+      srcset={icon?.srcset}
+      sizes="(max-width: 640px) 120px, 168px"
+      alt={icon?.alt || `${game.name} app icon`}
+      width="168" height="168"
+      fetchpriority="high" loading="eager" decoding="async"
+    />
   )}
   <div>
     <h1>{game.name}</h1>
@@ -21,7 +40,9 @@ function cap(s){ return (s||"").replace(/(^|-)\w/g, c => c.toUpperCase()).replac
       {game.archetype && <span class="pill primary">{cap(game.archetype)}</span>}
       <span class="pill">{price}</span>
       {game.sessionLength && <span class="pill">{game.sessionLength}</span>}
-      {game.rating > 0 && <span class="pill">★ {game.rating.toFixed(1)} · {game.ratingCount}</span>}
+      {game.rating > 0 && (
+        <span class="pill">★ {game.rating.toFixed(1)}{game.ratingCount ? ` · ${compactNum(game.ratingCount)} ratings` : ""}</span>
+      )}
     </div>
 
     {(game.uniqueHook || game.coreLoop) && (
@@ -38,11 +59,20 @@ function cap(s){ return (s||"").replace(/(^|-)\w/g, c => c.toUpperCase()).replac
   <section>
     <h2>Screenshots</h2>
     <div class="gallery" role="list">
-      {shots.slice(0, 8).map((s, i) => (
+      {shots.map((s: any, i: number) => (
         <picture role="listitem">
-          <img src={s} alt={`${game.name} screenshot ${i+1}`} width="400" height="600"
-               loading={i === 0 ? "eager" : "lazy"}
-               fetchpriority={i === 0 ? "high" : "auto"} />
+          {s.sources?.avif && <source type="image/avif" srcset={s.sources.avif} sizes="(max-width: 640px) 60vw, 220px" />}
+          {s.sources?.webp && <source type="image/webp" srcset={s.sources.webp} sizes="(max-width: 640px) 60vw, 220px" />}
+          <img
+            src={s.src}
+            srcset={s.srcset}
+            sizes="(max-width: 640px) 60vw, 220px"
+            alt={s.alt || `${game.name} screenshot ${i + 1}`}
+            width="400" height="600"
+            loading={i === 0 ? "eager" : "lazy"}
+            fetchpriority={i === 0 ? "high" : "auto"}
+            decoding="async"
+          />
         </picture>
       ))}
     </div>

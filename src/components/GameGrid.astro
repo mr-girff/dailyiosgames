@@ -22,7 +22,6 @@ const { games = [], featuredFirst = false, eagerCount = 2, emptyMessage = "Nothi
               <div class="tags">
                 {g.archetype && <span class="tag">{cap(g.archetype)}</span>}
                 <span class={`tag ${priceLabel(g)==='Free' ? 'price-free' : ''}`}>{priceLabel(g)}</span>
-                {g.verdict === "build" && <span class="tag signal">High signal</span>}
               </div>
             </div>
           </a>

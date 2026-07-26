@@ -16,3 +16,2626 @@
 - **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
 - **Note:** treated as 0% hand-written code; review the diff before merging.
 
+## 2026-07-26
+
+### `data/catalog.json` — created
+
+- **When:** 2026-07-26 02:34:28 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +15224 / -0 lines
+- **What:** created `data/catalog.json`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++{
++  "updatedAt": "2026-07-26T02:27:33.423Z",
++  "referenceDate": "2026-07-25",
++  "count": 393,
++  "games": {
++    "307569751": {
++      "id": "307569751",
++      "name": "NYT Games: Wordle & Crossword",
++      "seller": "The New York Times Company",
++      "bundle": "com.magmic.NYTCrosswords09",
++      "price": "Free",
++      "genres": [
+```
+
+</details>
+
+### `data/enriched.json` — modified
+
+- **When:** 2026-07-26 02:34:28 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +36510 / -23318 lines
+- **What:** modified `data/enriched.json`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-      ],
+-      "archetype": "rpg",
+-      "monetization": "iapAds",
+-      "tags": [],
+-      "coreLoop": "The first official hololive mobile game『hololive Dreams (holodori)』 is here, featuring a rhythm & RPG gameplay! Centered around rhythm games, the game includes a variety of content such as theme park development and mini-games!",
+-      "sessionLength": "15–30 min",
+-      "audience": "midcore players, 18–35, gacha/strategy comfortable",
+-      "uniqueHook": "The first official hololive mobile game『hololive Dreams (holodori)』 is here, featuring a rhythm & RPG gameplay!",
+-      "redFlags": [],
+-      "indexDirective": "index,follow",
+-      "designPalette": "dark-pixel",
+-      "heroLayout": "character-card",
+```
+
+</details>
+
+### `scripts/enrich.mjs` — modified
+
+- **When:** 2026-07-26 02:34:28 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +162 / -58 lines
+- **What:** modified `scripts/enrich.mjs`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-// Reads data/latest.json, classifies each game (rules + optional LLM), writes data/enriched.json.
++// Reads data/latest.json + the persistent catalogue (every game ever seen),
++// classifies each game (rules + optional LLM), writes data/enriched.json.
++//
++// The catalogue is what keeps /games/<id>/ URLs alive after a game drops off the
++// charts: stale entries stay in `all` (marked inactive + noindex) instead of
++// vanishing from the build and 404-ing.
++import { buildCatalog } from "./lib/catalog.mjs"
++const DATA_DIR = path.join(ROOT, "data")
+-// ─── 1. Rule-based archetype detector ───────────────────────────────
+-const ARCHETYPES = [
+-  { key: "match3",       any: ["match-3", "match 3", "matching", "swap", "blast", "crush", "candy", "jewel"] },
+```
+
+</details>
+
+### `scripts/lib/catalog.mjs` — created
+
+- **When:** 2026-07-26 02:34:28 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +120 / -0 lines
+- **What:** created `scripts/lib/catalog.mjs`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++// Persistent game catalogue.
++//
++// Why this exists: the pipeline used to build the whole site from data/latest.json,
++// i.e. *today's* App Store chart snapshot only. 7–16 games fall off the charts
++// every day, so their /games/<id>/ pages disappeared from the next build and every
++// already-indexed URL turned into a 404 (~260 dead URLs accumulated in 40 days).
++//
++// The catalogue is the union of every game ever seen. It is rebuilt from the daily
++// snapshots on every run and persisted to data/catalog.json so it survives snapshot
++// pruning/compaction. Pages are generated for every catalogue entry; staleness is
++// expressed with `active` / `daysSinceSeen` (and a noindex directive) instead of
++// deleting the page.
+```
+
+</details>
+
+### `src/lib/enriched.ts` — modified
+
+- **When:** 2026-07-26 02:34:28 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +8 / -0 lines
+- **What:** modified `src/lib/enriched.ts`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++  momentum?: string
++  traction?: string
++  // Catalogue bookkeeping (see scripts/lib/catalog.mjs).
++  active?: boolean
++  firstSeen?: string
++  lastSeen?: string
++  daysSeen?: number
++  daysSinceSeen?: number
+```
+
+</details>
+
+### `package.json` — modified
+
+- **When:** 2026-07-26 02:34:47 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +6 / -2 lines
+- **What:** modified `package.json`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-    "data":       "npm run fetch && npm run enrich && npm run velocity && npm run trends && npm run images && npm run video && npm run reviews",
+-    "data:novideo": "npm run fetch && npm run enrich && npm run velocity && npm run trends && npm run images && npm run reviews",
++    "og":      "node scripts/og.mjs",
++    "compact": "node scripts/compact.mjs",
++    "data":       "npm run fetch && npm run enrich && npm run velocity && npm run trends && npm run images && npm run og && npm run video && npm run reviews && npm run compact",
++    "data:novideo": "npm run fetch && npm run enrich && npm run velocity && npm run trends && npm run images && npm run og && npm run reviews && npm run compact",
++    "check":         "node scripts/check_build.mjs",
++    "verify":        "npm run build && npm run check",
+```
+
+</details>
+
+### `scripts/compact.mjs` — created
+
+- **When:** 2026-07-26 02:34:47 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +58 / -0 lines
+- **What:** created `scripts/compact.mjs`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++// Snapshot compaction — keeps the repository from growing without bound.
++//
++// Every day the pipeline commits a full data/YYYY-MM-DD.json (~380 KB: full
++// descriptions, release notes, screenshot URLs for ~130 games). That is ~140 MB
++// of git objects per year for data that is only ever read again by velocity.mjs,
++// which needs nothing but the time series (id, ratingCount, rating, chart ranks).
++//
++// Snapshots older than KEEP_FULL_DAYS are rewritten in "slim" form: the fields
++// velocity.mjs uses, nothing else. The persistent catalogue (data/catalog.json)
++// already holds the newest full record for every game, so no page content is lost.
++//
++// Idempotent: a snapshot already slim is left untouched.
+```
+
+</details>
+
+### `scripts/fetch_daily.mjs` — modified
+
+- **When:** 2026-07-26 02:34:47 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +83 / -12 lines
+- **What:** modified `scripts/fetch_daily.mjs`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-async function getJSON(url) {
+-  const r = await fetch(url, { headers: { "User-Agent": "DailyGameBot/1.0" } })
+-  if (!r.ok) throw new Error(`${url} -> ${r.status}`)
+-  return r.json()
++const sleep = (ms) => new Promise(r => setTimeout(r, ms))
++
++// Apple's public endpoints return sporadic 403/429/5xx from cloud IPs. Without
++// retries a single blip aborted the whole daily refresh (and the site then went
++// a day stale), so every request gets bounded exponential backoff with jitter.
++async function getJSON(url, { retries = 4, timeoutMs = 20000 } = {}) {
++  let lastErr
++  for (let attempt = 0; attempt <= retries; attempt++) {
+```
+
+</details>
+
+### `scripts/images.mjs` — modified
+
+- **When:** 2026-07-26 02:34:47 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +6 / -1 lines
+- **What:** modified `scripts/images.mjs`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-  const games = data.all.filter(g => g.indexDirective.startsWith("index")) // only for indexable pages
++  // Indexable pages only, and only games still on a chart (archived entries keep
++  // the variants they already have, carried forward by the catalogue).
++  // `indexDirective` is read defensively: a missing value used to throw here and
++  // abort the whole step.
++  const games = (data.all || []).filter(g =>
++    g.active !== false && (g.indexDirective || "").startsWith("index") && !g.images)
+```
+
+</details>
+
+### `scripts/trends.mjs` — modified
+
+- **When:** 2026-07-26 02:34:47 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +3 / -1 lines
+- **What:** modified `scripts/trends.mjs`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-  const games = data.all.filter(g => g.indexDirective?.startsWith("index"))
++  // Active + indexable only: archived catalogue entries would otherwise burn the
++  // (heavily rate-limited) Trends quota on games nobody charts any more.
++  const games = data.all.filter(g => g.active !== false && g.indexDirective?.startsWith("index"))
+```
+
+</details>
+
+### `scripts/velocity.mjs` — modified
+
+- **When:** 2026-07-26 02:34:47 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +14 / -2 lines
+- **What:** modified `scripts/velocity.mjs`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-  // Score only games that have a velocity object (cohort = today's tracked set).
+-  scoreCohort(all.filter(g => g.velocity))
++  // Score only games seen in today's snapshot: heat is a *live* signal, and an
++  // archived entry must never keep a stale high heat score on /movers/.
++  scoreCohort(all.filter(g => g.velocity && g.active !== false))
++  for (const g of all) {
++    if (g.active === false) {
++      g.heatScore = 0
++      g.momentum = "archived"
++      g.traction = "none"
++      // Charts for archived games are noise; drop the heavy series to keep the
++      // daily enriched.json diff (and the git repo) small.
+```
+
+</details>
+
+### `src/pages/404.astro` — created
+
+- **When:** 2026-07-26 02:34:47 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +91 / -0 lines
+- **What:** created `src/pages/404.astro`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++---
++// 404 page. Cloudflare Pages serves /404.html automatically for unmatched paths.
++// The site previously had none, so every stale link (and there were hundreds of
++// them, see the catalogue fix in scripts/lib/catalog.mjs) dead-ended on the
++// platform's blank error page.
++import Base from "../layouts/Base.astro"
++import KeepBrowsing from "../components/KeepBrowsing.astro"
++import { loadAll, rankByHeat, gameIconSrc, priceLabel, cap } from "../lib/enriched"
++
++const all = loadAll()
++const active = all.filter(g => g.active !== false)
++const suggestions = rankByHeat(active).slice(0, 6)
+```
+
+</details>
+
+### `src/pages/games/[id].astro` — modified
+
+- **When:** 2026-07-26 02:34:47 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +16 / -1 lines
+- **What:** modified `src/pages/games/[id].astro`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++  {game.active === false && (
++    <p class="archived-note">
++      <strong>Archived entry.</strong> This game last appeared on a US App Store chart we
++      track on <time datetime={game.lastSeen}>{game.lastSeen}</time>
++      {game.daysSinceSeen != null && ` (${game.daysSinceSeen} days ago)`}, so the figures
++      below are from that date. The page is kept online so links to it keep working —
++      check the App Store for current details.
++    </p>
++  )}
++
+-  {game.trends && (
++  {game.trends?.points?.length > 1 && (
+```
+
+</details>
+
+### `src/pages/games/index.astro` — modified
+
+- **When:** 2026-07-26 02:34:47 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +49 / -16 lines
+- **What:** modified `src/pages/games/index.astro`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-          <li data-arch={g.archetype || "other"}>
++          <li data-arch={g.archetype || "other"} data-q={`${g.name || ""} ${g.seller || ""}`.toLowerCase()}>
+-  <!-- ===== FILTER PILLS ===== -->
+-  <section class="filter-bar" aria-label="Filter by category">
++  <!-- ===== SEARCH + FILTER PILLS ===== -->
++  <section class="filter-bar" aria-label="Filter the catalogue">
++    <form class="cat-search" role="search" action="/search/" method="get">
++      <label class="visually-hidden" for="cat-q">Filter by title or developer</label>
++      <input id="cat-q" name="q" type="search" autocomplete="off" placeholder="Filter by title or developer…" />
++      <noscript><button type="submit">Search</button></noscript>
++    </form>
+-          <li data-arch={g.archetype || "other"}>
+```
+
+</details>
+
+### `src/pages/index.astro` — modified
+
+- **When:** 2026-07-26 02:34:47 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +4 / -1 lines
+- **What:** modified `src/pages/index.astro`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-      "target": `${(Astro.site?.toString() || "https://ios.querygame.com").replace(/\/$/, "")}/games/?q={search_term_string}`,
++      "target": {
++        "@type": "EntryPoint",
++        "urlTemplate": `${(Astro.site?.toString() || "https://ios.querygame.com").replace(/\/$/, "")}/search/?q={search_term_string}`
++      },
+```
+
+</details>
+
+### `src/pages/like/[seed].astro` — modified
+
+- **When:** 2026-07-26 02:34:47 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +21 / -8 lines
+- **What:** modified `src/pages/like/[seed].astro`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-      props: { seed, matches: ranked, date: data.date, allCount: all.length },
++      props: {
++        seed,
++        matches: ranked,
++        date: data.date,
++        allCount: all.length,
++        // Only archetypes that actually have a generated page. Seeds list
++        // aspirational archetypes (e.g. "strategy") that the classifier never
++        // emits, which used to produce 404 links in "Keep browsing".
++        existingArchetypes: [...new Set(all.map((g: any) => g.archetype).filter(Boolean))],
++      },
++  existingArchetypes: string[]
+```
+
+</details>
+
+### `src/pages/search-index.json.ts` — created
+
+- **When:** 2026-07-26 02:34:47 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +35 / -0 lines
+- **What:** created `src/pages/search-index.json.ts`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++// Compact static search index consumed by /search/ (client-side, no server).
++// Keys are short on purpose: the whole catalogue has to stay a small download.
++//   i id · n name · s seller · a archetype · m monetization · p price
++//   t tags · h heatScore · r rating · c ratingCount · d daysSinceRelease · x active
++import { loadAll, priceLabel } from "../lib/enriched"
++
++export async function GET() {
++  const games = loadAll()
++    .sort((a, b) =>
++      Number(b.active ?? true) - Number(a.active ?? true) ||
++      (b.heatScore || 0) - (a.heatScore || 0) ||
++      (a.name || "").localeCompare(b.name || ""))
+```
+
+</details>
+
+### `src/pages/search.astro` — created
+
+- **When:** 2026-07-26 02:34:47 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +172 / -0 lines
+- **What:** created `src/pages/search.astro`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++---
++// Site search. The homepage has always published a schema.org SearchAction
++// (sitelinks searchbox) but no search existed — this is the page that makes the
++// promise real. Fully client-side: it fetches the static /search-index.json,
++// so it works on Cloudflare Pages with no server and no third-party service.
++import Base from "../layouts/Base.astro"
++import KeepBrowsing from "../components/KeepBrowsing.astro"
++import { loadAll } from "../lib/enriched"
++
++const all = loadAll()
++const total = all.length
++const activeCount = all.filter(g => g.active !== false).length
+```
+
+</details>
+
+### `src/pages/sitemap.xml.ts` — modified
+
+- **When:** 2026-07-26 02:34:47 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +3 / -0 lines
+- **What:** modified `src/pages/sitemap.xml.ts`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++  // Note: /subscribe/, /team/, /search/, /this-week/ and /like-monument-valley/
++  // are deliberately noindex (duplicate or utility pages) and must stay out of
++  // the sitemap — `npm run check` fails the build if that ever drifts.
+```
+
+</details>
+
+### `public/_headers` — modified
+
+- **When:** 2026-07-26 02:35:03 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +10 / -0 lines
+- **What:** modified `public/_headers`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++/*
++  X-Content-Type-Options: nosniff
++  Referrer-Policy: strict-origin-when-cross-origin
++  Permissions-Policy: geolocation=(), microphone=(), camera=(), payment=()
++  X-Frame-Options: SAMEORIGIN
++
++/search-index.json
++  Access-Control-Allow-Origin: *
++  Cache-Control: public, max-age=600, s-maxage=1800
++
+```
+
+</details>
+
+### `public/hero-controller.png` — created
+
+- **When:** 2026-07-26 02:35:03 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +(binary) / -(binary) lines
+- **What:** created `public/hero-controller.png`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+### `public/hero-hidden-gems.png` — created
+
+- **When:** 2026-07-26 02:35:03 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +(binary) / -(binary) lines
+- **What:** created `public/hero-hidden-gems.png`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+### `public/hero-like.png` — created
+
+- **When:** 2026-07-26 02:35:03 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +(binary) / -(binary) lines
+- **What:** created `public/hero-like.png`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+### `public/hero-new-today.png` — created
+
+- **When:** 2026-07-26 02:35:03 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +(binary) / -(binary) lines
+- **What:** created `public/hero-new-today.png`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+### `public/hero-no-iap.png` — created
+
+- **When:** 2026-07-26 02:35:03 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +(binary) / -(binary) lines
+- **What:** created `public/hero-no-iap.png`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+### `public/hero-this-week.png` — created
+
+- **When:** 2026-07-26 02:35:03 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +(binary) / -(binary) lines
+- **What:** created `public/hero-this-week.png`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+### `public/illus/compare-casino-match3.png` — created
+
+- **When:** 2026-07-26 02:35:03 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +(binary) / -(binary) lines
+- **What:** created `public/illus/compare-casino-match3.png`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+### `public/illus/compare-casual-rpg.png` — created
+
+- **When:** 2026-07-26 02:35:03 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +(binary) / -(binary) lines
+- **What:** created `public/illus/compare-casual-rpg.png`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+### `public/illus/compare-free-premium.png` — created
+
+- **When:** 2026-07-26 02:35:03 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +(binary) / -(binary) lines
+- **What:** created `public/illus/compare-free-premium.png`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+### `public/illus/compare-match3-merge.png` — created
+
+- **When:** 2026-07-26 02:35:03 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +(binary) / -(binary) lines
+- **What:** created `public/illus/compare-match3-merge.png`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+### `public/illus/compare-offline-online.png` — created
+
+- **When:** 2026-07-26 02:35:03 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +(binary) / -(binary) lines
+- **What:** created `public/illus/compare-offline-online.png`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+### `public/illus/free-no-ads.png` — created
+
+- **When:** 2026-07-26 02:35:03 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +(binary) / -(binary) lines
+- **What:** created `public/illus/free-no-ads.png`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+### `public/illus/like-monument-valley.png` — created
+
+- **When:** 2026-07-26 02:35:03 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +(binary) / -(binary) lines
+- **What:** created `public/illus/like-monument-valley.png`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+### `public/illus/no-ads.png` — created
+
+- **When:** 2026-07-26 02:35:03 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +(binary) / -(binary) lines
+- **What:** created `public/illus/no-ads.png`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+### `public/illus/no-iap.png` — created
+
+- **When:** 2026-07-26 02:35:03 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +(binary) / -(binary) lines
+- **What:** created `public/illus/no-iap.png`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+### `public/illus/offline.png` — created
+
+- **When:** 2026-07-26 02:35:03 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +(binary) / -(binary) lines
+- **What:** created `public/illus/offline.png`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+### `public/illus/this-week.png` — created
+
+- **When:** 2026-07-26 02:35:03 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +(binary) / -(binary) lines
+- **What:** created `public/illus/this-week.png`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+### `public/og-default.png` — created
+
+- **When:** 2026-07-26 02:35:03 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +(binary) / -(binary) lines
+- **What:** created `public/og-default.png`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+### `scripts/og.mjs` — created
+
+- **When:** 2026-07-26 02:35:03 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +50 / -0 lines
+- **What:** created `scripts/og.mjs`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++// Rasterise every SVG used as an Open Graph image into a 1200x630 PNG.
++//
++// Why: Facebook, X/Twitter, LinkedIn, Slack, Discord and iMessage all ignore
++// `og:image` values that point at an SVG, so the whole site was shipping link
++// previews with no image at all. Base.astro rewrites `*.svg` OG values to the
++// `.png` sibling produced here.
++//
++// Run: npm run og   (idempotent — skips PNGs newer than their source SVG)
++
++import fs from "node:fs/promises"
++import path from "node:path"
++import sharp from "sharp"
+```
+
+</details>
+
+### `src/layouts/Base.astro` — modified
+
+- **When:** 2026-07-26 02:35:03 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +40 / -9 lines
+- **What:** modified `src/layouts/Base.astro`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++import fs from "node:fs"
++import path from "node:path"
++
++// Same rule for the telemetry tag: ids live in the environment, never in the repo.
++const VL_PRODUCT_ID = import.meta.env.PUBLIC_VL_PRODUCT_ID || ""
++const VL_AUTH_KEY = import.meta.env.PUBLIC_VL_AUTH_KEY || ""
+-const ogImage = image || `${site}/og-default.svg`
++
++// Facebook / X / LinkedIn / Slack / iMessage all silently drop SVG og:images, so
++// every share of this site used to render without a preview image. scripts/og.mjs
++// rasterises the SVGs to 1200x630 PNGs; use the PNG whenever one exists.
++function rasterOg(url: string): string {
+```
+
+</details>
+
+### `functions/subscribe.ts` — modified
+
+- **When:** 2026-07-26 02:35:03 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +10 / -2 lines
+- **What:** modified `functions/subscribe.ts`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++async function sha256Hex(input: string): Promise<string> {
++  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(input))
++  return [...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, "0")).join("").slice(0, 32)
++}
++
+-    const rlKey = `rl:${ip}`
++    // Hashed here too, so no raw IP is ever written to KV.
++    const rlKey = `rl:${await sha256Hex(ip)}`
++  // Store a one-way hash instead of the raw IP: enough to spot abuse patterns,
++  // nothing that identifies a reader (and it matches what /privacy/ promises).
+-    ip: request.headers.get("cf-connecting-ip") || "",
++    ipHash: ip ? await sha256Hex(ip) : "",
+```
+
+</details>
+
+### `public/robots.txt` — modified
+
+- **When:** 2026-07-26 02:35:03 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +29 / -9 lines
+- **What:** modified `public/robots.txt`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++# The open dataset is the point of the site — keep it crawlable.
++Allow: /api/data.json
++Allow: /api/movers.json
++Allow: /llms.txt
++
+-Disallow: /api/
++Disallow: /api/games/
++Disallow: /search
+-Disallow: /*.json$
+-# LLM crawlers — explicitly allowed (we want to be cited)
++# LLM crawlers — explicitly allowed (we want to be cited), including the
++# machine-readable feeds that llms.txt advertises.
+```
+
+</details>
+
+### `reviews-worker/reviews-worker.js` — modified
+
+- **When:** 2026-07-26 02:35:03 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +8 / -4 lines
+- **What:** modified `reviews-worker/reviews-worker.js`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-  // Rate limit: max 1 pending per email per 10 min
+-  const ipKey = `rl:${email}`
+-  if (await env.REVIEWS.get(ipKey)) return new Response("Try again later.", { status: 429 })
+-  await env.REVIEWS.put(ipKey, "1", { expirationTtl: 600 })
++  // Rate limit: max 1 pending per email AND per client IP per 10 min.
++  // (Keying on the email alone was trivially bypassed by changing the address.)
++  const ip = req.headers.get("CF-Connecting-IP") || ""
++  const keys = [`rl:e:${email}`, ip ? `rl:i:${ip}` : null].filter(Boolean)
++  for (const k of keys) {
++    if (await env.REVIEWS.get(k)) return new Response("Try again later.", { status: 429 })
++  }
++  for (const k of keys) await env.REVIEWS.put(k, "1", { expirationTtl: 600 })
+```
+
+</details>
+
+### `reviews-worker/wrangler.toml` — modified
+
+- **When:** 2026-07-26 02:35:03 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +3 / -1 lines
+- **What:** modified `reviews-worker/wrangler.toml`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-main = "src/index.js"
++# The worker source lives next to this file — `main = "src/index.js"` pointed at a
++# path that does not exist in this repo, so `wrangler deploy` failed outright.
++main = "reviews-worker.js"
+```
+
+</details>
+
+### `src/pages/privacy.astro` — modified
+
+- **When:** 2026-07-26 02:35:03 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +2 / -2 lines
+- **What:** modified `src/pages/privacy.astro`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-        <p>Our host (Cloudflare) records standard, aggregated request logs (page, country, timing) to keep the site fast and secure. These are not used to identify individuals.</p>
++        <p>Our host (Cloudflare) records standard, aggregated request logs (page, country, timing) to keep the site fast and secure. These are not used to identify individuals. When configured, we also load one privacy-oriented page-analytics script (and, if advertising is enabled, Google Analytics) to count page views — see <em>Cookies &amp; advertising</em> below.</p>
+-        <p>If you subscribe to updates, we store only the address you give us, solely to send what you asked for. Unsubscribe any time.</p>
++        <p>If you subscribe to updates, we store the address you give us plus the minimum request metadata needed to stop abuse: which page the form was submitted from, your browser's user-agent string, your country, and a one-way hash of your IP address (never the raw IP). Used only to send what you asked for and to rate-limit spam. Unsubscribe or request deletion any time.</p>
+```
+
+</details>
+
+### `.github/workflows/build.yml` — created
+
+- **When:** 2026-07-26 02:35:04 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +31 / -0 lines
+- **What:** created `.github/workflows/build.yml`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++name: Build & integrity check
++
++on:
++  pull_request:
++  push:
++    branches: [main]
++    paths-ignore:
++      - "data/**"
++      - "docs/**"
++      - "**/*.md"
++  workflow_dispatch: {}
++
+```
+
+</details>
+
+### `.github/workflows/daily.yml` — modified
+
+- **When:** 2026-07-26 02:35:04 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +33 / -14 lines
+- **What:** modified `.github/workflows/daily.yml`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-      - name: System deps for video pipeline
+-        run: |
+-          sudo apt-get update
+-          sudo apt-get install -y ffmpeg python3-pip
+-          pip3 install --quiet --break-system-packages edge-tts || pip3 install --quiet edge-tts
+-
+-            const MIN = 50; // site has been ~130; 50 = generous floor
++            const MIN = 50; // active set has been ~130; 50 = generous floor
+-            const n = (d.all || []).length;
++            const all = d.all || [];
++            const n = all.length;
++            // `all` is now the persistent catalogue (every game ever seen), so the
+```
+
+</details>
+
+### `scripts/check_build.mjs` — created
+
+- **When:** 2026-07-26 02:35:04 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +86 / -0 lines
+- **What:** created `scripts/check_build.mjs`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++#!/usr/bin/env node
++// Post-build integrity check. Run after `npm run build`.
++//
++// Catches the class of bug that shipped silently before: internal links pointing
++// at pages that are not generated (e.g. /archetype/strategy/ linked from
++// /like/clash-royale/), sitemap entries with no page, and missing key routes.
++//
++// Exit code 1 on any hard failure so CI blocks the merge.
++
++import fs from "node:fs/promises"
++import path from "node:path"
++
+```
+
+</details>
+
+### `.env.example` — modified
+
+- **When:** 2026-07-26 02:35:04 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +6 / -0 lines
+- **What:** modified `.env.example`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++# Optional page telemetry (vibeloft.ai). Both must be set or the tag is not
++# emitted. Previously hardcoded in src/layouts/Base.astro — set these in the
++# Cloudflare Pages environment to re-enable it in production.
++# PUBLIC_VL_PRODUCT_ID=00000000-0000-0000-0000-000000000000
++# PUBLIC_VL_AUTH_KEY=vl_web.xxxxxxxxxxxxxxxxxxxxxxxx
++
+```
+
+</details>
+
+### `AGENTS.md` — modified
+
+- **When:** 2026-07-26 02:35:04 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +49 / -0 lines
+- **What:** modified `AGENTS.md`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++# AGENTS.md — tool-neutral agent contract
++
++Same contract as [`CLAUDE.md`](CLAUDE.md), for agents that read `AGENTS.md`
++(Codex, Cursor, Aider, Copilot Workspace, Gemini CLI, ...). The file was committed
++empty, so non-Claude tools had no rules to follow — this is the content.
++
++## 1. Work-trace is mandatory
++
++- Enable the git layer once per clone: `bash .githooks/install.sh`
++  (sets `core.hooksPath=.githooks`). It logs the staged diff on **every** commit,
++  whichever model or tool produced it.
++- Tag the model so the log records who did the work:
+```
+
+</details>
+
+### `README.md` — modified
+
+- **When:** 2026-07-26 02:35:04 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +78 / -21 lines
+- **What:** modified `README.md`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-│  1. scripts/fetch_daily.mjs   → Apple iTunes RSS + Lookup    │
+-│  2. scripts/enrich.mjs        → AI: archetype/hook/loop      │
+-│  3. scripts/trends.mjs        → Google Trends (best-effort)  │
+-│  4. scripts/images.mjs        → cache/optimise assets        │
+-│  5. scripts/video.mjs         → optional 15-sec teasers      │
+-│  6. scripts/reviews.mjs       → seed reviews schema          │
++│  1. scripts/fetch_daily.mjs   → Apple RSS + Lookup (retries) │
++│  2. scripts/enrich.mjs        → catalogue + classification   │
++│  3. scripts/velocity.mjs      → heat / momentum from history │
++│  4. scripts/trends.mjs        → Google Trends (best-effort)  │
++│  5. scripts/images.mjs        → cache/optimise assets → R2   │
++│  6. scripts/og.mjs            → 1200x630 social cards        │
+```
+
+</details>
+
+### `src/pages/methodology.astro` — modified
+
+- **When:** 2026-07-26 02:35:04 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +8 / -2 lines
+- **What:** modified `src/pages/methodology.astro`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-  <p>Each game is classified into one of ~16 archetypes (match-3, idle, RPG, etc.) using a rule-based detector applied to the description and release notes. Where signal is strong enough (Google + YouTube Suggest combined ≥ 8), an LLM pass refines archetype, core loop, audience, and visual treatment.</p>
++  <p>Each game is classified into one of ~17 archetypes (match-3, idle, RPG, strategy, etc.) by a weighted rule-based detector: mechanic keywords are matched on word boundaries, a hit in the title counts more than one buried in the marketing copy, and Apple's own secondary genre acts as a prior (with a per-genre fallback when the description carries no mechanical signal at all). Where demand signal is strong enough (Google + YouTube Suggest combined ≥ 8), an LLM pass refines archetype, core loop and audience. Classification is a heuristic, not an editorial judgement — treat it as a filter, not a verdict.</p>
++
++  <h2>The catalogue, and why pages don't disappear</h2>
++  <p>The daily job only sees the games currently on the charts it tracks, and 7–16 games drop off every day. Those games are kept in a persistent catalogue, so every <code>/games/&lt;id&gt;/</code> URL we have ever published stays online. An entry that has not been on a tracked chart for more than 21 days is labelled <em>archived</em> on the page itself and switched to <code>noindex,follow</code> — the link keeps working, but a stale page stops competing in search.</p>
+-  <p>Pages without organic demand signal AND without substantive metadata are marked <code>noindex,follow</code> to keep the site lean. Pages with no traffic after 30 days are removed (HTTP 410). We index quality, not quantity.</p>
++  <p>Pages without organic demand signal AND without substantive metadata are marked <code>noindex,follow</code>, as are archived entries. Nothing is deleted, so no inbound link ever breaks. We index quality, not quantity.</p>
++
++  <h2>Finding things</h2>
++  <p>The whole catalogue is searchable client-side at <a href="/search/">/search/</a> (title, developer, category, monetisation, feature tags) from a static index — no query is sent to a server. Machine-readable equivalents: <a href="/api/data.json">/api/data.json</a> (indexable catalogue, CC BY 4.0), <a href="/api/movers.json">/api/movers.json</a> (heat ranking) and <a href="/llms.txt">/llms.txt</a>.</p>
+```
+
+</details>
+
+### `.gitignore` — modified
+
+- **When:** 2026-07-26 03:05:59 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +1 / -0 lines
+- **What:** modified `.gitignore`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++.cache/
+```
+
+</details>
+
+### `scripts/video.mjs` — modified
+
+- **When:** 2026-07-26 03:05:59 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +60 / -14 lines
+- **What:** modified `scripts/video.mjs`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++// Scratch files (downloaded screenshots, narration mp3) go to .cache/video/<id>/,
++// which is gitignored. They used to be written straight into public/video/<id>/
++// and were only deleted on the success path, so whenever ffmpeg or edge-tts was
++// missing the job left the intermediates behind and the daily commit shipped
++// them: 39 MB of src-*.jpg and voice.mp3 accumulated in the repo without a
++// single finished teaser.mp4. Nothing under public/video/ is a work file now.
++//
++//
++// Env: MAX_VIDEOS caps how many clips one run may build (default 20) so a cold
++// start cannot download 1500 screenshots in a single job.
++import { serialize } from "./lib/json.mjs"
++const WORK = path.join(ROOT, ".cache/video")
+```
+
+</details>
+
+### `scripts/compact.mjs` — modified
+
+- **When:** 2026-07-26 03:06:14 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +2 / -1 lines
+- **What:** modified `scripts/compact.mjs`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++import { serialize } from "./lib/json.mjs"
+-    await fs.writeFile(p, JSON.stringify(out, null, 2))
++    await fs.writeFile(p, serialize(out))
+```
+
+</details>
+
+### `scripts/images.mjs` — modified
+
+- **When:** 2026-07-26 03:06:14 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +2 / -1 lines
+- **What:** modified `scripts/images.mjs`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++import { serialize } from "./lib/json.mjs"
+-  await fs.writeFile(SRC, JSON.stringify(data, null, 2))
++  await fs.writeFile(SRC, serialize(data))
+```
+
+</details>
+
+### `scripts/lib/catalog.mjs` — modified
+
+- **When:** 2026-07-26 03:06:14 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +59 / -15 lines
+- **What:** modified `scripts/lib/catalog.mjs`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++import { serialize } from "./json.mjs"
+-  "rank", "icon", "screenshots", "desc", "releaseNotes", "signal", "verdict",
++  "rank", "icon", "screenshots", "desc", "releaseNotes", "searchDemand",
++// Recomputed from a stored date on every read, so they must never be written out.
++const DERIVED_FIELDS = ["daysSinceRelease", "daysSinceUpdate", "daysSinceSeen"]
++
++
++  // Presence is recounted from the snapshots on every run instead of being
++  // incremented off the persisted value: every run replays the full snapshot
++  // history, so incrementing added the whole history again each time (daysSeen
++  // climbed by ~1 per snapshot per run — 118 became 157 on a single re-run) and
++  // rewrote the field for every game in the process. compact.mjs keeps every id
+```
+
+</details>
+
+### `scripts/lib/json.mjs` — created
+
+- **When:** 2026-07-26 03:06:14 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +45 / -0 lines
+- **What:** created `scripts/lib/json.mjs`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++// Diff-friendly JSON writer for the generated data files.
++//
++// `JSON.stringify(x, null, 2)` puts every array element on its own line. For this
++// dataset that is the dominant source of repository growth: velocity.rcSeries is a
++// sliding 14-day window, so appending one day shifts every element and rewrites
++// ~50 lines per game — around 3400 changed lines per day across the active set,
++// for data nobody reads as text. `tags`, `genres`, `similar` and `screenshots`
++// behave the same way.
++//
++// Objects stay expanded (they are the part a human reviews in a diff); arrays that
++// contain no objects are emitted inline. One shifted series is then one changed
++// line instead of fifty, and the file is ~25% smaller.
+```
+
+</details>
+
+### `scripts/trends.mjs` — modified
+
+- **When:** 2026-07-26 03:06:14 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +2 / -1 lines
+- **What:** modified `scripts/trends.mjs`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++import { serialize } from "./lib/json.mjs"
+-  await fs.writeFile(SRC, JSON.stringify(data, null, 2))
++  await fs.writeFile(SRC, serialize(data))
+```
+
+</details>
+
+### `scripts/velocity.mjs` — modified
+
+- **When:** 2026-07-26 03:06:14 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +17 / -4 lines
+- **What:** modified `scripts/velocity.mjs`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++import { serialize } from "./lib/json.mjs"
+-  const rcSeries = points.slice(-SERIES_DAYS).map(p => ({ date: p.date, rc: p.rc }))
++  // [date, ratingCount] pairs rather than {date, rc} objects: the pretty-printer
++  // keeps object arrays expanded, and this window shifts every day, so the object
++  // form rewrote ~50 lines per game per run. See scripts/lib/json.mjs.
++  const rcSeries = points.slice(-SERIES_DAYS).map(p => [p.date, p.rc])
++/** Days since a YYYY-MM-DD date; 60 (neutral) when unknown or unparseable. */
++function ageDays(date) {
++  if (!date) return 60
++  const d = Math.round((Date.now() - Date.parse(`${String(date).slice(0, 10)}T00:00:00Z`)) / 86400000)
++  return Number.isFinite(d) ? Math.max(0, d) : 60
++}
+```
+
+</details>
+
+### `src/components/HeatSparkline.astro` — modified
+
+- **When:** 2026-07-26 03:06:14 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +5 / -4 lines
+- **What:** modified `src/components/HeatSparkline.astro`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-const series = velocity?.rcSeries || []
++// rcSeries is [[date, ratingCount], ...]; older data used [{date, rc}, ...].
++const series = (velocity?.rcSeries || []).map(p => Array.isArray(p) ? p : [p?.date, p?.rc])
+-const vals = series.map(p => p.rc)
++const vals = series.map(p => Number(p[1]) || 0)
+-const path = series.map((p, i) => {
++const path = vals.map((v, i) => {
+-  const y = h - pad - ((p.rc - min) / span) * (h - pad * 2)
++  const y = h - pad - ((v - min) / span) * (h - pad * 2)
+```
+
+</details>
+
+### `src/components/GameGrid.astro` — modified
+
+- **When:** 2026-07-26 03:06:14 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +0 / -1 lines
+- **What:** modified `src/components/GameGrid.astro`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-                {g.verdict === "build" && <span class="tag signal">High signal</span>}
+```
+
+</details>
+
+### `src/lib/enriched.ts` — modified
+
+- **When:** 2026-07-26 03:06:14 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +74 / -6 lines
+- **What:** modified `src/lib/enriched.ts`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++  releaseDate?: string
++  currentVersionDate?: string
++  version?: string
++  // Derived at load time from the dates above — never stored. See hydrate().
++  /**
++   * Number of Google + YouTube autocomplete completions for the title: how much
++   * the game is already being searched for. Previously called `signal`, with a
++   * derived `verdict` of "build" | "watch" | "skip" — both inherited from the
++   * template's original "which keyword should I build a site for?" purpose. The
++   * verdict was rendered to readers as a "High signal" badge and used as
++   * "Editor's picks", implying an editorial review that never happened.
++   */
+```
+
+</details>
+
+### `src/pages/404.astro` — modified
+
+- **When:** 2026-07-26 03:06:14 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +1 / -1 lines
+- **What:** modified `src/pages/404.astro`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-      { href: "/hidden-gems/", title: "Hidden gems", sub: "High signal, small audience", icon: "star" },
++      { href: "/hidden-gems/", title: "Hidden gems", sub: "Well rated, small audience", icon: "star" },
+```
+
+</details>
+
+### `src/pages/api/data.json.ts` — modified
+
+- **When:** 2026-07-26 03:06:14 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +6 / -5 lines
+- **What:** modified `src/pages/api/data.json.ts`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-import fs from "node:fs"
+-import path from "node:path"
++import { loadEnriched } from "../../lib/enriched"
+-  const p = path.join(process.cwd(), "data/enriched.json")
+-  const data = fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, "utf8")) : { all: [] }
++  const data = loadEnriched()
+-    signal: g.signal ?? null,
++    // Count of Google + YouTube autocomplete completions for the title.
++    searchDemand: g.searchDemand ?? g.signal ?? null,
++    /** @deprecated renamed to searchDemand; kept so existing consumers keep working. */
++    signal: g.searchDemand ?? g.signal ?? null,
+```
+
+</details>
+
+### `src/pages/api/games/[id].json.ts` — modified
+
+- **When:** 2026-07-26 03:06:14 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +2 / -5 lines
+- **What:** modified `src/pages/api/games/[id].json.ts`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-import fs from "node:fs"
+-import path from "node:path"
++import { loadEnriched } from "../../../lib/enriched"
+-  const p = path.join(process.cwd(), "data/enriched.json")
+-  if (!fs.existsSync(p)) return []
+-  const data = JSON.parse(fs.readFileSync(p, "utf8"))
++  const data = loadEnriched()
+```
+
+</details>
+
+### `src/pages/api/movers.json.ts` — modified
+
+- **When:** 2026-07-26 03:06:14 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +2 / -4 lines
+- **What:** modified `src/pages/api/movers.json.ts`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-import fs from "node:fs"
+-import path from "node:path"
++import { loadEnriched } from "../../lib/enriched"
+-  const p = path.join(process.cwd(), "data/enriched.json")
+-  const data = fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, "utf8")) : { all: [], date: null }
++  const data = loadEnriched()
+```
+
+</details>
+
+### `src/pages/archetype/[archetype].astro` — modified
+
+- **When:** 2026-07-26 03:06:14 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +3 / -6 lines
+- **What:** modified `src/pages/archetype/[archetype].astro`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-import fs from "node:fs"
+-import path from "node:path"
++import { loadEnriched, demandOf } from "../../lib/enriched"
+-  const p = path.join(process.cwd(), "data/enriched.json")
+-  if (!fs.existsSync(p)) return []
+-  const data = JSON.parse(fs.readFileSync(p, "utf8"))
++  const data = loadEnriched()
+-const sorted = [...games].sort((a,b)=>(b.heatScore||0)-(a.heatScore||0) || (b.signal||0)-(a.signal||0))
++const sorted = [...games].sort((a,b)=>(b.heatScore||0)-(a.heatScore||0) || demandOf(b)-demandOf(a))
+```
+
+</details>
+
+### `src/pages/archetype/index.astro` — modified
+
+- **When:** 2026-07-26 03:06:14 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +2 / -4 lines
+- **What:** modified `src/pages/archetype/index.astro`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-import fs from "node:fs"
+-import path from "node:path"
+-const p = path.join(process.cwd(), "data/enriched.json")
+-const data = fs.existsSync(p) ? JSON.parse(fs.readFileSync(p,"utf8")) : { all: [] }
++import { loadEnriched } from "../../lib/enriched"
++const data = loadEnriched()
+```
+
+</details>
+
+### `src/pages/controller-support.astro` — modified
+
+- **When:** 2026-07-26 03:06:14 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +3 / -5 lines
+- **What:** modified `src/pages/controller-support.astro`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-import fs from "node:fs"
+-import path from "node:path"
++import { loadEnriched, demandOf } from "../lib/enriched"
+-const p = path.join(process.cwd(), "data/enriched.json")
+-const data = fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, "utf8")) : { all: [], date: "n/a" }
++const data = loadEnriched()
+-  .sort((a, b) => (b.signal || 0) - (a.signal || 0))
++  .sort((a, b) => demandOf(b) - demandOf(a))
+```
+
+</details>
+
+### `src/pages/games/[id].astro` — modified
+
+- **When:** 2026-07-26 03:06:14 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +9 / -6 lines
+- **What:** modified `src/pages/games/[id].astro`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-import fs from "node:fs"
+-import path from "node:path"
++import { loadEnriched } from "../../lib/enriched"
+-  const p = path.join(process.cwd(), "data/enriched.json")
+-  if (!fs.existsSync(p)) return []
+-  const data = JSON.parse(fs.readFileSync(p, "utf8"))
++  const data = loadEnriched()
+-const similar = (game.similar || []).map(s => all.find(g => g.id === s.id)).filter(Boolean).slice(0, 6)
++// `similar` holds ids only; resolve against the catalogue. Tolerates the older
++// [{ id, name }] shape so a stale data/enriched.json still renders.
++const byId = new Map(all.map(g => [g.id, g]))
++const similar = (game.similar || [])
+```
+
+</details>
+
+### `src/pages/games/index.astro` — modified
+
+- **When:** 2026-07-26 03:06:14 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +11 / -9 lines
+- **What:** modified `src/pages/games/index.astro`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-import fs from "node:fs"
+-import path from "node:path"
++import { loadEnriched, demandOf } from "../../lib/enriched"
+-const p = path.join(process.cwd(), "data/enriched.json")
+-const data = fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, "utf8")) : { all: [] }
++const data = loadEnriched()
+-// ---- Editor's picks: verdict=build, prefer recent ----
++// ---- Most-searched recent releases ----
++// Was "Editor's picks", selected by verdict === "build" — which only meant the
++// title had >= 10 autocomplete completions. Nobody edited anything, and the field
++// is no longer produced, so the row silently emptied. Now it is what it always
++// really was: recent releases with the most search demand.
+```
+
+</details>
+
+### `src/pages/hidden-gems.astro` — modified
+
+- **When:** 2026-07-26 03:06:14 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +17 / -18 lines
+- **What:** modified `src/pages/hidden-gems.astro`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-import fs from "node:fs"
+-import path from "node:path"
++import { loadEnriched } from "../lib/enriched"
+-const p = path.join(process.cwd(), "data/enriched.json")
+-const data = fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, "utf8")) : { all: [], date: "n/a" }
++const data = loadEnriched()
+-// "Hidden gem" = positive signal but small audience (low rating count).
+-// Recipe:
+-//   - verdict in {build, watch} OR signal >= 12
+-//   - rating either unknown OR >= 4.0
+-//   - ratingCount < 5,000 (avoids chart-toppers; this is the "hidden" filter)
+-//   - no big red flags (gacha / energy gating)
+```
+
+</details>
+
+### `src/pages/index.astro` — modified
+
+- **When:** 2026-07-26 03:06:14 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +2 / -3 lines
+- **What:** modified `src/pages/index.astro`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++import { loadEnriched } from "../lib/enriched"
+-const enrichedPath = path.join(process.cwd(), "data/enriched.json")
+-const enriched = fs.existsSync(enrichedPath) ? JSON.parse(fs.readFileSync(enrichedPath, "utf8")) : { all: [] }
++const enriched = loadEnriched()
+-                  {g.verdict === "build" && <span class="tag signal">High signal</span>}
+```
+
+</details>
+
+### `src/pages/like/[seed].astro` — modified
+
+- **When:** 2026-07-26 03:06:14 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +7 / -8 lines
+- **What:** modified `src/pages/like/[seed].astro`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-import fs from "node:fs"
+-import path from "node:path"
++import { loadEnriched, demandOf } from "../../lib/enriched"
+-  const p = path.join(process.cwd(), "data/enriched.json")
+-  const data = fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, "utf8")) : { all: [], date: "n/a" }
++  const data = loadEnriched()
+-      // Quality boost
+-      if (g.verdict === "build") s += 3
+-      if (g.verdict === "watch") s += 1
+-      if ((g.signal || 0) >= 12) s += 2
++      // Search-demand boost (was a "verdict" bonus: an autocomplete threshold
++      // dressed up as an editorial rating, and no longer populated).
+```
+
+</details>
+
+### `src/pages/like/index.astro` — modified
+
+- **When:** 2026-07-26 03:06:14 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +2 / -4 lines
+- **What:** modified `src/pages/like/index.astro`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-import fs from "node:fs"
+-import path from "node:path"
++import { loadEnriched } from "../../lib/enriched"
+-const p = path.join(process.cwd(), "data/enriched.json")
+-const data = fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, "utf8")) : { all: [], date: "n/a" }
++const data = loadEnriched()
+```
+
+</details>
+
+### `src/pages/llms.txt.ts` — modified
+
+- **When:** 2026-07-26 03:06:14 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +2 / -4 lines
+- **What:** modified `src/pages/llms.txt.ts`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-import fs from "node:fs"
+-import path from "node:path"
++import { loadEnriched } from "../lib/enriched"
+-  const p = path.join(process.cwd(), "data/enriched.json")
+-  const data = fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, "utf8")) : { all: [], date: "" }
++  const data = loadEnriched()
+```
+
+</details>
+
+### `src/pages/methodology.astro` — modified
+
+- **When:** 2026-07-26 03:06:14 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +1 / -1 lines
+- **What:** modified `src/pages/methodology.astro`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-  <p>Each game is classified into one of ~17 archetypes (match-3, idle, RPG, strategy, etc.) by a weighted rule-based detector: mechanic keywords are matched on word boundaries, a hit in the title counts more than one buried in the marketing copy, and Apple's own secondary genre acts as a prior (with a per-genre fallback when the description carries no mechanical signal at all). Where demand signal is strong enough (Google + YouTube Suggest combined ≥ 8), an LLM pass refines archetype, core loop and audience. Classification is a heuristic, not an editorial judgement — treat it as a filter, not a verdict.</p>
++  <p>Each game is classified into one of 19 archetypes (match-3, merge, idle, RPG, strategy, board, sandbox, casino, …) by a weighted rule-based detector in <code>scripts/lib/classify.mjs</code>: mechanic keywords are matched on word boundaries, a hit in the title counts more than one buried in the marketing copy, description evidence is capped so keyword-stuffed ad copy cannot outvote hard metadata, and Apple's own genres contribute score ranked by how much they actually narrow things down (&quot;Casino&quot; and &quot;Board&quot; are decisive; &quot;Entertainment&quot; is ignored). Two titles whose store metadata is actively misleading are corrected by hand and listed in that file. Where search demand is strong enough (Google + YouTube autocomplete completions combined &#8805; 8), an LLM pass refines archetype, core loop and audience. Classification is a heuristic, not an editorial judgement — treat it as a filter, not a recommendation.</p>
+```
+
+</details>
+
+### `src/pages/movers.astro` — modified
+
+- **When:** 2026-07-26 03:06:14 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +2 / -4 lines
+- **What:** modified `src/pages/movers.astro`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-import fs from "node:fs"
+-import path from "node:path"
++import { loadEnriched } from "../lib/enriched"
+-const p = path.join(process.cwd(), "data/enriched.json")
+-const data = fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, "utf8")) : { all: [] }
++const data = loadEnriched()
+```
+
+</details>
+
+### `src/pages/movers.xml.ts` — modified
+
+- **When:** 2026-07-26 03:06:14 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +2 / -4 lines
+- **What:** modified `src/pages/movers.xml.ts`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-import fs from "node:fs"
+-import path from "node:path"
++import { loadEnriched } from "../lib/enriched"
+-  const p = path.join(process.cwd(), "data/enriched.json")
+-  const data = fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, "utf8")) : { all: [], date: null }
++  const data = loadEnriched()
+```
+
+</details>
+
+### `src/pages/new-this-week.astro` — modified
+
+- **When:** 2026-07-26 03:06:14 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +8 / -10 lines
+- **What:** modified `src/pages/new-this-week.astro`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-import fs from "node:fs"
+-import path from "node:path"
++import { loadEnriched, demandOf } from "../lib/enriched"
+-const p = path.join(process.cwd(), "data/enriched.json")
+-const data = fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, "utf8")) : { all: [], date: "n/a" }
++const data = loadEnriched()
+-  .sort((a, b) => (b.signal || 0) - (a.signal || 0))
++  .sort((a, b) => demandOf(b) - demandOf(a))
+-const topPicks = week.filter(g => (g.signal || 0) >= 10)
+-const others = week.filter(g => (g.signal || 0) < 10)
++const topPicks = week.filter(g => demandOf(g) >= 10)
++const others = week.filter(g => demandOf(g) < 10)
+```
+
+</details>
+
+### `src/pages/new-today.astro` — modified
+
+- **When:** 2026-07-26 03:06:14 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +4 / -6 lines
+- **What:** modified `src/pages/new-today.astro`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-import fs from "node:fs"
+-import path from "node:path"
++import { loadEnriched, demandOf } from "../lib/enriched"
+-const p = path.join(process.cwd(), "data/enriched.json")
+-const data = fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, "utf8")) : { all: [], date: "n/a" }
++const data = loadEnriched()
+-  .sort((a, b) => (b.signal || 0) - (a.signal || 0))
++  .sort((a, b) => demandOf(b) - demandOf(a))
+-  .sort((a, b) => (b.signal || 0) - (a.signal || 0))
++  .sort((a, b) => demandOf(b) - demandOf(a))
+```
+
+</details>
+
+### `src/pages/no-iap.astro` — modified
+
+- **When:** 2026-07-26 03:06:14 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +3 / -5 lines
+- **What:** modified `src/pages/no-iap.astro`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-import fs from "node:fs"
+-import path from "node:path"
++import { loadEnriched, demandOf } from "../lib/enriched"
+-const p = path.join(process.cwd(), "data/enriched.json")
+-const data = fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, "utf8")) : { all: [], date: "n/a" }
++const data = loadEnriched()
+-const list = [...uniq.values()].sort((a, b) => (b.signal || 0) - (a.signal || 0))
++const list = [...uniq.values()].sort((a, b) => demandOf(b) - demandOf(a))
+```
+
+</details>
+
+### `src/pages/sitemap.xml.ts` — modified
+
+- **When:** 2026-07-26 03:06:14 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +2 / -2 lines
+- **What:** modified `src/pages/sitemap.xml.ts`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++import { loadEnriched } from "../lib/enriched"
+-  const p = path.join(process.cwd(), "data/enriched.json")
+-  const data = fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, "utf8")) : { all: [] }
++  const data = loadEnriched()
+```
+
+</details>
+
+### `package.json` — modified
+
+- **When:** 2026-07-26 03:06:39 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +2 / -1 lines
+- **What:** modified `package.json`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-    "verify":        "npm run build && npm run check",
++    "test":          "node --test scripts/test/",
++    "verify":        "npm test && npm run build && npm run check",
+```
+
+</details>
+
+### `scripts/lib/classify.mjs` — created
+
+- **When:** 2026-07-26 03:06:39 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +235 / -0 lines
+- **What:** created `scripts/lib/classify.mjs`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++// Archetype classifier.
++//
++// The archetype drives the page title, the /archetype/ landing pages, the
++// session-length estimate and the similar-games graph, so a wrong label is
++// visible in production and in search results.
++//
++// History of this file:
++//   1. "first archetype with any substring hit wins", scanning the whole
++//      marketing description for loose words ("blast", "crush", "hero", "race").
++//      101 of 393 games (26%) came out as `match3`, including a sniper shooter.
++//   2. Weighted word-boundary matching + Apple genre as a tie-breaker. Much
++//      better, but the genre could only ever *boost* an archetype that already
+```
+
+</details>
+
+### `scripts/test/classify.test.mjs` — created
+
+- **When:** 2026-07-26 03:06:39 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +118 / -0 lines
+- **What:** created `scripts/test/classify.test.mjs`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++// Regression tests for the archetype classifier: `npm test`.
++//
++// The archetype is user-visible (page titles, /archetype/ pages, related games),
++// and it is decided by heuristics over marketing copy, so it needs a fixed set of
++// hand-labelled expectations. Two layers:
++//
++//   1. Synthetic cases — pure logic, always run.
++//   2. Live catalogue — the biggest titles in data/enriched.json, labelled by
++//      hand. Skipped when the data file is absent (fresh clone, no snapshots).
++
++import test from "node:test"
++import assert from "node:assert/strict"
+```
+
+</details>
+
+### `data/catalog.json` — modified
+
+- **When:** 2026-07-26 03:07:32 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +1190 / -3499 lines
+- **What:** modified `data/catalog.json`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-  "updatedAt": "2026-07-26T02:27:33.423Z",
++  "updatedAt": "2026-07-26T02:57:14.278Z",
+-      "genres": [
+-        "Games",
+-        "Entertainment",
+-        "Word",
+-        "Puzzle"
+-      ],
++      "genres": ["Games","Entertainment","Word","Puzzle"],
+-      "screenshots": [
+-        "https://is1-ssl.mzstatic.com/image/thumb/PurpleSource211/v4/70/8a/65/708a650c-a257-79c9-a4d3-a671553619a0/a6bd7996-146e-41ea-9b50-eeb9dbb9eb7d_Games8_1Wordle.png/392x696bb.png",
+-        "https://is1-ssl.mzstatic.com/image/thumb/PurpleSource221/v4/da/80/dc/da80dc03-3c48-66da-6aee-c8b175746168/6a0c0f6b-d1dd-4c99-963f-e8a2a9515731_NYTGames_iPhone_5.5__iPhone_8_2.jpg/392x696bb.jpg",
+```
+
+</details>
+
+### `data/enriched.json` — modified
+
+- **When:** 2026-07-26 03:07:32 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +2243 / -24334 lines
+- **What:** modified `data/enriched.json`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-      "genres": [
+-        "Games",
+-        "Music"
+-      ],
++      "genres": ["Games","Music"],
+-      "googleSuggest": [
+-        "hololive dreams",
+-        "hololive dreams tier list",
+-        "hololive dreams reddit",
+-        "hololive dreams chest locations",
+-        "hololive dreams reroll",
+-        "hololive dreams songs",
+```
+
+</details>
+
+### `scripts/enrich.mjs` — modified
+
+- **When:** 2026-07-26 03:07:32 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +53 / -132 lines
+- **What:** modified `scripts/enrich.mjs`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++import { detectArchetype } from "./lib/classify.mjs"
++import { serialize } from "./lib/json.mjs"
++const DAY_MS = 86400000
++
++/** Whole days between two YYYY-MM-DD dates; 0 when either is missing/invalid. */
++function daysSince(from, to) {
++  if (!from || !to) return 0
++  const d = Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / DAY_MS)
++  return Number.isFinite(d) ? Math.max(0, d) : 0
++}
+-// ─── 1. Archetype detector ──────────────────────────────────────────
+-//
+```
+
+</details>
+
+### `scripts/fetch_daily.mjs` — modified
+
+- **When:** 2026-07-26 03:07:32 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +14 / -8 lines
+- **What:** modified `scripts/fetch_daily.mjs`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++import { serialize } from "./lib/json.mjs"
+-      g.signal = (g.googleSuggest.length + g.youtubeSuggest.length)
+-      g.verdict = g.signal >= 10 ? "build" : g.signal >= 5 ? "watch" : "skip"
++      // Count of Google + YouTube autocomplete completions for the title: a proxy
++      // for how much people are already searching for this game. It was called
++      // `signal`, and a derived `verdict` of "build" / "watch" / "skip" — leftovers
++      // from the template's original purpose (deciding which keyword to build a
++      // site around). "build" was rendered to readers as a "High signal" badge,
++      // which said nothing about the game. The number is useful; the advice is not.
++      g.searchDemand = (g.googleSuggest.length + g.youtubeSuggest.length)
+-  await fs.writeFile(path.join(DATA_DIR, `${today}.json`), JSON.stringify(payload, null, 2))
+-  await fs.writeFile(path.join(DATA_DIR, "latest.json"), JSON.stringify(payload, null, 2))
+```
+
+</details>
+
+### `src/lib/format.ts` — modified
+
+- **When:** 2026-07-26 03:07:32 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +19 / -6 lines
+- **What:** modified `src/lib/format.ts`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-  // Composite signal for "hidden gem" selection: high rating + decent review base,
+-  // recent release, "build" verdict, low red-flag count.
++  // Ranking score for /hidden-gems/.
++  //
++  // This used to be `searchDemand + verdictBoost + rating + log(ratingCount)`,
++  // where the two demand terms contributed up to 28 points and the rating at most
++  // 10 — so the "hidden gems" list was ranked, overwhelmingly, by how *popular* a
++  // game already was. On a page whose entire premise is finding titles the charts
++  // have not noticed yet, that is backwards.
++  //
++  // Now: rating quality first, a modest credibility bonus for having enough
++  // reviews to trust the average, and a small bonus for *low* search demand —
+```
+
+</details>
+
+### `scripts/fetch_daily.mjs` — modified
+
+- **When:** 2026-07-26 03:07:32 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +53 / -3 lines
+- **What:** modified `scripts/fetch_daily.mjs`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++//
++// Verified against the live API on 2026-07-26: the only app feeds that exist are
++// `top-free` and `top-paid`. `games-we-love` and `new-apps-we-love` both 404 —
++// the previous mapping for `newapplications` could never have worked — and there
++// is no grossing feed at all, so mapping `topgrossingapplications` to `top-paid`
++// silently recorded paid-chart positions as grossing ranks.
++//
++// A feed with no modern equivalent falls back to nothing rather than to the wrong
++// chart: new releases are identified from the release date returned by the lookup
++// step, not from which feed an id came out of, so losing the legacy `newapplications`
++// feed degrades coverage without corrupting anything.
++//
+```
+
+</details>
+
+### `astro.config.mjs` — modified
+
+- **When:** 2026-07-26 03:39:58 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +8 / -2 lines
+- **What:** modified `astro.config.mjs`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-import tailwind from "@astrojs/tailwind"
++//
++// No Tailwind here on purpose. The design system lives in `public/styles.css`
++// and no page ever used a Tailwind utility class, but the integration still
++// injected Tailwind's preflight into every page — and preflight's
++// `h1..h6 { font-size: inherit; font-weight: inherit }` silently flattened every
++// heading on the site to 16px body text, while its `.grow { flex-grow: 1 }`
++// utility collided with the growth badge on /movers/. See public/styles.css
++// ("Base reset") for the small subset of preflight that is actually wanted.
+-  integrations: [tailwind()],
+```
+
+</details>
+
+### `docs/AUTOMATION-OVERVIEW.md` — modified
+
+- **When:** 2026-07-26 03:39:58 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +2 / -2 lines
+- **What:** modified `docs/AUTOMATION-OVERVIEW.md`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-│   ├── astro.config.mjs           # sitemap + tailwind
+-│   ├── tailwind.config.mjs
++│   ├── astro.config.mjs           # canonical site URL + build format
++│   ├── public/styles.css          # hand-written design system (no CSS framework)
+```
+
+</details>
+
+### `package-lock.json` — modified
+
+- **When:** 2026-07-26 03:39:58 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +1 / -661 lines
+- **What:** modified `package-lock.json`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-        "@astrojs/tailwind": "^5.1.0",
+-        "sharp": "^0.33.4",
+-        "tailwindcss": "^3.4.0"
+-      }
+-    },
+-    "node_modules/@alloc/quick-lru": {
+-      "version": "5.2.0",
+-      "resolved": "https://registry.npmjs.org/@alloc/quick-lru/-/quick-lru-5.2.0.tgz",
+-      "integrity": "sha512-UrcABB+4bUrFABwbluTIBErXwvbsU/V7TZWfmbgJfbkwiBuziS9gxdODUyuiecfdGQ85jglMW6juS3+z5TsKLw==",
+-      "license": "MIT",
+-      "engines": {
+-        "node": ">=10"
+```
+
+</details>
+
+### `package.json` — modified
+
+- **When:** 2026-07-26 03:39:58 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +0 / -2 lines
+- **What:** modified `package.json`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-    "@astrojs/tailwind": "^5.1.0",
+-    "tailwindcss": "^3.4.0",
+```
+
+</details>
+
+### `public/styles.css` — modified
+
+- **When:** 2026-07-26 03:39:58 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +13 / -0 lines
+- **What:** modified `public/styles.css`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++/* Base reset ---------------------------------------------------------------
++   Replaces the handful of Tailwind-preflight rules this design actually relied
++   on, now that the (otherwise unused) Tailwind integration is gone. Deliberately
++   does NOT reset headings or list markers: preflight's
++   `h1..h6 { font-size: inherit }` was flattening every heading on the site, and
++   its `ol,ul { list-style: none }` was eating the bullets in prose sections. */
++img, svg, video, canvas, iframe { display: block; vertical-align: middle; }
++img, video { max-width: 100%; }
++button, input, select, textarea { font-family: inherit; font-size: 100%; line-height: inherit; color: inherit; margin: 0; }
++button { background: none; border: 0; }
++input[type="search"] { -webkit-appearance: none; appearance: none; }
++:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+```
+
+</details>
+
+### `src/layouts/Base.astro` — modified
+
+- **When:** 2026-07-26 03:39:58 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +1 / -1 lines
+- **What:** modified `src/layouts/Base.astro`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-    <link rel="stylesheet" href="/styles.css?v=20260628d" />
++    <link rel="stylesheet" href="/styles.css?v=20260726a" />
+```
+
+</details>
+
+### `scripts/enrich.mjs` — modified
+
+- **When:** 2026-07-26 03:40:16 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +15 / -7 lines
+- **What:** modified `scripts/enrich.mjs`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-const MONETIZATION_HINTS = {
+-  premium:     /\bno ads\b|\bpremium\b|\bpaid\b|\bbuy once\b/i,
+-  subscription:/\bsubscription\b|\bsubscribe\b|\bweekly\b.{0,10}\$|\bmonthly\b.{0,10}\$/i,
+-  iapAds:      /\bin-app purchase\b|\bin app purchase\b|\biap\b|\bads\b/i,
+-}
++// "premium" means one thing on this site: you pay once, up front. It is the
++// filter behind /no-iap/ and /no-ads-no-iap/ ("pay once and own it").
++//
++// The old version also awarded "premium" to any *free* listing whose copy
++// contained "no ads", "premium", "paid" or "buy once" — so 25 of the 33 premium
++// games in the dataset were free-to-play, including Slotomania, Jackpot World
++// and "Triumph: Play for Cash". Casino apps were being presented as pay-once
+```
+
+</details>
+
+### `src/lib/format.ts` — modified
+
+- **When:** 2026-07-26 03:40:16 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +31 / -0 lines
+- **What:** modified `src/lib/format.ts`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++/**
++ * Human label for the monetization enum, which was being printed raw ("iapAds")
++ * on the game detail page and in the archetype list.
++ *
++ * Price wins over the classifier. `detectMonetization` used to return "premium"
++ * for any *free* listing whose copy contained "no ads" / "premium" / "paid", so
++ * 25 of the 33 "premium" games in the dataset were free-to-play — casino slots
++ * among them, shown on /no-ads-no-iap/ as pay-once titles. enrich.mjs no longer
++ * does that, but archived snapshots still carry the old value, so read defensively.
++ */
++export function monetizationLabel(g: any): string {
++  const mon = String(g?.monetization || "")
+```
+
+</details>
+
+### `src/pages/archetype/[archetype].astro` — modified
+
+- **When:** 2026-07-26 03:40:16 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +2 / -1 lines
+- **What:** modified `src/pages/archetype/[archetype].astro`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++import { monetizationShort } from "../../lib/format"
+-          <span class="rl-meta">{g.seller}{g.sessionLength ? ` · ${g.sessionLength}` : ""}{g.monetization ? ` · ${g.monetization}` : ""}</span>
++          <span class="rl-meta">{g.seller}{g.sessionLength ? ` · ${g.sessionLength}` : ""}{g.monetization ? ` · ${monetizationShort(g)}` : ""}</span>
+```
+
+</details>
+
+### `src/pages/compare/free-vs-premium.astro` — modified
+
+- **When:** 2026-07-26 03:40:16 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +2 / -1 lines
+- **What:** modified `src/pages/compare/free-vs-premium.astro`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++import { isPremium } from "../../lib/format"
+-const b = rankByHeat(all.filter(g => isIndexable(g) && (g.monetization === "premium" || (g.tags || []).includes("no-ads"))))
++const b = rankByHeat(all.filter(g => isIndexable(g) && (isPremium(g) || (g.tags || []).includes("no-ads"))))
+```
+
+</details>
+
+### `src/pages/like-monument-valley/index.astro` — modified
+
+- **When:** 2026-07-26 03:40:16 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +2 / -1 lines
+- **What:** modified `src/pages/like-monument-valley/index.astro`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++import { isPremium } from "../../lib/format"
+-      { num: matching.filter(g => g.monetization === "premium").length, lbl: "Premium (no IAP)" },
++      { num: matching.filter(g => isPremium(g)).length, lbl: "Premium (no IAP)" },
+```
+
+</details>
+
+### `src/pages/no-ads-no-iap/index.astro` — modified
+
+- **When:** 2026-07-26 03:40:16 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +5 / -2 lines
+- **What:** modified `src/pages/no-ads-no-iap/index.astro`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++import { isPremium } from "../../lib/format"
+-      g.monetization === "premium" ||
++      // `isPremium` requires an actual price. Testing monetization directly let
++      // free-to-play slots apps onto a "pay once and own it" page.
++      isPremium(g) ||
+-      { num: all.filter(g => g.monetization === "premium").length, lbl: "Pure premium titles" },
++      { num: all.filter(g => isPremium(g)).length, lbl: "Pure premium titles" },
+```
+
+</details>
+
+### `src/pages/no-iap.astro` — modified
+
+- **When:** 2026-07-26 03:40:16 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +8 / -4 lines
+- **What:** modified `src/pages/no-iap.astro`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-import { isFree, hasTag } from "../lib/format"
++import { isFree, hasTag, isPremium } from "../lib/format"
+-//   - monetization === "premium"  OR
+-//   - paid app + tagged no-ads
+-const premium = all.filter(g => g.monetization === "premium")
++//   - a genuinely paid app (isPremium: priced, and premium/no-ads flagged)  OR
++//   - a free app tagged no-ads whose monetization is not iapAds
++//
++// This used to read `g.monetization === "premium"` directly, which — because the
++// old classifier handed "premium" to any free listing mentioning "no ads" —
++// filled the page with free-to-play casino and slots apps.
++const premium = all.filter(g => isPremium(g))
+```
+
+</details>
+
+### `src/pages/offline/index.astro` — modified
+
+- **When:** 2026-07-26 03:40:16 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +2 / -1 lines
+- **What:** modified `src/pages/offline/index.astro`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++import { isPremium } from "../../lib/format"
+-      { num: matching.filter(g => g.monetization === "premium").length, lbl: "Premium (no IAP) offline picks" },
++      { num: matching.filter(g => isPremium(g)).length, lbl: "Premium (no IAP) offline picks" },
+```
+
+</details>
+
+### `public/styles.css` — modified
+
+- **When:** 2026-07-26 03:40:48 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +270 / -2 lines
+- **What:** modified `public/styles.css`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-  color: var(--fg-muted); text-transform: capitalize;
++  color: var(--fg-muted);
+-.detail-hero .pill.primary { background: var(--accent); color: #fff; }
++/* Capitalise the archetype slug only. Applying it to every pill turned
++   "5–10 min" into "5–10 Min" and "181k ratings" into "181k Ratings". */
++.detail-hero .pill.primary { background: var(--accent); color: #fff; text-transform: capitalize; }
++/* ============================================================
++   SHARE ROW
++   ============================================================ */
++.share-row {
++  display: flex; align-items: center; flex-wrap: wrap; gap: .45rem;
++  margin: 1.25rem 0 0;
+```
+
+</details>
+
+### `src/components/HeatSparkline.astro` — modified
+
+- **When:** 2026-07-26 03:40:48 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +49 / -37 lines
+- **What:** modified `src/components/HeatSparkline.astro`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-// Rating-count trajectory sparkline, server-rendered from velocity.rcSeries.
+-// rating count is a public proxy for downloads; its slope is the "is it taking
+-// off" signal. Renders nothing if there's no usable history yet.
+-const { velocity } = Astro.props
+-// rcSeries is [[date, ratingCount], ...]; older data used [{date, rc}, ...].
+-const series = (velocity?.rcSeries || []).map(p => Array.isArray(p) ? p : [p?.date, p?.rc])
+-if (series.length < 2) return null
++// Rating-count trajectory, server-rendered from velocity.rcSeries.
++// Rating count is a public proxy for downloads; its slope is the "is it taking
++// off" signal. Renders nothing if there is no usable history yet.
++import { sparkGeom, rcValues, compactNum, growthLabel } from "../lib/spark"
+-const w = 280, h = 60, pad = 4
+```
+
+</details>
+
+### `src/components/Hero.astro` — modified
+
+- **When:** 2026-07-26 03:40:48 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +41 / -11 lines
+- **What:** modified `src/components/Hero.astro`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-// Falls back gracefully when screenshots are missing.
++// Falls back gracefully when the optimised image set or screenshots are missing.
++import { compactNum } from "../lib/spark"
++
+-const icon = game.images?.icon?.src || game.icon
+-const shots = Array.isArray(game.screenshots) ? game.screenshots.filter(Boolean) : []
++
++// scripts/images.mjs mirrors every icon and screenshot to R2 as avif/webp with a
++// srcset. Serving `game.screenshots` (Apple's original PNG/JPEG) instead — which
++// is what this component used to do — shipped several megabytes of unoptimised
++// images on the page with the most traffic.
++const icon = game.images?.icon
+```
+
+</details>
+
+### `src/components/Movers.astro` — modified
+
+- **When:** 2026-07-26 03:40:48 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +43 / -64 lines
+- **What:** modified `src/components/Movers.astro`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-// Renders nothing until velocity data exists, so it degrades gracefully on
+-// the first deploy before the daily pipeline has run the velocity step.
++// Renders nothing until velocity data exists, so it degrades gracefully on the
++// first deploy, before the daily pipeline has run the velocity step.
++//
++// Shares the leaderboard styling with /movers/ (see public/styles.css) so the
++// homepage teaser and the full page cannot drift apart.
++import { cap, priceLabel, gameIconSrc } from "../lib/enriched"
++import { sparkGeom, rcValues, growthLabel } from "../lib/spark"
++
+-  .filter(g => typeof g.heatScore === "number" && g.heatScore > 0)
+-  .sort((a, b) => (b.heatScore || 0) - (a.heatScore || 0))
+```
+
+</details>
+
+### `src/components/ShareRow.astro` — created
+
+- **When:** 2026-07-26 03:40:48 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +101 / -0 lines
+- **What:** created `src/components/ShareRow.astro`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++---
++// Share affordance for data pages.
++//
++// Progressive enhancement, in this order:
++//   1. No JS  -> three real <a> intents (X / Reddit / Hacker News) that work.
++//   2. JS     -> "Copy link" button becomes functional.
++//   3. Mobile -> if navigator.share exists, a native Share button is revealed
++//                and the intent links are collapsed behind it.
++//
++// The URL has to be absolute and known at build time (the site is static), so
++// callers pass the same canonical they gave <Base>.
++const {
+```
+
+</details>
+
+### `src/components/TrendSparkline.astro` — modified
+
+- **When:** 2026-07-26 03:40:48 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +33 / -25 lines
+- **What:** modified `src/components/TrendSparkline.astro`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-// Tiny inline SVG sparkline. Server-rendered. No JS.
++// Google Trends search interest. Server-rendered, no JS.
++import { sparkGeom } from "../lib/spark"
++
+-if (!trend?.points?.length) return null
+-const w = 280, h = 60, pad = 4
+-const pts = trend.points
+-const max = Math.max(...pts.map(p => p.v), 1)
+-const stepX = (w - pad*2) / (pts.length - 1 || 1)
+-const path = pts.map((p, i) => {
+-  const x = pad + i * stepX
+-  const y = h - pad - (p.v / max) * (h - pad*2)
+```
+
+</details>
+
+### `src/lib/spark.ts` — created
+
+- **When:** 2026-07-26 03:40:48 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +77 / -0 lines
+- **What:** created `src/lib/spark.ts`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++// Sparkline geometry, shared by every chart on the site.
++//
++// The same ~15 lines of "normalise a series into an SVG path" were copy-pasted
++// into HeatSparkline, TrendSparkline and the movers rows, each with slightly
++// different padding and a different bug (one divided by zero on a flat series,
++// another on a single point). One implementation, tested by rendering.
++
++export type SparkGeom = {
++  /** `M…L…` polyline through every point. */
++  line: string
++  /** Same polyline closed along the baseline, for a gradient fill. */
++  area: string
+```
+
+</details>
+
+### `src/pages/games/[id].astro` — modified
+
+- **When:** 2026-07-26 03:40:48 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +73 / -12 lines
+- **What:** modified `src/pages/games/[id].astro`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
++import ShareRow from "../../components/ShareRow.astro"
++import { compactNum, growthLabel } from "../../lib/spark"
++import { monetizationLabel } from "../../lib/format"
+-function oneLine(s){ return (s||"").replace(/\s+/g," ").trim().slice(0, 240) }
++// Key-stat strip. Every tile is data we actually hold — no placeholders, and a
++// tile is dropped entirely rather than rendered as "—".
++const chartRank = game.rank?.free ?? game.rank?.grossing ?? game.rank?.new ?? null
++const chartRankLabel = game.rank?.free ? "Free chart" : game.rank?.grossing ? "Grossing chart" : game.rank?.new ? "New chart" : ""
++const growth7d = growthLabel(game.velocity?.rcGrowthPct)
++const added7d = Number(game.velocity?.rcDelta7d || 0)
++const daysTracked = Number(game.velocity?.daysTracked || 0)
++
+```
+
+</details>
+
+### `src/pages/movers.astro` — modified
+
+- **When:** 2026-07-26 03:40:48 UTC
+- **Source:** git commit (model: claude)
+- **Change size:** +183 / -114 lines
+- **What:** modified `src/pages/movers.astro`.
+- **How:** staged change captured at commit time by the model-agnostic pre-commit hook.
+- **Note:** treated as 0% hand-written code; review the diff before merging.
+
+<details><summary>Key diff (truncated)</summary>
+
+```diff
+-import { loadEnriched } from "../lib/enriched"
++import ShareRow from "../components/ShareRow.astro"
++import { loadEnriched, cap, priceLabel, gameIconSrc } from "../lib/enriched"
++import { sparkGeom, rcValues, compactNum, growthLabel } from "../lib/spark"
+-const strong  = movers.filter(g => g.traction === "strong").length
+-
+-function cap(s){ return (s||"").replace(/(^|-)\w/g, c => c.toUpperCase()).replace(/-/g," ") }
+-function priceLabel(g){ const p = g.price; return (!p || p === "Free" || p === "0") ? "Free" : p }
+-function growthLabel(g){
+-  const v = g.velocity?.rcGrowthPct
+-  if (v == null) return null
+-  return `+${v >= 1000 ? Math.round(v/1000)+"k" : v}% / 7d`
+```
+
+</details>
+

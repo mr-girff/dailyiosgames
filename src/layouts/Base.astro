@@ -1,13 +1,31 @@
 ---
+import fs from "node:fs"
+import path from "node:path"
+
 const { title, description, canonical, robots = "index,follow", styleVars = "", bodyClass = "", image, ogType = "website" } = Astro.props
 // Read from environment only. Never hardcode account IDs so forks don't send
 // traffic/ad revenue to the original owner. Set PUBLIC_ADSENSE_CLIENT / PUBLIC_GA_ID
 // in Cloudflare Pages env (or .env) to enable AdSense / Analytics.
 const ADSENSE = import.meta.env.PUBLIC_ADSENSE_CLIENT || ""
 const GA_ID = import.meta.env.PUBLIC_GA_ID || ""
+// Same rule for the telemetry tag: ids live in the environment, never in the repo.
+const VL_PRODUCT_ID = import.meta.env.PUBLIC_VL_PRODUCT_ID || ""
+const VL_AUTH_KEY = import.meta.env.PUBLIC_VL_AUTH_KEY || ""
 const site = Astro.site?.toString().replace(/\/$/, "") || "https://ios.querygame.com"
 const SITE_NAME = import.meta.env.PUBLIC_SITE_NAME || "Daily iOS Games"
-const ogImage = image || `${site}/og-default.svg`
+
+// Facebook / X / LinkedIn / Slack / iMessage all silently drop SVG og:images, so
+// every share of this site used to render without a preview image. scripts/og.mjs
+// rasterises the SVGs to 1200x630 PNGs; use the PNG whenever one exists.
+function rasterOg(url: string): string {
+  if (!url.endsWith(".svg")) return url
+  const rel = url.replace(/^https?:\/\/[^/]+/, "")
+  if (!rel.startsWith("/")) return url
+  const png = rel.replace(/\.svg$/, ".png")
+  return fs.existsSync(path.join(process.cwd(), "public", png)) ? url.replace(/\.svg$/, ".png") : url
+}
+const ogImage = rasterOg(image || `${site}/og-default.svg`)
+const ogIsOwnCard = ogImage.endsWith(".png") && ogImage.startsWith(site)
 const computedCanonical = canonical || `${site}${Astro.url.pathname}`
 ---
 <!doctype html>
@@ -30,16 +48,20 @@ const computedCanonical = canonical || `${site}${Astro.url.pathname}`
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:image" content={ogImage} />
+    {ogIsOwnCard && <meta property="og:image:width" content="1200" />}
+    {ogIsOwnCard && <meta property="og:image:height" content="630" />}
+    {ogIsOwnCard && <meta property="og:image:type" content="image/png" />}
     <meta property="og:url" content={computedCanonical} />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={ogImage} />
+    <meta name="twitter:image:alt" content={title} />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="preconnect" href="https://pagead2.googlesyndication.com" crossorigin />
     <link rel="preconnect" href="https://www.googletagmanager.com" crossorigin />
-    <link rel="stylesheet" href="/styles.css?v=20260628d" />
+    <link rel="stylesheet" href="/styles.css?v=20260726a" />
 
     {/* Google Analytics 4 */}
     {GA_ID && (
@@ -70,16 +92,20 @@ const computedCanonical = canonical || `${site}${Astro.url.pathname}`
       "logo": `${site}/favicon.svg`,
     })}></script>
 
-    {/* VibeLoft Web Telemetry — loaded once, globally, on every page.
+    {/* VibeLoft Web Telemetry — loaded once, globally, on every page. Ids come from
+        PUBLIC_VL_PRODUCT_ID / PUBLIC_VL_AUTH_KEY so forks don't report into the
+        original owner's workspace (same policy as AdSense/GA above).
         is:inline keeps Astro from bundling/relocating this third-party tag so
         the defer + data-* attributes are emitted verbatim in the <head>. */}
-    <script
-      is:inline
-      defer
-      src="https://vibeloft.ai/telemetry/v1.js"
-      data-vl-product-id="628441e5-010f-4258-a55e-93194acfd408"
-      data-vl-auth-key="vl_web.rIJvei6PWInXvpZkI9q0Pi5ox4lMHKk7yu7PKSpueis"
-    ></script>
+    {VL_PRODUCT_ID && VL_AUTH_KEY && (
+      <script
+        is:inline
+        defer
+        src="https://vibeloft.ai/telemetry/v1.js"
+        data-vl-product-id={VL_PRODUCT_ID}
+        data-vl-auth-key={VL_AUTH_KEY}
+      ></script>
+    )}
   </head>
   <body class={`themed ${bodyClass}`}>
     <a href="#main" class="skip">Skip to content</a>
@@ -132,6 +158,10 @@ const computedCanonical = canonical || `${site}${Astro.url.pathname}`
             <svg class="nav-caret" width="12" height="12" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6 9l6 6 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
           </a>
             <div class="nav-submenu" role="menu">
+              <a href="/search/" role="menuitem">
+                <svg class="nav-i" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5" stroke="currentColor" stroke-width="1.8" fill="none"/><path d="M16 16l4.5 4.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+                <span>Search games</span>
+              </a>
               <a href="/like/" role="menuitem">
                 <svg class="nav-i" width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s-7-4.5-7-10a4 4 0 017-2.6A4 4 0 0119 11c0 5.5-7 10-7 10z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" fill="none"/></svg>
                 <span>Games like…</span>
@@ -209,6 +239,7 @@ const computedCanonical = canonical || `${site}${Astro.url.pathname}`
           <div class="foot-col">
             <h4>Browse</h4>
             <ul>
+              <li><a href="/search/">Search games</a></li>
               <li><a href="/games/">All games</a></li>
               <li><a href="/archetype/">Categories</a></li>
               <li><a href="/like/">Games like…</a></li>

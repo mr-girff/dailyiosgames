@@ -4,12 +4,10 @@ import GameGrid from "../../components/GameGrid.astro"
 import KeepBrowsing from "../../components/KeepBrowsing.astro"
 import { SEEDS } from "../../lib/likeSeeds"
 import type { LikeSeed } from "../../lib/likeSeeds"
-import fs from "node:fs"
-import path from "node:path"
+import { loadEnriched, demandOf } from "../../lib/enriched"
 
 export async function getStaticPaths() {
-  const p = path.join(process.cwd(), "data/enriched.json")
-  const data = fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, "utf8")) : { all: [], date: "n/a" }
+  const data = loadEnriched()
   const all = data.all || []
 
   return SEEDS.map(seed => {
@@ -27,10 +25,11 @@ export async function getStaticPaths() {
       for (const kw of seed.keywords) if (text.includes(kw.toLowerCase())) s += 4
       // Exclusions
       for (const kw of (seed.excludeKeywords || [])) if (text.includes(kw.toLowerCase())) s -= 10
-      // Quality boost
-      if (g.verdict === "build") s += 3
-      if (g.verdict === "watch") s += 1
-      if ((g.signal || 0) >= 12) s += 2
+      // Search-demand boost (was a "verdict" bonus: an autocomplete threshold
+      // dressed up as an editorial rating, and no longer populated).
+      const demand = demandOf(g)
+      if (demand >= 12) s += 3
+      else if (demand >= 5) s += 1
       // Rating gate (don't surface low-quality matches)
       const r = Number(g.rating || 0)
       if (r > 0 && r < 3.5) s -= 4
@@ -45,7 +44,16 @@ export async function getStaticPaths() {
 
     return {
       params: { seed: seed.slug },
-      props: { seed, matches: ranked, date: data.date, allCount: all.length },
+      props: {
+        seed,
+        matches: ranked,
+        date: data.date,
+        allCount: all.length,
+        // Only archetypes that actually have a generated page. Seeds list
+        // aspirational archetypes (e.g. "strategy") that the classifier never
+        // emits, which used to produce 404 links in "Keep browsing".
+        existingArchetypes: [...new Set(all.map((g: any) => g.archetype).filter(Boolean))],
+      },
     }
   })
 }
@@ -55,8 +63,9 @@ interface Props {
   matches: any[]
   date: string
   allCount: number
+  existingArchetypes: string[]
 }
-const { seed, matches, date, allCount } = Astro.props as Props
+const { seed, matches, date, allCount, existingArchetypes } = Astro.props as Props
 
 const top = matches.slice(0, 12)
 const more = matches.slice(12, 36)
@@ -139,12 +148,15 @@ const description = seed.metaDescription
       { href: "/hidden-gems/", title: "Hidden gems", sub: "Indies worth a shot", icon: "star" },
       { href: "/movers/", title: "Rising games", sub: "Hot momentum", icon: "fire" },
       { href: "/new-today/", title: "New today", sub: "Fresh launches", icon: "calendar" },
-      ...seed.archetypes.slice(0, 2).map(a => ({
-        href: `/archetype/${a}/`,
-        title: a.replace(/-/g, " ") + " category",
-        sub: "Browse the whole archetype",
-        icon: "list",
-      })),
+      ...seed.archetypes
+        .filter(a => (existingArchetypes || []).includes(a))
+        .slice(0, 2)
+        .map(a => ({
+          href: `/archetype/${a}/`,
+          title: a.replace(/-/g, " ") + " category",
+          sub: "Browse the whole archetype",
+          icon: "list",
+        })),
     ].slice(0, 6)
     return <KeepBrowsing title="Keep exploring" eyebrow="More" items={items} />
   })()}

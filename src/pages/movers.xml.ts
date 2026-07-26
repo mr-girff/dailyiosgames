@@ -1,10 +1,8 @@
 // Rising iOS Games RSS feed — for developers/scouts who want the heat list in their reader.
-import fs from "node:fs"
-import path from "node:path"
+import { loadEnriched } from "../lib/enriched"
 
 export async function GET({ site }) {
-  const p = path.join(process.cwd(), "data/enriched.json")
-  const data = fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, "utf8")) : { all: [], date: null }
+  const data = loadEnriched()
   const base = site?.toString().replace(/\/$/, "") || ""
 
   const movers = (data.all || [])

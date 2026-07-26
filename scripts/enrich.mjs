@@ -1,52 +1,58 @@
 // Game understanding layer.
-// Reads data/latest.json, classifies each game (rules + optional LLM), writes data/enriched.json.
+// Reads data/latest.json + the persistent catalogue (every game ever seen),
+// classifies each game (rules + optional LLM), writes data/enriched.json.
 // Run after fetch_daily.mjs. Designed to be cheap & dependency-free; LLM call is optional.
+//
+// The catalogue is what keeps /games/<id>/ URLs alive after a game drops off the
+// charts: stale entries stay in `all` (marked inactive + noindex) instead of
+// vanishing from the build and 404-ing.
 
 import fs from "node:fs/promises"
 import path from "node:path"
+import { buildCatalog } from "./lib/catalog.mjs"
+import { detectArchetype } from "./lib/classify.mjs"
+import { serialize } from "./lib/json.mjs"
 
 const ROOT = process.cwd()
+const DATA_DIR = path.join(ROOT, "data")
 const SRC = path.join(ROOT, "data/latest.json")
 const DST = path.join(ROOT, "data/enriched.json")
 
-// ─── 1. Rule-based archetype detector ───────────────────────────────
-const ARCHETYPES = [
-  { key: "match3",       any: ["match-3", "match 3", "matching", "swap", "blast", "crush", "candy", "jewel"] },
-  { key: "merge",        any: ["merge ", "merging", "combine to evolve"] },
-  { key: "puzzle-word",  any: ["word", "anagram", "spelling", "letters", "vocabulary"] },
-  { key: "puzzle-logic", any: ["sudoku", "nonogram", "picross", "logic puzzle"] },
-  { key: "idle",         any: ["idle", "tap to earn", "auto-clicker", "afk", "tycoon"] },
-  { key: "rpg",          any: ["rpg", "role-playing", "hero", "guild", "raid", "loot"] },
-  { key: "roguelike",    any: ["roguelike", "roguelite", "permadeath", "run-based"] },
-  { key: "racing",       any: ["racing", "race", "drift", "kart"] },
-  { key: "casino",       any: ["slot", "casino", "poker", "bingo", "blackjack", "jackpot"] },
-  { key: "sim",          any: ["simulation", "manage", "build your", "city builder", "farm"] },
-  { key: "shooter",      any: ["shooter", "fps", "gunfight", "battle royale"] },
-  { key: "platformer",   any: ["platformer", "jump and run"] },
-  { key: "card",         any: ["card game", "deckbuilder", "ccg", "tcg"] },
-  { key: "sports",       any: ["football", "soccer", "basketball", "tennis", "golf game"] },
-  { key: "social-deduction", any: ["impostor", "social deduction"] },
-  { key: "casual-arcade", any: ["arcade", "endless runner", "tap to play"] },
-]
+// A game that has not been on any tracked chart for this long stops being
+// indexable (page stays online, so no 404 and no lost inbound links).
+const STALE_DAYS = 21
+const DAY_MS = 86400000
 
-function detectArchetype(text) {
-  const t = (text || "").toLowerCase()
-  for (const a of ARCHETYPES) {
-    if (a.any.some(k => t.includes(k))) return a.key
-  }
-  return "casual-arcade"
+/** Whole days between two YYYY-MM-DD dates; 0 when either is missing/invalid. */
+function daysSince(from, to) {
+  if (!from || !to) return 0
+  const d = Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / DAY_MS)
+  return Number.isFinite(d) ? Math.max(0, d) : 0
 }
 
-const MONETIZATION_HINTS = {
-  premium:     /\bno ads\b|\bpremium\b|\bpaid\b|\bbuy once\b/i,
-  subscription:/\bsubscription\b|\bsubscribe\b|\bweekly\b.{0,10}\$|\bmonthly\b.{0,10}\$/i,
-  iapAds:      /\bin-app purchase\b|\bin app purchase\b|\biap\b|\bads\b/i,
-}
+// Fields that were part of the original "should I build a site for this game?"
+// experiment and are not rendered anywhere. Dropped from the output to keep the
+// daily git diff small.
+const DROP_FIELDS = ["googleSuggest", "youtubeSuggest", "domains", "designPalette", "heroLayout"]
+
+// "premium" means one thing on this site: you pay once, up front. It is the
+// filter behind /no-iap/ and /no-ads-no-iap/ ("pay once and own it").
+//
+// The old version also awarded "premium" to any *free* listing whose copy
+// contained "no ads", "premium", "paid" or "buy once" — so 25 of the 33 premium
+// games in the dataset were free-to-play, including Slotomania, Jackpot World
+// and "Triumph: Play for Cash". Casino apps were being presented as pay-once
+// titles with no gem packs. Only the price decides "premium" now.
+const SUBSCRIPTION_RE = /\bsubscription\b|\bsubscribe\b|\bweekly\b.{0,10}\$|\bmonthly\b.{0,10}\$/i
+const AD_FREE_RE = /\bno ads\b|\bad[- ]free\b|\bwithout ads\b/i
+const IAP_ADS_RE = /\bin-app purchase\b|\bin app purchase\b|\biap\b|\bads\b/i
 
 function detectMonetization(g) {
   const t = (g.desc || "") + " " + (g.releaseNotes || "")
-  if (g.price && g.price !== "Free") return "premium"
-  for (const [k, re] of Object.entries(MONETIZATION_HINTS)) if (re.test(t)) return k
+  if (g.price && g.price !== "Free" && g.price !== "0") return "premium"
+  if (SUBSCRIPTION_RE.test(t)) return "subscription"
+  // Check ad-free before the IAP/ads hint: /\bads\b/ also matches "no ads".
+  if (AD_FREE_RE.test(t) && !IAP_ADS_RE.test(t.replace(AD_FREE_RE, ""))) return "free"
   return "iapAds"
 }
 
@@ -80,6 +86,7 @@ function guessSessionLength(arch) {
     idle: "30s check-ins", rpg: "15–30 min", roguelike: "10–20 min/run", racing: "2–4 min/race",
     casino: "open-ended", sim: "10–30 min", shooter: "5–10 min/match", platformer: "5–15 min",
     card: "10–20 min", sports: "5–15 min", "social-deduction": "10 min/round", "casual-arcade": "1–3 min",
+    strategy: "15–40 min",
   })[arch] || "5 min"
 }
 
@@ -88,7 +95,7 @@ function guessAudience(arch, g) {
   const t = (g.desc || "").toLowerCase()
   if (arch === "match3" || arch === "merge") return "casual players, 25–55, prefer relaxing single-player loops"
   if (arch === "casino") return "adults 21+, slots & social-casino fans"
-  if (arch === "rpg" || arch === "roguelike") return "midcore players, 18–35, gacha/strategy comfortable"
+  if (arch === "rpg" || arch === "roguelike" || arch === "strategy") return "midcore players, 18–35, gacha/strategy comfortable"
   if (arch === "puzzle-word") return "word-game fans, 35+"
   if (arch === "racing" || arch === "shooter") return "younger action-game players, 13–30"
   if (/\bkid|child|toddler|preschool|baby\b/.test(t)) return "kids 4–9 and their parents"
@@ -119,7 +126,7 @@ function findRedFlags(g) {
 async function llmEnrich(game, env) {
   if (!env.OPENAI_API_KEY) return null
   const system = "You analyze mobile games for an editorial site. Return strict JSON only."
-  const user = `Given this iOS game, return JSON with keys: archetype, coreLoop (≤25 words), uniqueHook (≤25 words), competitors (up to 3 well-known game names), targetAudience (≤15 words), designPalette (one of: candy, neon, dark-pixel, gold-casino, pastel, military, cozy-warm, sci-fi-cool), heroLayout (one of: grid-tiles, character-card, isometric, screenshot-carousel, action-still).
+  const user = `Given this iOS game, return JSON with keys: archetype, coreLoop (≤25 words), uniqueHook (≤25 words), competitors (up to 3 well-known game names), targetAudience (≤15 words).
 
 Game: ${game.name}
 Developer: ${game.seller}
@@ -145,32 +152,59 @@ Release notes: ${(game.releaseNotes||"").slice(0, 300)}`
 }
 
 // ─── 3. Similar-games clustering (deterministic, no LLM) ────────────
+//
+// Two properties matter as much as relevance here:
+//
+//   * Stability. The old version scored plain Jaccard over
+//     {archetype, tags, genres} and sorted on the raw float. Ties were extremely
+//     common (dozens of match-3 games share an identical tag set), so the winner
+//     was decided by the input order — which is catalogue order and changes every
+//     day. Every game's "similar" block reshuffled daily: ~1900 lines of pure
+//     noise in each data commit, and readers saw the related list churn for no
+//     reason. Score is rounded and ties break on id, so the list only moves when
+//     the underlying tags actually move.
+//   * Weight. A shared archetype means much more than a shared genre string
+//     ("Games" is on literally everything), so the components are weighted
+//     instead of thrown into one flat set.
+function similarityScore(a, b) {
+  const tagSet = x => new Set([...(x.tags || []), ...(x.genres || [])])
+  const at = tagSet(a), bt = tagSet(b)
+  const inter = [...at].filter(x => bt.has(x)).length
+  const union = new Set([...at, ...bt]).size || 1
+  let s = inter / union
+  if (a.archetype && a.archetype === b.archetype) s += 1.5
+  if (a.monetization && a.monetization === b.monetization) s += 0.25
+  if (a.seller && a.seller === b.seller) s += 0.5
+  return Math.round(s * 1000) / 1000
+}
+
 function buildSimilarity(games) {
-  // simple Jaccard on (archetype + tags + genres)
   return games.map(g => {
-    const set = new Set([g.archetype, ...(g.tags||[]), ...(g.genres||[])])
-    const scored = games
+    const similar = games
       .filter(o => o.id !== g.id)
-      .map(o => {
-        const oset = new Set([o.archetype, ...(o.tags||[]), ...(o.genres||[])])
-        const inter = [...set].filter(x => oset.has(x)).length
-        const union = new Set([...set, ...oset]).size || 1
-        return { id: o.id, name: o.name, score: inter / union }
-      })
-      .sort((a, b) => b.score - a.score)
+      .map(o => ({ id: o.id, score: similarityScore(g, o) }))
+      .sort((a, b) => b.score - a.score || (a.id < b.id ? -1 : 1))
       .slice(0, 8)
-    return { id: g.id, similar: scored }
+      .filter(s => s.score > 0)
+      // Ids only: the name was a duplicate of the catalogue entry (and churned
+      // whenever a developer retitled a game), the score was never rendered.
+      .map(s => s.id)
+    return { id: g.id, similar }
   })
 }
 
 // ─── 4. Index decision (avoid programmatic doorway penalty) ─────────
-function indexDecision(g) {
+function indexDecision(g, refDate) {
+  // Long-stale entries are kept online for link preservation but dropped from
+  // the index (and from the sitemap) instead of being deleted.
+  // Derived from lastSeen rather than a stored daysSinceSeen: see catalog.mjs.
+  if (daysSince(g.lastSeen, refDate) > STALE_DAYS) return "noindex,follow"
   // index only if there's real signal OR meaningful content
-  const signal = g.signal || 0
+  const demand = g.searchDemand || 0
   const hasReviews = (g.ratingCount || 0) >= 20
   const hasContent = (g.desc || "").length > 400
-  if (signal >= 8 || hasReviews) return "index,follow"
-  if (hasContent && signal >= 3) return "index,follow"
+  if (demand >= 8 || hasReviews) return "index,follow"
+  if (hasContent && demand >= 3) return "index,follow"
   return "noindex,follow" // keep crawl path open but don't pollute SERP
 }
 
@@ -180,10 +214,19 @@ async function main() {
   const env = process.env
   const useLLM = !!env.OPENAI_API_KEY && env.ENRICH_USE_LLM !== "0"
 
-  const all = [...(raw.newReleases || []), ...(raw.updates || [])]
+  // Previous run's output: source of carried-over images / video / trends / LLM polish.
+  let previous = null
+  try { previous = JSON.parse(await fs.readFile(DST, "utf8")) } catch {}
+
+  const { games: all, today, stats } = await buildCatalog({
+    dataDir: DATA_DIR,
+    today: raw.date,
+    carryFrom: previous,
+  })
+
   for (const g of all) {
-    const haystack = (g.desc || "") + " " + (g.releaseNotes || "") + " " + (g.genres || []).join(" ")
-    g.archetype     = detectArchetype(haystack)
+    for (const f of DROP_FIELDS) delete g[f]
+    g.archetype     = detectArchetype(g)
     g.monetization  = detectMonetization(g)
     g.tags          = detectFeatures(g)
     g.coreLoop      = extractCoreLoop(g)
@@ -191,10 +234,12 @@ async function main() {
     g.audience      = guessAudience(g.archetype, g)
     g.uniqueHook    = findHook(g)
     g.redFlags      = findRedFlags(g)
-    g.indexDirective = indexDecision(g)
+    g.indexDirective = indexDecision(g, today)
 
-    // Only call LLM on indexable, high-signal games (budget control)
-    if (useLLM && g.indexDirective.startsWith("index") && (g.signal || 0) >= 8) {
+    // Only call LLM on active, indexable, high-signal games (budget control).
+    // Archived entries are never re-sent to the LLM: their polish is carried
+    // forward by the catalogue instead.
+    if (useLLM && g.active && !g.llmEnriched && g.indexDirective.startsWith("index") && (g.searchDemand || 0) >= 8) {
       const polish = await llmEnrich(g, env)
       if (polish) {
         g.archetype     = polish.archetype || g.archetype
@@ -202,40 +247,28 @@ async function main() {
         g.uniqueHook    = polish.uniqueHook || g.uniqueHook
         g.competitors   = polish.competitors || []
         g.audience      = polish.targetAudience || g.audience
-        g.designPalette = polish.designPalette || defaultPalette(g.archetype)
-        g.heroLayout    = polish.heroLayout || defaultHero(g.archetype)
         g.llmEnriched   = true
       }
     }
-    if (!g.designPalette) g.designPalette = defaultPalette(g.archetype)
-    if (!g.heroLayout)    g.heroLayout    = defaultHero(g.archetype)
   }
 
-  const similarity = buildSimilarity(all)
-  const simMap = Object.fromEntries(similarity.map(s => [s.id, s.similar]))
-
+  // Similar-games links are only drawn between games that are still indexable,
+  // so detail pages never point at an archived, noindexed page.
+  const linkable = all.filter(g => g.indexDirective.startsWith("index"))
+  const simMap = Object.fromEntries(buildSimilarity(linkable).map(s => [s.id, s.similar]))
   for (const g of all) g.similar = simMap[g.id] || []
 
-  const out = { ...raw, enrichedAt: new Date().toISOString(), all }
-  await fs.writeFile(DST, JSON.stringify(out, null, 2))
-  console.log(`Enriched ${all.length} games. Indexable: ${all.filter(g=>g.indexDirective.startsWith("index")).length}`)
-}
-
-function defaultPalette(arch) {
-  return ({
-    match3: "candy", merge: "pastel", "puzzle-word": "cozy-warm", "puzzle-logic": "cozy-warm",
-    idle: "neon", rpg: "dark-pixel", roguelike: "dark-pixel", racing: "neon",
-    casino: "gold-casino", sim: "pastel", shooter: "military", platformer: "candy",
-    card: "dark-pixel", sports: "neon", "social-deduction": "neon", "casual-arcade": "candy",
-  })[arch] || "pastel"
-}
-function defaultHero(arch) {
-  return ({
-    match3: "grid-tiles", merge: "grid-tiles", "puzzle-word": "grid-tiles", "puzzle-logic": "grid-tiles",
-    idle: "isometric", rpg: "character-card", roguelike: "character-card", racing: "action-still",
-    casino: "screenshot-carousel", sim: "isometric", shooter: "action-still", platformer: "action-still",
-    card: "character-card", sports: "action-still", "social-deduction": "character-card", "casual-arcade": "screenshot-carousel",
-  })[arch] || "screenshot-carousel"
+  const out = {
+    ...raw,
+    enrichedAt: new Date().toISOString(),
+    catalog: { referenceDate: today, ...stats },
+    all,
+  }
+  await fs.writeFile(DST, serialize(out))
+  console.log(
+    `Enriched ${all.length} catalogue games (${stats.active} active today, ` +
+    `${stats.snapshots} snapshots). Indexable: ${all.filter(g => g.indexDirective.startsWith("index")).length}`,
+  )
 }
 
 main().catch(e => { console.error(e); process.exit(1) })

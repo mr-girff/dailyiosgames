@@ -3,21 +3,19 @@ import Base from "../layouts/Base.astro"
 import GameGrid from "../components/GameGrid.astro"
 import KeepBrowsing from "../components/KeepBrowsing.astro"
 import Subscribe from "../components/Subscribe.astro"
-import fs from "node:fs"
-import path from "node:path"
+import { loadEnriched, demandOf } from "../lib/enriched"
 
-const p = path.join(process.cwd(), "data/enriched.json")
-const data = fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, "utf8")) : { all: [], date: "n/a" }
+const data = loadEnriched()
 const all = data.all || []
 
 // Past 7 days
 const week = all
   .filter(g => (g.daysSinceRelease ?? 9999) <= 7)
-  .sort((a, b) => (b.signal || 0) - (a.signal || 0))
+  .sort((a, b) => demandOf(b) - demandOf(a))
 
 // Split: top picks (signal >= 10) and rest
-const topPicks = week.filter(g => (g.signal || 0) >= 10)
-const others = week.filter(g => (g.signal || 0) < 10)
+const topPicks = week.filter(g => demandOf(g) >= 10)
+const others = week.filter(g => demandOf(g) < 10)
 
 // Group by day for the "What launched each day" list
 const groups: Record<string, any[]> = {}
@@ -50,10 +48,10 @@ const description = `${week.length} new iOS games launched on the US App Store i
     <div class="hero-band__inner">
       <div class="eyebrow">7-day window · updated {dateFmt}</div>
       <h1>New iOS Games This Week</h1>
-      <p class="lead">Every US App Store game launch from the past 7 days, ranked by early signal. Use this as your weekly "what just dropped" digest.</p>
+      <p class="lead">Every US App Store game launch from the past 7 days, ranked by search demand. Use this as your weekly "what just dropped" digest.</p>
       <div class="stat-row">
         <div class="stat"><span class="num">{week.length}</span><span class="lbl">Launches</span></div>
-        <div class="stat"><span class="num">{topPicks.length}</span><span class="lbl">High signal</span></div>
+        <div class="stat"><span class="num">{topPicks.length}</span><span class="lbl">High search demand</span></div>
         <div class="stat"><span class="num">{days.length}</span><span class="lbl">Days covered</span></div>
       </div>
     </div>
@@ -97,7 +95,7 @@ const description = `${week.length} new iOS games launched on the US App Store i
     const items = [
       { href: "/new-today/", title: "New today", sub: "24-hour window", icon: "calendar" },
       { href: "/movers/", title: "Rising games", sub: "Hot momentum", icon: "fire" },
-      { href: "/hidden-gems/", title: "Hidden gems", sub: "High signal indies", icon: "star" },
+      { href: "/hidden-gems/", title: "Hidden gems", sub: "Well rated, barely found", icon: "star" },
       { href: "/games/", title: "All tracked games", sub: `${all.length} titles`, icon: "list" },
       { href: "/archetype/", title: "By category", sub: "Match-3, RPG, idle…", icon: "tag" },
       { href: "/no-iap/", title: "No in-app purchases", sub: "Premium picks", icon: "star" },

@@ -4,19 +4,20 @@ import GameGrid from "../components/GameGrid.astro"
 import KeepBrowsing from "../components/KeepBrowsing.astro"
 import Subscribe from "../components/Subscribe.astro"
 import { trustScore } from "../lib/format"
-import fs from "node:fs"
-import path from "node:path"
+import { loadEnriched } from "../lib/enriched"
 
-const p = path.join(process.cwd(), "data/enriched.json")
-const data = fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, "utf8")) : { all: [], date: "n/a" }
+const data = loadEnriched()
 const all = data.all || []
 
-// "Hidden gem" = positive signal but small audience (low rating count).
-// Recipe:
-//   - verdict in {build, watch} OR signal >= 12
-//   - rating either unknown OR >= 4.0
-//   - ratingCount < 5,000 (avoids chart-toppers; this is the "hidden" filter)
-//   - no big red flags (gacha / energy gating)
+// "Hidden gem" = well reviewed, but hardly anyone has found it yet.
+//
+// The old recipe *required* verdict in {build, watch} or searchDemand >= 12, i.e.
+// it demanded high search interest from a page about undiscovered games — and
+// since `verdict` is no longer produced, the list had quietly shrunk to whatever
+// stale entries still carried the field. Criteria now:
+//   - rating >= 4.2 with at least 20 ratings (a rating nobody has voted on is noise)
+//   - ratingCount < 5,000 (the "hidden" filter — no chart-toppers)
+//   - no red flags (gacha / energy gating / mandatory subscription)
 const flagBad = (g: any) => (g.redFlags || []).some((f: string) =>
   /gacha|energy|subscription gate|requires internet/i.test(f)
 )
@@ -25,9 +26,7 @@ const candidates = all.filter(g => {
   if (flagBad(g)) return false
   const r = Number(g.rating || 0)
   const rc = Number(g.ratingCount || 0)
-  if (r > 0 && r < 4) return false
-  if (rc >= 5000) return false
-  return g.verdict === "build" || g.verdict === "watch" || (g.signal || 0) >= 12
+  return r >= 4.2 && rc >= 20 && rc < 5000
 })
 
 const ranked = candidates
@@ -89,16 +88,16 @@ const description = `${ranked.length} under-the-radar iOS games with strong sign
 
   <section class="prose">
     <h2>How "hidden gem" is decided</h2>
-    <p>Every tracked game gets a <em>trust score</em> built from four inputs:</p>
+    <p>Every tracked game gets a <em>trust score</em> built from four inputs, all of them mechanical — there is no human review step:</p>
     <ul>
-      <li><strong>Signal</strong> — our internal score for hook strength, chart velocity and freshness.</li>
-      <li><strong>Editorial verdict</strong> — pages flagged <code>build</code> or <code>watch</code> after structural review.</li>
-      <li><strong>Quality floor</strong> — App Store rating ≥ 4.0 (or unknown), to filter blatant clones.</li>
+      <li><strong>Quality floor</strong> — App Store rating ≥ 4.2 from at least 20 ratings, so a single five-star review cannot qualify a game.</li>
       <li><strong>Audience cap</strong> — fewer than 5,000 ratings, so chart-toppers are excluded.</li>
+      <li><strong>Rating credibility</strong> — more ratings lift the score, with diminishing returns.</li>
+      <li><strong>Low search demand</strong> — titles almost nobody is searching for yet score <em>higher</em>, not lower.</li>
     </ul>
     <p>Red flags subtract: any game tagged with gacha mechanics, energy/lives gating, mandatory subscriptions or "requires internet" for a single-player loop is removed before ranking.</p>
     <h3>Why this works</h3>
-    <p>The big iOS "best of" lists are recycled monthly. They surface games that are already winning. This page does the opposite — it watches the long tail of fresh releases and flags the ones with structural signal before the charts pick them up. If you're a scout, this is the one to bookmark.</p>
+    <p>The big iOS "best of" lists are recycled monthly. They surface games that are already winning. This page does the opposite — it watches the long tail of fresh releases and surfaces the well-rated ones before the charts pick them up. If you're a scout, this is the one to bookmark.</p>
     <h3>Related pages</h3>
     <ul>
       <li><a href="/movers/">Rising iOS games</a> — momentum leaderboard (includes chart-toppers)</li>

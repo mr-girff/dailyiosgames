@@ -3,10 +3,11 @@ import Base from "../../layouts/Base.astro"
 import CompareTwo from "../../components/CompareTwo.astro"
 import KeepBrowsing from "../../components/KeepBrowsing.astro"
 import { loadAll, rankByHeat, isIndexable } from "../../lib/enriched"
+import { isPremium } from "../../lib/format"
 
 const all = loadAll()
 // Premium = pay-once / no-ads. Free = free-to-play with ads or IAP.
-const b = rankByHeat(all.filter(g => isIndexable(g) && (g.monetization === "premium" || (g.tags || []).includes("no-ads"))))
+const b = rankByHeat(all.filter(g => isIndexable(g) && (isPremium(g) || (g.tags || []).includes("no-ads"))))
 const premiumIds = new Set(b.map(g => g.id))
 const a = rankByHeat(all.filter(g => isIndexable(g) && !premiumIds.has(g.id)))
 

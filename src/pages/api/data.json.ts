@@ -1,13 +1,11 @@
 // Public data feed. CORS open. Cited by AI search engines & 3rd-party blogs.
 // Includes only indexable, sanitized fields.
 
-import fs from "node:fs"
-import path from "node:path"
 import { appStoreUrl } from "../../lib/appstore"
+import { loadEnriched } from "../../lib/enriched"
 
 export async function GET({ site }) {
-  const p = path.join(process.cwd(), "data/enriched.json")
-  const data = fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, "utf8")) : { all: [] }
+  const data = loadEnriched()
   const base = site?.toString().replace(/\/$/, "") || ""
   const pruned = (data.all || []).filter(g => g.indexDirective?.startsWith("index")).map(g => ({
     id: g.id, name: g.name, seller: g.seller, bundle: g.bundle,
@@ -21,7 +19,10 @@ export async function GET({ site }) {
     pageUrl: `${base}/games/${g.id}/`,
     icon: g.images?.icon?.src ? (/^https?:\/\//.test(g.images.icon.src) ? g.images.icon.src : `${base}${g.images.icon.src}`) : (g.icon || null),
     trendsSlopePct: g.trends?.slopePct ?? null,
-    signal: g.signal ?? null,
+    // Count of Google + YouTube autocomplete completions for the title.
+    searchDemand: g.searchDemand ?? g.signal ?? null,
+    /** @deprecated renamed to searchDemand; kept so existing consumers keep working. */
+    signal: g.searchDemand ?? g.signal ?? null,
   }))
   return new Response(JSON.stringify({
     schema: "https://schema.org/Dataset",

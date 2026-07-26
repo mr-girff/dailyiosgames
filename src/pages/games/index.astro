@@ -1,20 +1,22 @@
 ---
 import Base from "../../layouts/Base.astro"
 import KeepBrowsing from "../../components/KeepBrowsing.astro"
-import fs from "node:fs"
-import path from "node:path"
+import { loadEnriched, demandOf } from "../../lib/enriched"
 
-const p = path.join(process.cwd(), "data/enriched.json")
-const data = fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, "utf8")) : { all: [] }
+const data = loadEnriched()
 const all = data.all || []
 
 function cap(s){ return (s||"").replace(/(^|-)\w/g, c => c.toUpperCase()).replace(/-/g," ") }
 function priceLabel(g){ const p = g.price; return (!p || p === "Free" || p === "0") ? "Free" : p }
 
-// ---- Editor's picks: verdict=build, prefer recent ----
+// ---- Most-searched recent releases ----
+// Was "Editor's picks", selected by verdict === "build" — which only meant the
+// title had >= 10 autocomplete completions. Nobody edited anything, and the field
+// is no longer produced, so the row silently emptied. Now it is what it always
+// really was: recent releases with the most search demand.
 const picks = all
-  .filter(g => g.verdict === "build")
-  .sort((a, b) => (a.daysSinceRelease ?? 9999) - (b.daysSinceRelease ?? 9999))
+  .filter(g => (g.daysSinceRelease ?? 9999) <= 45 && demandOf(g) > 0)
+  .sort((a, b) => demandOf(b) - demandOf(a) || (a.daysSinceRelease ?? 9999) - (b.daysSinceRelease ?? 9999))
   .slice(0, 4)
 const pickIds = new Set(picks.map(g => g.id))
 
@@ -37,7 +39,7 @@ function renderCard(g, eager=false) {
 ---
 <Base
   title="All Games — Daily iOS Games"
-  description={`Browse ${all.length} tracked iOS games. Editor's picks, new today, updated recently, by category.`}
+  description={`Browse ${all.length} tracked iOS games. Most searched new releases, new today, updated recently, by category.`}
 >
   <section class="hero-band">
     <div class="eyebrow">Catalog · {all.length} games</div>
@@ -54,7 +56,7 @@ function renderCard(g, eager=false) {
       </div>
       <ul class="game-grid">
         {picks.map((g, i) => (
-          <li data-arch={g.archetype || "other"}>
+          <li data-arch={g.archetype || "other"} data-q={`${g.name || ""} ${g.seller || ""}`.toLowerCase()}>
             <a class={`game-card ${i === 0 ? "featured" : ""}`} href={`/games/${g.id}/`}>
               {g.icon && <img class="icon" src={g.images?.icon?.src || g.icon} alt={`${g.name} app icon`} width={i===0?96:64} height={i===0?96:64} loading={i<2?"eager":"lazy"} />}
               <div class="meta">
@@ -64,7 +66,7 @@ function renderCard(g, eager=false) {
                 <div class="tags">
                   {g.archetype && <span class="tag">{cap(g.archetype)}</span>}
                   <span class={`tag ${priceLabel(g)==='Free' ? 'price-free' : ''}`}>{priceLabel(g)}</span>
-                  <span class="tag signal">High signal</span>
+                  <span class="tag signal">{demandOf(g)} search hits</span>
                 </div>
               </div>
             </a>
@@ -74,8 +76,13 @@ function renderCard(g, eager=false) {
     </section>
   )}
 
-  <!-- ===== FILTER PILLS ===== -->
-  <section class="filter-bar" aria-label="Filter by category">
+  <!-- ===== SEARCH + FILTER PILLS ===== -->
+  <section class="filter-bar" aria-label="Filter the catalogue">
+    <form class="cat-search" role="search" action="/search/" method="get">
+      <label class="visually-hidden" for="cat-q">Filter by title or developer</label>
+      <input id="cat-q" name="q" type="search" autocomplete="off" placeholder="Filter by title or developer…" />
+      <noscript><button type="submit">Search</button></noscript>
+    </form>
     <button class="pill active" data-filter="all">All <span class="cnt">{all.length}</span></button>
     {archetypes.map(([k, n]) => (
       <button class="pill" data-filter={k}>{cap(k)} <span class="cnt">{n}</span></button>
@@ -91,7 +98,7 @@ function renderCard(g, eager=false) {
       </div>
       <ul class="game-grid compact">
         {newToday.map(g => (
-          <li data-arch={g.archetype || "other"}>
+          <li data-arch={g.archetype || "other"} data-q={`${g.name || ""} ${g.seller || ""}`.toLowerCase()}>
             <a class="game-card" href={`/games/${g.id}/`}>
               {g.icon && <img class="icon" src={g.images?.icon?.src || g.icon} alt={`${g.name} app icon`} width="56" height="56" loading="lazy" />}
               <div class="meta">
@@ -118,7 +125,7 @@ function renderCard(g, eager=false) {
       </div>
       <ul class="game-grid compact">
         {newMonth.map(g => (
-          <li data-arch={g.archetype || "other"}>
+          <li data-arch={g.archetype || "other"} data-q={`${g.name || ""} ${g.seller || ""}`.toLowerCase()}>
             <a class="game-card" href={`/games/${g.id}/`}>
               {g.icon && <img class="icon" src={g.images?.icon?.src || g.icon} alt={`${g.name} app icon`} width="56" height="56" loading="lazy" />}
               <div class="meta">
@@ -147,7 +154,7 @@ function renderCard(g, eager=false) {
         <summary>Show all</summary>
         <ul class="game-grid compact">
           {updatedRec.map(g => (
-            <li data-arch={g.archetype || "other"}>
+            <li data-arch={g.archetype || "other"} data-q={`${g.name || ""} ${g.seller || ""}`.toLowerCase()}>
               <a class="game-card" href={`/games/${g.id}/`}>
                 {g.icon && <img class="icon" src={g.images?.icon?.src || g.icon} alt={`${g.name} app icon`} width="56" height="56" loading="lazy" />}
                 <div class="meta">
@@ -177,7 +184,7 @@ function renderCard(g, eager=false) {
         <summary>Show all {older.length}</summary>
         <ul class="game-grid compact">
           {older.map(g => (
-            <li data-arch={g.archetype || "other"}>
+            <li data-arch={g.archetype || "other"} data-q={`${g.name || ""} ${g.seller || ""}`.toLowerCase()}>
               <a class="game-card" href={`/games/${g.id}/`}>
                 {g.icon && <img class="icon" src={g.images?.icon?.src || g.icon} alt={`${g.name} app icon`} width="56" height="56" loading="lazy" />}
                 <div class="meta">
@@ -206,11 +213,15 @@ function renderCard(g, eager=false) {
       const items = document.querySelectorAll('li[data-arch]');
       const buckets = document.querySelectorAll('[data-bucket]');
       const empty = document.getElementById('emptyMsg');
+      const search = document.getElementById('cat-q');
+      let filter = 'all';
+      let query = '';
 
-      function apply(filter) {
+      function apply() {
         let visibleTotal = 0;
         items.forEach(li => {
-          const match = filter === 'all' || li.dataset.arch === filter;
+          const match = (filter === 'all' || li.dataset.arch === filter)
+                     && (!query || (li.dataset.q || '').indexOf(query) !== -1);
           li.style.display = match ? '' : 'none';
           if (match) visibleTotal++;
         });
@@ -218,25 +229,41 @@ function renderCard(g, eager=false) {
           const visible = b.querySelectorAll('li[data-arch]:not([style*="display: none"])').length;
           b.style.display = visible === 0 ? 'none' : '';
         });
+        // Collapsed <details> hide matches, so open them while a query is active.
+        document.querySelectorAll('details.reveal').forEach(d => { if (query) d.open = true; });
         if (empty) empty.hidden = visibleTotal > 0;
         // Update URL hash for sharing
-        if (filter === 'all') {
-          history.replaceState(null, '', location.pathname);
-        } else {
-          history.replaceState(null, '', '#' + filter);
-        }
+        history.replaceState(null, '', filter === 'all' ? location.pathname : '#' + filter);
       }
 
       pills.forEach(p => p.addEventListener('click', () => {
         pills.forEach(x => x.classList.remove('active'));
         p.classList.add('active');
-        apply(p.dataset.filter);
+        filter = p.dataset.filter;
+        apply();
       }));
+
+      if (search) {
+        // Progressive enhancement: without JS the input submits to /search/;
+        // with JS we filter the already-rendered catalogue in place.
+        search.form.addEventListener('submit', e => {
+          e.preventDefault();
+          query = search.value.trim().toLowerCase();
+          apply();
+        });
+        let t;
+        search.addEventListener('input', () => {
+          clearTimeout(t);
+          t = setTimeout(() => { query = search.value.trim().toLowerCase(); apply(); }, 120);
+        });
+        const preset = new URLSearchParams(location.search).get('q');
+        if (preset) { search.value = preset; query = preset.trim().toLowerCase(); }
+      }
 
       // Apply hash on load
       const initial = location.hash.replace('#','') || 'all';
       const target = document.querySelector(`.pill[data-filter="${initial}"]`);
-      if (target) target.click();
+      if (target) target.click(); else apply();
     })();
   </script>
 
@@ -272,6 +299,14 @@ function renderCard(g, eager=false) {
   transition: all .15s;
   display: inline-flex; align-items: center; gap: .35rem;
 }
+.cat-search { flex: 1 1 100%; display: flex; gap: .4rem; margin-bottom: .35rem; }
+.cat-search input {
+  flex: 1; min-width: 0; padding: .55rem .85rem; font: inherit; font-size: .9rem;
+  background: var(--bg); color: var(--fg);
+  border: 1px solid var(--border-strong); border-radius: 999px;
+}
+.cat-search input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(193,95,60,.15); }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
 .pill:hover { border-color: var(--border-strong); color: var(--fg); }
 .pill.active {
   background: var(--fg); color: var(--bg);

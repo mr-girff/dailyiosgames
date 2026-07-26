@@ -1,0 +1,172 @@
+---
+// Site search. The homepage has always published a schema.org SearchAction
+// (sitelinks searchbox) but no search existed — this is the page that makes the
+// promise real. Fully client-side: it fetches the static /search-index.json,
+// so it works on Cloudflare Pages with no server and no third-party service.
+import Base from "../layouts/Base.astro"
+import KeepBrowsing from "../components/KeepBrowsing.astro"
+import { loadAll } from "../lib/enriched"
+
+const all = loadAll()
+const total = all.length
+const activeCount = all.filter(g => g.active !== false).length
+const SITE = (Astro.site || "").toString().replace(/\/$/, "")
+const title = `Search ${total} tracked iOS games`
+const description = `Search the full catalogue of ${total} US App Store games tracked by Daily iOS Games — by title, developer, category, price or feature.`
+---
+<Base
+  title={`${title} — Daily iOS Games`}
+  description={description}
+  canonical={`${SITE}/search/`}
+  robots="noindex,follow"
+>
+  <section class="hero-band">
+    <div class="eyebrow">Catalogue · {total} games · {activeCount} on the charts today</div>
+    <h1>Search iOS games</h1>
+    <p class="lead">Type a game title, a studio, a category (<code>match3</code>, <code>roguelike</code>) or a feature (<code>offline</code>, <code>no-ads</code>, <code>controller</code>).</p>
+  </section>
+
+  <form class="search-form" role="search" action="/search/" method="get">
+    <label class="visually-hidden" for="q">Search games</label>
+    <input id="q" name="q" type="search" autocomplete="off" autocapitalize="none" spellcheck="false"
+           placeholder="e.g. roguelike deckbuilder, Voodoo, offline" enterkeyhint="search" />
+    <button type="submit">Search</button>
+  </form>
+
+  <p class="search-status" id="status" aria-live="polite">Loading the catalogue…</p>
+
+  <ul class="rank-list" id="results"></ul>
+
+  <noscript>
+    <p class="search-status">Search needs JavaScript. Browse <a href="/games/">all games</a> or the <a href="/archetype/">categories</a> instead.</p>
+  </noscript>
+
+  <KeepBrowsing
+    title="Or browse instead"
+    eyebrow="No search needed"
+    items={[
+      { href: "/new-today/", title: "New today", sub: "Today's fresh releases", icon: "calendar" },
+      { href: "/movers/", title: "Rising right now", sub: "Highest heat today", icon: "fire" },
+      { href: "/archetype/", title: "Browse by category", sub: "Every archetype", icon: "grid" },
+      { href: "/games/", title: "All tracked games", sub: `${total} in the catalogue`, icon: "list" },
+    ]}
+  />
+
+  <script is:inline>
+    (function () {
+      var input = document.getElementById("q");
+      var status = document.getElementById("status");
+      var results = document.getElementById("results");
+      var form = document.querySelector(".search-form");
+      var games = null;
+
+      function norm(s) { return (s || "").toString().toLowerCase(); }
+
+      function score(g, terms) {
+        var name = norm(g.n), seller = norm(g.s);
+        var hay = name + " " + seller + " " + norm(g.a) + " " + norm(g.m) + " " + (g.t || []).join(" ");
+        var s = 0;
+        for (var i = 0; i < terms.length; i++) {
+          var t = terms[i];
+          if (hay.indexOf(t) === -1) return 0;          // every term must match
+          if (name === t) s += 100;
+          else if (name.indexOf(t) === 0) s += 40;
+          else if (name.indexOf(t) !== -1) s += 25;
+          if (seller.indexOf(t) !== -1) s += 12;
+          if (norm(g.a) === t) s += 10;
+          if ((g.t || []).indexOf(t) !== -1) s += 8;
+        }
+        s += Math.min(g.h || 0, 100) / 20;               // nudge by heat
+        if (g.x) s += 3;                                 // prefer games still charting
+        return s;
+      }
+
+      function esc(s) {
+        return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
+          return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+        });
+      }
+
+      function render(list, q) {
+        if (!list.length) {
+          results.innerHTML = "";
+          status.innerHTML = 'No game matches <strong>' + esc(q) + '</strong>. Try a shorter query, a studio name, or browse <a href="/games/">all games</a>.';
+          return;
+        }
+        status.textContent = list.length + (list.length === 1 ? " match" : " matches") + ' for "' + q + '"';
+        var html = "";
+        for (var i = 0; i < list.length; i++) {
+          var g = list[i];
+          var bits = [g.s, g.a ? g.a.replace(/-/g, " ") : "", g.p].filter(Boolean).join(" · ");
+          html += '<li>' +
+            '<span class="rl-rank">' + (i + 1) + "</span>" +
+            '<span class="rl-body">' +
+              '<span class="rl-name"><a href="/games/' + encodeURIComponent(g.i) + '/">' + esc(g.n) + "</a></span>" +
+              '<span class="rl-meta">' + esc(bits) + (g.x ? "" : " · archived") + "</span>" +
+            "</span>" +
+            (g.h > 0 ? '<span class="rl-tag hot">heat ' + g.h + "</span>" : "") +
+            '<span class="rl-tag">' + esc(g.p) + "</span>" +
+          "</li>";
+        }
+        results.innerHTML = html;
+      }
+
+      function run(q) {
+        q = (q || "").trim();
+        if (!games) return;
+        if (!q) { results.innerHTML = ""; status.textContent = games.length + " games in the catalogue — start typing."; return; }
+        var terms = q.toLowerCase().split(/\s+/).filter(Boolean);
+        var scored = [];
+        for (var i = 0; i < games.length; i++) {
+          var s = score(games[i], terms);
+          if (s > 0) scored.push([s, games[i]]);
+        }
+        scored.sort(function (a, b) { return b[0] - a[0]; });
+        render(scored.slice(0, 60).map(function (x) { return x[1]; }), q);
+      }
+
+      var timer;
+      function onInput() {
+        clearTimeout(timer);
+        timer = setTimeout(function () {
+          run(input.value);
+          var url = input.value.trim() ? "/search/?q=" + encodeURIComponent(input.value.trim()) : "/search/";
+          history.replaceState(null, "", url);
+        }, 120);
+      }
+
+      form.addEventListener("submit", function (e) { e.preventDefault(); clearTimeout(timer); onInput(); });
+      input.addEventListener("input", onInput);
+
+      fetch("/search-index.json")
+        .then(function (r) { return r.json(); })
+        .then(function (d) {
+          games = d.games || [];
+          var q = new URLSearchParams(location.search).get("q") || "";
+          if (q) input.value = q;
+          input.focus();
+          run(q);
+        })
+        .catch(function () {
+          status.innerHTML = 'Could not load the search index. Browse <a href="/games/">all games</a> instead.';
+        });
+    })();
+  </script>
+
+  <style>
+    .search-form { display: flex; gap: .5rem; margin: 1.5rem 0 1rem; }
+    .search-form input {
+      flex: 1; min-width: 0; padding: .8rem 1rem; font: inherit;
+      background: var(--bg); color: var(--fg);
+      border: 1px solid var(--border-strong); border-radius: 10px;
+    }
+    .search-form input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(193,95,60,.15); }
+    .search-form button {
+      padding: .8rem 1.25rem; font: inherit; font-weight: 500; cursor: pointer;
+      background: var(--fg); color: var(--bg); border: 0; border-radius: 10px;
+    }
+    .search-status { color: var(--fg-muted); font-size: .9rem; margin: .25rem 0 1rem; }
+    .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
+    @media (max-width: 540px) { .search-form { flex-direction: column; } .search-form button { width: 100%; } }
+  </style>
+</Base>

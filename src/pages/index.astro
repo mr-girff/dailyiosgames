@@ -5,14 +5,14 @@ import Movers from "../components/Movers.astro"
 import KeepBrowsing from "../components/KeepBrowsing.astro"
 import fs from "node:fs"
 import path from "node:path"
+import { loadEnriched } from "../lib/enriched"
 
 const dataPath = path.join(process.cwd(), "data/latest.json")
 const data = fs.existsSync(dataPath)
   ? JSON.parse(fs.readFileSync(dataPath, "utf8"))
   : { date: "n/a", newReleases: [], updates: [] }
 
-const enrichedPath = path.join(process.cwd(), "data/enriched.json")
-const enriched = fs.existsSync(enrichedPath) ? JSON.parse(fs.readFileSync(enrichedPath, "utf8")) : { all: [] }
+const enriched = loadEnriched()
 const byId = new Map(enriched.all.map(g => [g.id, g]))
 
 // Merge enriched fields back into list
@@ -104,7 +104,6 @@ function priceLabel(g){ const p = g.price; return (!p || p === "Free" || p === "
                 <div class="tags">
                   {g.archetype && <span class="tag">{cap(g.archetype)}</span>}
                   <span class={`tag ${priceLabel(g)==='Free' ? 'price-free' : ''}`}>{priceLabel(g)}</span>
-                  {g.verdict === "build" && <span class="tag signal">High signal</span>}
                 </div>
               </div>
             </a>
@@ -175,7 +174,10 @@ function priceLabel(g){ const p = g.price; return (!p || p === "Free" || p === "
     "inLanguage": "en",
     "potentialAction": {
       "@type": "SearchAction",
-      "target": `${(Astro.site?.toString() || "https://ios.querygame.com").replace(/\/$/, "")}/games/?q={search_term_string}`,
+      "target": {
+        "@type": "EntryPoint",
+        "urlTemplate": `${(Astro.site?.toString() || "https://ios.querygame.com").replace(/\/$/, "")}/search/?q={search_term_string}`
+      },
       "query-input": "required name=search_term_string"
     }
   })} />

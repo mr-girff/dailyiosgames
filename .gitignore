@@ -10,3 +10,4 @@ public/img/
 .claude/tmp/
 *.trace.tmp
 
+.cache/

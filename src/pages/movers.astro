@@ -1,11 +1,11 @@
 ---
 import Base from "../layouts/Base.astro"
 import KeepBrowsing from "../components/KeepBrowsing.astro"
-import fs from "node:fs"
-import path from "node:path"
+import ShareRow from "../components/ShareRow.astro"
+import { loadEnriched, cap, priceLabel, gameIconSrc } from "../lib/enriched"
+import { sparkGeom, rcValues, compactNum, growthLabel } from "../lib/spark"
 
-const p = path.join(process.cwd(), "data/enriched.json")
-const data = fs.existsSync(p) ? JSON.parse(fs.readFileSync(p, "utf8")) : { all: [] }
+const data = loadEnriched()
 const all = data.all || []
 
 const movers = all
@@ -13,29 +13,54 @@ const movers = all
   .sort((a, b) => (b.heatScore || 0) - (a.heatScore || 0))
 
 const surging = movers.filter(g => g.momentum === "surging").length
-const strong  = movers.filter(g => g.traction === "strong").length
+const strong = movers.filter(g => g.traction === "strong").length
+const freeCount = movers.filter(g => priceLabel(g) === "Free").length
 
-function cap(s){ return (s||"").replace(/(^|-)\w/g, c => c.toUpperCase()).replace(/-/g," ") }
-function priceLabel(g){ const p = g.price; return (!p || p === "Free" || p === "0") ? "Free" : p }
-function growthLabel(g){
-  const v = g.velocity?.rcGrowthPct
-  if (v == null) return null
-  return `+${v >= 1000 ? Math.round(v/1000)+"k" : v}% / 7d`
-}
 const MOMENTUM = {
   surging: { label: "🔥 Surging", cls: "m-surging" },
-  rising:  { label: "📈 Rising",  cls: "m-rising"  },
-  steady:  { label: "Steady",     cls: "m-steady"  },
-  fading:  { label: "Fading",     cls: "m-fading"  },
+  rising: { label: "📈 Rising", cls: "m-rising" },
+  steady: { label: "Steady", cls: "m-steady" },
+  fading: { label: "Fading", cls: "m-fading" },
 }
-const dateFmt = data.date ? new Date(data.date + "T00:00:00Z").toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" }) : ""
-const canonical = `${(Astro.site||"").toString().replace(/\/$/,"")}/movers/`
+
+/** Everything a row/podium card needs, computed once. */
+function view(g: any, i: number) {
+  const m = MOMENTUM[g.momentum as keyof typeof MOMENTUM] || MOMENTUM.steady
+  const vals = rcValues(g.velocity)
+  const rankDelta = g.velocity?.rankDelta7d ?? null
+  return {
+    g,
+    pos: i + 1,
+    m,
+    free: priceLabel(g) === "Free",
+    price: priceLabel(g),
+    growth: growthLabel(g.velocity?.rcGrowthPct),
+    newReviews: g.velocity?.rcDelta7d > 0 ? compactNum(g.velocity.rcDelta7d) : null,
+    reviews: g.ratingCount ? compactNum(g.ratingCount) : null,
+    // Positive rankDelta7d = climbed the chart (rank number went down).
+    rankDelta: typeof rankDelta === "number" && rankDelta !== 0 ? rankDelta : null,
+    spark: sparkGeom(vals.slice(-14), 76, 26, 3),
+    sparkWide: sparkGeom(vals.slice(-14), 168, 46, 4),
+    icon: gameIconSrc(g),
+  }
+}
+
+const rows = movers.map(view)
+const podium = rows.slice(0, 3)
+const rest = rows.slice(3)
+
+const dateFmt = data.date
+  ? new Date(data.date + "T00:00:00Z").toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" })
+  : ""
+const site = (Astro.site || "").toString().replace(/\/$/, "")
+const canonical = `${site}/movers/`
+const title = "Rising iOS Games — Early Traction Radar"
+const description = `${movers.length} iOS games ranked by early-traction heat: download velocity, relative growth and chart momentum. ${surging} surging, ${strong} with strong traction. Updated ${dateFmt}.`
+const shareText = podium.length
+  ? `Today's fastest-rising iOS game: ${podium[0].g.name} (heat ${podium[0].g.heatScore}/100).`
+  : description
 ---
-<Base
-  title="Rising iOS Games — Early Traction Radar"
-  description={`${movers.length} iOS games ranked by early-traction heat: download velocity, relative growth and chart momentum. ${surging} surging, ${strong} with strong traction. Updated ${dateFmt}.`}
-  canonical={canonical}
->
+<Base title={title} description={description} canonical={canonical} image={`${site}/og-default.png`}>
   <section class="hero-band">
     <div class="eyebrow">Updated {dateFmt} · {movers.length} games tracked</div>
     <h1>Rising iOS Games</h1>
@@ -45,124 +70,166 @@ const canonical = `${(Astro.site||"").toString().replace(/\/$/,"")}/movers/`
       <div class="stat"><span class="num">{strong}</span><span class="lbl">Strong traction</span></div>
       <div class="stat"><span class="num">{movers.length}</span><span class="lbl">Total movers</span></div>
     </div>
+    <ShareRow url={canonical} title={title} text={shareText} label="Share today's radar" />
   </section>
 
-  <div class="filters" role="tablist" aria-label="Filter movers">
-    <button class="pill active" data-filter="all" aria-pressed="true">All</button>
-    <button class="pill" data-filter="surging" aria-pressed="false">🔥 Surging</button>
-    <button class="pill" data-filter="strong" aria-pressed="false">Strong traction</button>
-    <button class="pill" data-filter="free" aria-pressed="false">Free</button>
-    <a class="pill ghost" href="/movers.xml">Subscribe (RSS) ↗</a>
-    <a class="pill ghost" href="/api/movers.json">Export JSON ↗</a>
-  </div>
-
-  <ol class="mover-list">
-    {movers.map((g, i) => {
-      const m = MOMENTUM[g.momentum] || MOMENTUM.steady
-      const gl = growthLabel(g)
-      const free = priceLabel(g) === "Free"
-      return (
-        <li data-momentum={g.momentum} data-traction={g.traction} data-free={free ? "1" : "0"}>
-          <a class="mover" href={`/games/${g.id}/`}>
-            <span class="rank">{i + 1}</span>
-            {g.icon && <img class="icon" src={g.images?.icon?.src || g.icon} alt={`${g.name} app icon`} width="48" height="48" loading={i < 8 ? "eager" : "lazy"} />}
-            <div class="meta">
-              <div class="name">{g.name}</div>
-              <div class="dev">{g.seller}{g.archetype ? ` · ${cap(g.archetype)}` : ""}</div>
-              <div class="badges">
-                <span class={`badge ${m.cls}`}>{m.label}</span>
-                {g.traction === "strong" && <span class="badge t-strong">Strong traction</span>}
-                {gl && <span class="badge grow">{gl}</span>}
-                <span class={`badge ${free ? "price-free" : ""}`}>{priceLabel(g)}</span>
+  {podium.length > 0 && (
+    <section class="podium-wrap">
+      <div class="section-head">
+        <h2>Top 3 right now</h2>
+        <span class="more">Highest heat of {movers.length} tracked games</span>
+      </div>
+      <ol class="podium">
+        {podium.map(v => (
+          <li class={`podium-card podium-card--${v.pos}`}>
+            <a href={`/games/${v.g.id}/`}>
+              <div class="podium-card__top">
+                <span class="podium-medal" aria-label={`Rank ${v.pos}`}>{["🥇", "🥈", "🥉"][v.pos - 1]}</span>
+                {v.icon && <img class="podium-icon" src={v.icon} srcset={v.g.images?.icon?.srcset} sizes="72px" alt="" width="72" height="72" loading="eager" fetchpriority="high" />}
+                <div class="podium-heat">
+                  <span class="podium-heat__num">{v.g.heatScore}</span>
+                  <span class="podium-heat__lbl">heat</span>
+                </div>
               </div>
+              <div class="podium-card__name">{v.g.name}</div>
+              <div class="podium-card__dev">{v.g.seller}{v.g.archetype ? ` · ${cap(v.g.archetype)}` : ""}</div>
+              {v.sparkWide && (
+                <svg class="podium-spark" viewBox="0 0 168 46" role="img" aria-label={`Rating-count trend, ${compactNum(v.sparkWide.first)} to ${compactNum(v.sparkWide.last)} over ${Math.min(14, rcValues(v.g.velocity).length)} days`}>
+                  <path d={v.sparkWide.area} class="spark-fill" />
+                  <path d={v.sparkWide.line} class="spark-line" />
+                  <circle cx={v.sparkWide.lastX.toFixed(1)} cy={v.sparkWide.lastY.toFixed(1)} r="3" class="spark-dot" />
+                </svg>
+              )}
+              <div class="podium-card__facts">
+                <span class={`badge ${v.m.cls}`}>{v.m.label}</span>
+                {v.growth && <span class="badge badge--grow">{v.growth} / 7d</span>}
+                {v.newReviews && <span class="badge">+{v.newReviews} reviews</span>}
+                <span class={`badge ${v.free ? "badge--free" : ""}`}>{v.price}</span>
+              </div>
+            </a>
+          </li>
+        ))}
+      </ol>
+    </section>
+  )}
+
+  <div class="filters-bar">
+    <div class="filters" role="group" aria-label="Filter movers">
+      <button class="pill active" data-filter="all" aria-pressed="true">All <span class="pill-n">{movers.length}</span></button>
+      <button class="pill" data-filter="surging" aria-pressed="false">🔥 Surging <span class="pill-n">{surging}</span></button>
+      <button class="pill" data-filter="strong" aria-pressed="false">Strong traction <span class="pill-n">{strong}</span></button>
+      <button class="pill" data-filter="free" aria-pressed="false">Free <span class="pill-n">{freeCount}</span></button>
+      <span class="filters__spacer"></span>
+      <a class="pill ghost" href="/movers.xml">RSS ↗</a>
+      <a class="pill ghost" href="/api/movers.json">JSON ↗</a>
+    </div>
+  </div>
+  <p class="filters__count" data-visible-count aria-live="polite">Showing all {movers.length} games</p>
+
+  <ol class="mover-list mover-list--v2" start="4">
+    {rest.map(v => (
+      <li data-momentum={v.g.momentum} data-traction={v.g.traction} data-free={v.free ? "1" : "0"}>
+        <a class="mover" href={`/games/${v.g.id}/`}>
+          <span class="mover__rank">{v.pos}</span>
+          {v.icon && <img class="mover__icon" src={v.icon} srcset={v.g.images?.icon?.srcset} sizes="48px" alt="" width="48" height="48" loading="lazy" />}
+          <div class="mover__meta">
+            <div class="mover__name">{v.g.name}</div>
+            <div class="mover__dev">{v.g.seller}{v.g.archetype ? ` · ${cap(v.g.archetype)}` : ""}</div>
+            <div class="mover__badges">
+              <span class={`badge ${v.m.cls}`}>{v.m.label}</span>
+              {v.g.traction === "strong" && <span class="badge badge--strong">Strong traction</span>}
+              {v.growth && <span class="badge badge--grow">{v.growth} / 7d</span>}
+              {v.rankDelta && (
+                <span class={`badge ${v.rankDelta > 0 ? "badge--up" : "badge--down"}`}>
+                  {v.rankDelta > 0 ? "▲" : "▼"} {Math.abs(v.rankDelta)} chart
+                </span>
+              )}
+              <span class={`badge ${v.free ? "badge--free" : ""}`}>{v.price}</span>
             </div>
-            <div class="heat" title="Heat score (0–100)">
-              <span class="heat-num">{g.heatScore}</span>
-              <span class="heat-lbl">heat</span>
-            </div>
-          </a>
-        </li>
-      )
-    })}
+          </div>
+          {v.spark && (
+            <svg class="mover__spark" viewBox="0 0 76 26" aria-hidden="true">
+              <path d={v.spark.area} class="spark-fill" />
+              <path d={v.spark.line} class="spark-line" />
+            </svg>
+          )}
+          <div class="mover__heat">
+            <span class="mover__heat-num">{v.g.heatScore}</span>
+            <span class="mover__heat-lbl">heat</span>
+          </div>
+          <span class="mover__meter" aria-hidden="true"><i style={`width:${Math.max(2, Math.min(100, v.g.heatScore))}%`}></i></span>
+        </a>
+      </li>
+    ))}
   </ol>
 
-  <p class="caveat">Heat is a relative, cohort-normalized signal derived from our own daily App Store snapshots (rating count is a public proxy for downloads). Rank momentum becomes available as history accrues. Not affiliated with Apple.</p>
+  <p class="empty-filter" data-empty hidden>No games match that filter today.</p>
+
+  <p class="caveat">Heat is a relative, cohort-normalized signal derived from our own daily App Store snapshots (rating count is a public proxy for downloads). Chart movement is measured against the best rank we saw seven days ago. Not affiliated with Apple.</p>
 
   {(() => {
     const topArchetypes = [...new Set(movers.map(g => g.archetype).filter(Boolean))]
       .map(a => ({ a, n: movers.filter(g => g.archetype === a).length }))
       .sort((x, y) => y.n - x.n).slice(0, 3)
     const items = [
-      { href: "/posts/",  title: "Today's daily report", sub: "Every new release", icon: "calendar" },
-      { href: "/games/",  title: "All tracked games",   sub: `${all.length} games`, icon: "list" },
+      { href: "/posts/", title: "Today's daily report", sub: "Every new release", icon: "calendar" },
+      { href: "/games/", title: "All tracked games", sub: `${all.length} games`, icon: "list" },
       ...topArchetypes.map(t => ({ href: `/archetype/${t.a}/`, title: cap(t.a) + " games", sub: `${t.n} rising`, icon: "tag" })),
-      { href: "/about/",  title: "How heat is calculated", sub: "Methodology", icon: "star" },
+      { href: "/about/", title: "How heat is calculated", sub: "Methodology", icon: "star" },
     ].slice(0, 6)
     return <KeepBrowsing title="Where to go next" eyebrow="Keep exploring" items={items} />
   })()}
 
   <script type="application/ld+json" set:html={JSON.stringify({
-    "@context":"https://schema.org","@type":"ItemList",
-    "name":"Rising iOS Games",
+    "@context": "https://schema.org", "@type": "ItemList",
+    "name": "Rising iOS Games",
     "numberOfItems": movers.length,
     "itemListElement": movers.slice(0, 20).map((g, i) => ({
-      "@type":"ListItem","position":i+1,"name":g.name,"url":`${(Astro.site||"")}games/${g.id}/`
-    }))
+      "@type": "ListItem", "position": i + 1, "name": g.name, "url": `${site}/games/${g.id}/`,
+    })),
   })} />
 </Base>
 
 <script is:inline>
-  const list = document.querySelector(".mover-list");
-  const pills = document.querySelectorAll(".filters .pill[data-filter]");
-  pills.forEach(btn => btn.addEventListener("click", () => {
-    pills.forEach(b => { b.classList.remove("active"); b.setAttribute("aria-pressed","false"); });
-    btn.classList.add("active"); btn.setAttribute("aria-pressed","true");
-    const f = btn.dataset.filter;
-    list.querySelectorAll("li").forEach(li => {
-      let show = true;
-      if (f === "surging") show = li.dataset.momentum === "surging";
-      else if (f === "strong") show = li.dataset.traction === "strong";
-      else if (f === "free") show = li.dataset.free === "1";
-      li.style.display = show ? "" : "none";
-    });
-  }));
-</script>
+  (function () {
+    var list = document.querySelector(".mover-list");
+    var pills = document.querySelectorAll(".filters .pill[data-filter]");
+    var counter = document.querySelector("[data-visible-count]");
+    var empty = document.querySelector("[data-empty]");
+    var podium = document.querySelector(".podium-wrap");
+    if (!list) return;
 
-<style>
-  .filters { display:flex; gap:.5rem; flex-wrap:wrap; margin:1.25rem 0; }
-  .pill { font-size:.85rem; padding:.35rem .85rem; border-radius:999px; border:1px solid var(--border, rgba(127,127,127,.25));
-    background:var(--muted); color:inherit; cursor:pointer; text-decoration:none; line-height:1.5; }
-  .pill.active { background:var(--accent); color:#fff; border-color:var(--accent); }
-  .pill.ghost { margin-left:auto; color:var(--fg-muted); }
-  .mover-list { list-style:none; padding:0; margin:1rem 0 0; display:grid; gap:.5rem; }
-  .mover { display:flex; align-items:center; gap:.75rem; padding:.6rem .75rem; border-radius:12px;
-    background:var(--muted); text-decoration:none; color:inherit; transition:background .15s; }
-  .mover:hover { background:var(--card-hover, rgba(127,127,127,.12)); }
-  .mover .rank { width:1.75rem; text-align:center; font-weight:700; color:var(--fg-muted); font-variant-numeric:tabular-nums; }
-  .mover .icon { border-radius:11px; flex:none; }
-  .mover .meta { flex:1; min-width:0; }
-  .mover .name { font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .mover .dev { font-size:.8rem; color:var(--fg-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-  .mover .badges { display:flex; gap:.35rem; flex-wrap:wrap; margin-top:.3rem; }
-  .badge { font-size:.68rem; padding:.1rem .45rem; border-radius:999px; line-height:1.5; white-space:nowrap; background:rgba(127,127,127,.12); }
-  .m-surging { background:rgba(255,99,71,.18); color:#ff6347; }
-  .m-rising  { background:rgba(92,214,133,.18); color:#3fae63; }
-  .m-steady, .m-fading { background:rgba(127,127,127,.15); color:var(--fg-muted); }
-  .t-strong  { background:rgba(255,165,0,.18); color:#d68a00; font-weight:600; }
-  .grow      { background:rgba(92,214,133,.12); color:#3fae63; font-variant-numeric:tabular-nums; }
-  .price-free { color:#3fae63; }
-  .mover .heat { text-align:center; flex:none; width:3rem; }
-  .mover .heat-num { display:block; font-weight:700; font-size:1.15rem; color:var(--accent); font-variant-numeric:tabular-nums; }
-  .mover .heat-lbl { display:block; font-size:.6rem; text-transform:uppercase; letter-spacing:.05em; color:var(--fg-muted); }
-  .caveat { font-size:.78rem; color:var(--fg-muted); margin-top:1.5rem; }
-  @media (max-width: 560px) {
-    .mover { gap:.6rem; padding:.55rem .6rem; align-items:flex-start; }
-    .mover .rank { width:1.1rem; font-size:.85rem; padding-top:.15rem; }
-    .mover .icon { width:42px; height:42px; }
-    .mover .name { white-space:normal; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; line-height:1.25; }
-    .mover .dev { white-space:normal; }
-    .mover .heat { width:2.3rem; }
-    .mover .heat-num { font-size:1rem; }
-    .stat-row { gap:1.5rem; }
-  }
-</style>
+    var LABEL = { all: "all", surging: "surging", strong: "strong-traction", free: "free" };
+
+    function apply(f) {
+      var shown = 0;
+      list.querySelectorAll("li").forEach(function (li) {
+        var show =
+          f === "surging" ? li.dataset.momentum === "surging" :
+          f === "strong"  ? li.dataset.traction === "strong"  :
+          f === "free"    ? li.dataset.free === "1"           : true;
+        li.hidden = !show;
+        if (show) shown++;
+      });
+      // The podium is the top 3 by heat, not a filtered view — hide it when a
+      // filter is on so the numbers on screen always add up.
+      if (podium) podium.hidden = f !== "all";
+      var total = shown + (f === "all" ? 3 : 0);
+      if (counter) {
+        counter.textContent = f === "all"
+          ? "Showing all " + total + " games"
+          : "Showing " + shown + " " + LABEL[f].replace("-", " ") + " game" + (shown === 1 ? "" : "s");
+      }
+      if (empty) empty.hidden = shown > 0;
+    }
+
+    pills.forEach(function (btn) {
+      btn.addEventListener("click", function () {
+        pills.forEach(function (b) { b.classList.remove("active"); b.setAttribute("aria-pressed", "false"); });
+        btn.classList.add("active");
+        btn.setAttribute("aria-pressed", "true");
+        apply(btn.dataset.filter);
+      });
+    });
+  })();
+</script>

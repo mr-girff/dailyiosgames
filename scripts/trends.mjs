@@ -4,6 +4,7 @@
 
 import fs from "node:fs/promises"
 import path from "node:path"
+import { serialize } from "./lib/json.mjs"
 
 const ROOT = process.cwd()
 const SRC = path.join(ROOT, "data/enriched.json")
@@ -52,7 +53,9 @@ function summarize(series) {
 
 async function main() {
   const data = JSON.parse(await fs.readFile(SRC, "utf8"))
-  const games = data.all.filter(g => g.indexDirective?.startsWith("index"))
+  // Active + indexable only: archived catalogue entries would otherwise burn the
+  // (heavily rate-limited) Trends quota on games nobody charts any more.
+  const games = data.all.filter(g => g.active !== false && g.indexDirective?.startsWith("index"))
   console.log(`Pulling trends for ${games.length} games`)
   let ok = 0, fail429 = 0
   for (const g of games) {
@@ -71,7 +74,7 @@ async function main() {
       await sleep(1500)
     }
   }
-  await fs.writeFile(SRC, JSON.stringify(data, null, 2))
+  await fs.writeFile(SRC, serialize(data))
   console.log(`Trends collected for ${ok}/${games.length} games`)
 }
 
